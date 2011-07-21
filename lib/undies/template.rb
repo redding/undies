@@ -1,6 +1,7 @@
 require 'undies/source'
 require 'undies/buffer'
 require "undies/utils"
+require 'rack/utils'
 
 module Undies
   class Template
@@ -36,21 +37,20 @@ module Undies
     end
 
     # Buffer raw data to the template buffer
-    def raw(html="")
+    def __(html="")
       @buffer << html
     end
-    alias_method :__, :raw
 
     # Buffer tag markup to the template buffer
     # the building block of all macros and html generation
     # this builds an html element with optional attrs/content
     def tag(name, attrs={})
       if block_given?
-        @buffer << "<#{name}#{Utils.html_attrs(attrs)}>"
+        @buffer << "<#{name}#{html_attrs(attrs)}>"
         yield
         @buffer << "</#{name}>"
       else
-        @buffer << "<#{name}#{Utils.html_attrs(attrs)} />"
+        @buffer << "<#{name}#{html_attrs(attrs)} />"
       end
     end
 
@@ -58,6 +58,19 @@ module Undies
 
     def tag_attrs(selector='', options={})
       Utils.selector_opts(selector).merge(options)
+    end
+
+    def html_attrs(opts)
+      raise ArgumentError unless opts.kind_of? ::Hash
+      if opts.empty?
+        ''
+      else
+        ' '+opts.
+        sort {|a,b|  a[0].to_s <=> b[0].to_s}.
+        collect {|k_v| "#{k_v[0]}=\"#{k_v[1]}\""}.
+        join(' ').
+        strip
+      end
     end
 
     def evaluate_source

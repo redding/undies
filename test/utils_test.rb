@@ -9,9 +9,9 @@ class Undies::Utils
     context "the util"
     subject { Undies::Utils }
 
-    should have_instance_methods :selector_opts, :html_attrs
+    should have_instance_methods :selector_opts
 
-    [ :selector_opts, :html_attrs ].
+    [ :selector_opts ].
     each do |meth|
       define_method(meth) do |*args|
         Undies::Utils.send(meth.to_s, *args)
@@ -68,33 +68,6 @@ class Undies::Utils
           :id => 'tim'
         }, selector_opts(s))
       end
-    end
-  end
-
-  class HtmlAttrsTest < Test
-    context "'html_attrs'"
-
-    should "convert an empty hash to html attrs" do
-      @expected = ""
-      assert_equal('', html_attrs({}))
-    end
-
-    should "convert a basic hash to html attrs" do
-      attrs = html_attrs(:class => "test", :id => "test_1")
-      assert_match /^\s{1}/, attrs
-      assert attrs.include?('class="test"')
-      assert attrs.include?('id="test_1"')
-    end
-
-    should "convert a nested hash to html attrs" do
-      attrs = html_attrs({
-        :class => "testing", :id => "test_2",
-        :nested => {:something => 'is_awesome'}
-      })
-      assert_match /^\s{1}/, attrs
-      assert attrs.include?('class="testing"')
-      assert attrs.include?('id="test_2"')
-      assert attrs.include?('nested="somethingis_awesome"')
     end
   end
 

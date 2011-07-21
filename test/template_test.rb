@@ -7,21 +7,47 @@ class Undies::Template
 
     context 'a template'
     subject { Undies::Template.new {} }
-    should have_instance_methods :__, :raw, :tag
-    should have_instance_methods :to_s
+    should have_instance_methods :__, :tag, :to_s
   end
 
-  class RawTest < TemplateTest
-    context "raw method"
+  class BufferTest < TemplateTest
+    context "buffer methods"
 
-    should "buffer whatever is passed to it" do
-      subject.raw "stuff"
+    should "un-escaped buffer whatever is passed to it" do
+      subject.__ "stuff"
       assert_equal "stuff", subject.buffer.to_s
     end
 
     should "be aliased as the '__' method to less obtrusive in templates" do
       subject.__ "stuffblah\nblah\nblah"
       assert_equal "stuffblah\nblah\nblah", subject.buffer.to_s
+    end
+  end
+
+  class HtmlAttrsTest < TemplateTest
+    context "html_attrs util"
+
+    should "convert an empty hash to html attrs" do
+      @expected = ""
+      assert_equal('', subject.send(:html_attrs, {}))
+    end
+
+    should "convert a basic hash to html attrs" do
+      attrs = subject.send(:html_attrs, :class => "test", :id => "test_1")
+      assert_match /^\s{1}/, attrs
+      assert attrs.include?('class="test"')
+      assert attrs.include?('id="test_1"')
+    end
+
+    should "convert a nested hash to html attrs" do
+      attrs = subject.send(:html_attrs, {
+        :class => "testing", :id => "test_2",
+        :nested => {:something => 'is_awesome'}
+      })
+      assert_match /^\s{1}/, attrs
+      assert attrs.include?('class="testing"')
+      assert attrs.include?('id="test_2"')
+      assert attrs.include?('nested="somethingis_awesome"')
     end
   end
 

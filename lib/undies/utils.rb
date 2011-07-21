@@ -2,19 +2,6 @@ module Undies; end
 class Undies::Utils
   class << self
 
-    def html_attrs(opts)
-      raise ArgumentError unless opts.kind_of? ::Hash
-      if opts.empty?
-        ''
-      else
-        ' '+opts.
-        sort {|a,b|  a[0].to_s <=> b[0].to_s}.
-        collect {|k_v| "#{k_v[0]}=\"#{k_v[1]}\""}.
-        join(' ').
-        strip
-      end
-    end
-
     def selector_opts(str='')
       # if str is a selector string
       if str =~ /^[#|\.]/
