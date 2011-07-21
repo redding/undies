@@ -1,7 +1,6 @@
 require 'undies/source'
 require 'undies/buffer'
 require "undies/utils"
-require 'rack/utils'
 
 module Undies
   class Template
@@ -36,9 +35,13 @@ module Undies
       @buffer.to_s(pretty_print)
     end
 
-    # Buffer raw data to the template buffer
-    def __(html="")
-      @buffer << html
+    # Buffer data and don't escape it
+    def __(data="")
+      @buffer << data
+    end
+    # Buffer data and escape it
+    def _(data="")
+      @buffer << escape_html(data)
     end
 
     # Buffer tag markup to the template buffer
@@ -80,6 +83,27 @@ module Undies
         instance_eval(&@source.data)
       end
     end
+
+    private
+
+    # Ripped from Rack v1.3.0 ======================================
+    # => ripped b/c I don't want a dependency on Rack for just this
+    ESCAPE_HTML = {
+      "&" => "&amp;",
+      "<" => "&lt;",
+      ">" => "&gt;",
+      "'" => "&#x27;",
+      '"' => "&quot;",
+      "/" => "&#x2F;"
+    }
+    ESCAPE_HTML_PATTERN = Regexp.union(*ESCAPE_HTML.keys)
+
+    # Escape ampersands, brackets and quotes to their HTML/XML entities.
+    def escape_html(string)
+      string.to_s.gsub(ESCAPE_HTML_PATTERN){|c| ESCAPE_HTML[c] }
+    end
+    # end Rip from Rack v1.3.0 =====================================
+
 
   end
 end

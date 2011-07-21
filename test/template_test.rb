@@ -5,23 +5,27 @@ class Undies::Template
   class BasicTest < Test::Unit::TestCase
     include TestBelt
 
-    context 'a template'
+    context 'template'
     subject { Undies::Template.new {} }
-    should have_instance_methods :__, :tag, :to_s
+    should have_instance_methods :to_s, :tag, :_, :__
   end
 
-  class BufferTest < BasicTest
-    context "buffer methods"
-
-    should "un-escaped buffer whatever is passed to it" do
-      subject.__ "stuff"
-      assert_equal "stuff", subject.buffer.to_s
+  class BufferContentTest < BasicTest
+    context "with raw content"
+    before do
+      @content = "stuff & <em>more stuff</em>"
     end
 
-    should "be aliased as the '__' method to less obtrusive in templates" do
-      subject.__ "stuffblah\nblah\nblah"
-      assert_equal "stuffblah\nblah\nblah", subject.buffer.to_s
+    should "buffer it un-escaped using the '__' method" do
+      subject.__ @content
+      assert_equal "stuff & <em>more stuff</em>", subject.buffer.to_s
     end
+
+    should "buffer it escaped using the '_' method" do
+      subject._ @content
+      assert_equal "stuff &amp; &lt;em&gt;more stuff&lt;&#x2F;em&gt;", subject.buffer.to_s
+    end
+
   end
 
   class HtmlAttrsTest < BasicTest
