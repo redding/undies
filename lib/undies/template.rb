@@ -6,7 +6,7 @@ module Undies
   class Template < Buffer
 
     def initialize(file=nil, &block)
-      super()
+      super
       @source = Source.new(file, block)
     end
 

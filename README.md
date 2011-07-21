@@ -28,7 +28,7 @@ A pure-Ruby HTML templating DSL.  Named for its gratuitus use of the underscore.
 7. Tag with id attribute
     _h1.header!
     # => "<h1 id=\"header\" />"
-8. Tag with class attribute
+8. Tag with class attributes
     _h1.header.awesome
     # => "<h1 class=\"header awesome\" />"
 

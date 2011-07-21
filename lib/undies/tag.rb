@@ -6,7 +6,7 @@ module Undies
     attr_reader :attrs
 
     def initialize(name=nil, attrs={}, &block)
-      super()
+      super
       @name = name
       @attrs = attrs
       @block = block

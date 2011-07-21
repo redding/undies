@@ -1,6 +1,10 @@
 module Undies
   class Buffer < ::Array
 
+    def initialize(*args)
+      super()
+    end
+
     # Add data and don't escape it
     def __(data="")
       self << data
