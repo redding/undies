@@ -30,6 +30,7 @@ module Undies
 
     def tag(name, attrs={}, &block)
       self << Tag.new(name, attrs, &block)
+      self.last
     end
 
     def to_s(pretty_print=false)

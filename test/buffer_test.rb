@@ -45,6 +45,10 @@ class Undies::Buffer
   class TagTest < BasicTest
     context "when using the tag method"
 
+    should "return a new Tag object" do
+      assert_equal Undies::Tag.new(:br), subject.tag(:br)
+    end
+
     should "add a new Tag object" do
       subject.tag(:br)
       assert_equal Undies::Tag.new(:br), subject.first

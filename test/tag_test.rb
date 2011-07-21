@@ -68,10 +68,18 @@ class Undies::Tag
     should "respond to any method ending in '!' as an id proxy" do
       assert subject.respond_to?(:asdgasdg!)
     end
+
     should "proxy id attr with methods ending in '!'" do
       assert_equal({
         :id => 'thing1'
       }, subject.thing1!.attrs)
+    end
+
+    should "nest tags from proxy id call" do
+      assert_equal(
+        "<div id=\"thing1\">stuff</div>",
+        subject.thing1! { _ 'stuff' }.to_s
+      )
     end
 
     should "proxy id attr with last method call ending in '!'" do
@@ -100,6 +108,13 @@ class Undies::Tag
       assert_equal({
         :class => 'thing'
       }, subject.thing.attrs)
+    end
+
+    should "nest tags from proxy class call" do
+      assert_equal(
+        "<div class=\"thing\">stuff</div>",
+        subject.thing { _ 'stuff' }.to_s
+      )
     end
 
     should "proxy multi html class attrs" do

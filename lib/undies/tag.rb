@@ -64,12 +64,14 @@ module Undies
     def proxy_id_attr(value, attrs={}, &block)
       @attrs.merge!(:id => value)
       @attrs.merge!(attrs)
+      @block = block
       self
     end
 
     def proxy_class_attr(value, attrs={}, &block)
       @attrs[:class] = [@attrs[:class], value].compact.join(' ')
       @attrs.merge!(attrs)
+      @block = block
       self
     end
 
