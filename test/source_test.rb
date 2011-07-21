@@ -3,7 +3,7 @@ require "undies/source"
 
 class Undies::Source
 
-  class SourceTest < Test::Unit::TestCase
+  class BasicTest < Test::Unit::TestCase
     include TestBelt
 
     context 'a source'
@@ -18,7 +18,7 @@ class Undies::Source
     end
   end
 
-  class BlockTest < SourceTest
+  class BlockTest < BasicTest
     context 'from a block'
     subject { Undies::Source.new(nil, Proc.new {}) }
 
@@ -27,7 +27,7 @@ class Undies::Source
     end
   end
 
-  class FileTest < SourceTest
+  class FileTest < BasicTest
     context 'from a file'
     subject do
       file = 'test/test_template.html.rb'

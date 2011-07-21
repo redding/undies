@@ -2,7 +2,7 @@ require "test/helper"
 
 class Undies::Template
 
-  class TemplateTest < Test::Unit::TestCase
+  class BasicTest < Test::Unit::TestCase
     include TestBelt
 
     context 'a template'
@@ -10,7 +10,7 @@ class Undies::Template
     should have_instance_methods :__, :tag, :to_s
   end
 
-  class BufferTest < TemplateTest
+  class BufferTest < BasicTest
     context "buffer methods"
 
     should "un-escaped buffer whatever is passed to it" do
@@ -24,7 +24,7 @@ class Undies::Template
     end
   end
 
-  class HtmlAttrsTest < TemplateTest
+  class HtmlAttrsTest < BasicTest
     context "html_attrs util"
 
     should "convert an empty hash to html attrs" do
@@ -51,7 +51,7 @@ class Undies::Template
     end
   end
 
-  class TagTest < TemplateTest
+  class TagTest < BasicTest
     context "tag method"
 
     should "buffer an empty html tag with no attrs" do
@@ -68,10 +68,9 @@ class Undies::Template
       subject.tag(:strong, {:class => 'big'}) { subject.__ "Loud Noises!" }
       assert_equal '<strong class="big">Loud Noises!</strong>', subject.buffer.to_s
     end
-  end
 
-  class TagMethodsTest < TemplateTest
-    should "should respond to tag methods with an underscore prefix" do
+    should "respond to any underscore prefix method" do
+      assert subject.respond_to?(:_h1)
       assert subject.respond_to?(:_div)
     end
 
@@ -82,13 +81,13 @@ class Undies::Template
       end
     end
 
-    should "generate tag markup" do
-      subject._div {}
-      assert_equal "<div></div>", subject.buffer.to_s
+    should "interpret underscore prefix methods as a tag" do
+      assert_equal subject._br, subject.tag(:br)
+      assert_equal subject._div(:class => 'big'), subject.tag(:div, :class => 'big')
     end
   end
 
-  class DefinitionTest < TemplateTest
+  class DefinitionTest < BasicTest
     should "generate markup given a block" do
       assert_equal(
         "<html><head></head><body><div class=\"yea\">YEA!!</div></body></html>",
