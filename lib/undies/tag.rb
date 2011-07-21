@@ -3,6 +3,8 @@ require 'undies/buffer'
 module Undies
   class Tag < Buffer
 
+    attr_reader :attrs
+
     def initialize(name=nil, attrs={}, &block)
       super()
       @name = name
@@ -10,14 +12,14 @@ module Undies
       @block = block
     end
 
-    ID_METH_REGEX = /^[^_](.+)!$/
-    CLASS_METH_REGEX = /^[^_](.+)$/
+    ID_METH_REGEX = /^([^_].+)!$/
+    CLASS_METH_REGEX = /^([^_].+)$/
 
     def method_missing(meth, *args, &block)
       if meth.to_s =~ ID_METH_REGEX
-        ""#id_attr($1, *args, &block)
+        proxy_id_attr($1, *args, &block)
       elsif meth.to_s =~ CLASS_METH_REGEX
-        ""#class_attr($1, *args, &block)
+        proxy_class_attr($1, *args, &block)
       else
         super
       end
@@ -55,6 +57,20 @@ module Undies
         join(' ').
         strip
       end
+    end
+
+    private
+
+    def proxy_id_attr(value, attrs={}, &block)
+      @attrs.merge!(:id => value)
+      @attrs.merge!(attrs)
+      self
+    end
+
+    def proxy_class_attr(value, attrs={}, &block)
+      @attrs[:class] = [@attrs[:class], value].compact.join(' ')
+      @attrs.merge!(attrs)
+      self
     end
 
   end
