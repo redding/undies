@@ -9,7 +9,7 @@ module Undies
       super
       @name = name
       @attrs = attrs
-      @block = block
+      self.content = block
     end
 
     ID_METH_REGEX = /^([^_].+)!$/
@@ -33,15 +33,16 @@ module Undies
       end
     end
 
-    def to_s(pretty_print=false)
-      if @block
-        self << "<#{@name}#{html_attrs(@attrs)}>"
-        instance_eval(&@block)
-        self << "</#{@name}>"
+    def to_s(pp_level=0, pp_indent=nil)
+      out = ""
+      if @content
+        out << pretty_print("<#{@name}#{html_attrs(@attrs)}>", pp_level, pp_indent)
+        out << super(pp_level+1, pp_indent)
+        out << pretty_print("</#{@name}>", pp_level, pp_indent)
       else
-        self << "<#{@name}#{html_attrs(@attrs)} />"
+        out << pretty_print("<#{@name}#{html_attrs(@attrs)} />", pp_level, pp_indent)
       end
-      super(pretty_print)
+      out
     end
 
     protected
@@ -64,15 +65,22 @@ module Undies
     def proxy_id_attr(value, attrs={}, &block)
       @attrs.merge!(:id => value)
       @attrs.merge!(attrs)
-      @block = block
+      self.content = block
       self
     end
 
     def proxy_class_attr(value, attrs={}, &block)
       @attrs[:class] = [@attrs[:class], value].compact.join(' ')
       @attrs.merge!(attrs)
-      @block = block
+      self.content = block
       self
+    end
+
+    def content=(block)
+      if block
+        @content = block
+        instance_eval(&@content)
+      end
     end
 
   end

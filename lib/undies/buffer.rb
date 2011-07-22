@@ -7,11 +7,11 @@ module Undies
 
     # Add data and don't escape it
     def __(data="")
-      self << data
+      append_item(data)
     end
     # Add data and escape it
     def _(data="")
-      self << escape_html(data)
+      append_item(escape_html(data))
     end
 
     TAG_METH_REGEX = /^_(.+)$/
@@ -33,22 +33,35 @@ module Undies
     end
 
     def tag(name, attrs={}, &block)
-      self << Tag.new(name, attrs, &block)
-      self.last
+      append_item(new_tag=Tag.new(name, attrs, &block))
+      new_tag
     end
 
-    def to_s(pretty_print=false)
-      # TODO: incorp pretty printing the HTML in the buffer
+    def to_s(pp_level=0, pp_indent=nil)
       self.collect do |i|
         begin
-          i.to_s(pretty_print)
+          i.to_s(pp_level, pp_indent)
         rescue ArgumentError => err
-          i.to_s
+          pretty_print(i.to_s, pp_level, pp_indent)
         end
       end.join
     end
 
+    protected
+
+    def pretty_print(data, level, indent)
+      if indent
+        "#{' '*level*indent}#{data}\n"
+      else
+        data
+      end
+    end
+
     private
+
+    def append_item(data)
+      self << data
+    end
 
     # Ripped from Rack v1.3.0 ======================================
     # => ripped b/c I don't want a dependency on Rack for just this

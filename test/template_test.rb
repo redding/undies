@@ -35,6 +35,23 @@ class Undies::Template
         Undies::Template.new(File.expand_path(file)).to_s
       )
     end
+
+    should "generate pretty printed markup" do
+      file = 'test/test_template.html.rb'
+      assert_equal(
+        %{<html>
+  <head>
+  </head>
+  <body>
+    <div class="file">
+      FILE!!
+    </div>
+  </body>
+</html>
+},
+        Undies::Template.new(File.expand_path(file)).to_s(2)
+      )
+    end
   end
 
 end
