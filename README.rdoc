@@ -3,32 +3,32 @@ A pure-Ruby DSL for writing HTML templates.  Named for its gratuitous use of the
 == Installation
     $ gem install undies
 == Usage
-# Empty tag:
+Empty tag:
     _br # => "<br />"
 
-# Tag with content:
+Tag with content:
     _h1 {
       _ "Some Header"
     } # => "<h1>Some Header</h1>"
-# Nested tags:
+Nested tags:
     _body {
       _div {
         _ "Some Content"
       }
     } # => "<body><div>Some Content</div></body>"
-# Buffer escaped output:
+Buffer escaped output:
     _ "this will be escaped & and added to the buffer"
     # => "this will be escaped &amp; added to the buffer"
-# Buffer un-escaped output:
+Buffer un-escaped output:
     __ "this will <em>not</em> be escaped"
     # => "this will <em>not</em> be escaped"
-# Tag with attributes
+Tag with attributes
     _h1(:class => 'title', :title => "A Header")
     # => "<h1 class=\"title\" title=\"A Header\" />"
-# Tag with id attribute
+Tag with id attribute
     _h1.header!
     # => "<h1 id=\"header\" />"
-# Tag with class attributes
+Tag with class attributes
     _h1.header.awesome
     # => "<h1 class=\"header awesome\" />"
 
