@@ -1,40 +1,38 @@
-# Undies
-A pure-Ruby HTML templating DSL.  Named for its gratuitous use of the underscore.
-## Installation
-    gem install undies
-## Usage
-1. Empty tag:
-<pre>
-_br # => "<br />"
-</pre>
+= Undies
+A pure-Ruby DSL for writing HTML templates.  Named for its gratuitous use of the underscore.
+== Installation
+    $ gem install undies
+== Usage
+# Empty tag:
+    _br # => "<br />"
 
-2. Tag with content:
+# Tag with content:
     _h1 {
       _ "Some Header"
     } # => "<h1>Some Header</h1>"
-3. Nested tags:
+# Nested tags:
     _body {
       _div {
         _ "Some Content"
       }
     } # => "<body><div>Some Content</div></body>"
-4. Buffer escaped output:
+# Buffer escaped output:
     _ "this will be escaped & and added to the buffer"
     # => "this will be escaped &amp; added to the buffer"
-5. Buffer un-escaped output:
+# Buffer un-escaped output:
     __ "this will <em>not</em> be escaped"
     # => "this will <em>not</em> be escaped"
-6. Tag with attributes
+# Tag with attributes
     _h1(:class => 'title', :title => "A Header")
     # => "<h1 class=\"title\" title=\"A Header\" />"
-7. Tag with id attribute
+# Tag with id attribute
     _h1.header!
     # => "<h1 id=\"header\" />"
-8. Tag with class attributes
+# Tag with class attributes
     _h1.header.awesome
     # => "<h1 class=\"header awesome\" />"
 
-## License
+== License
 
 Copyright (c) 2011 Kelly D. Redding
 
