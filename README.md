@@ -4,8 +4,9 @@ A pure-Ruby HTML templating DSL.  Named for its gratuitous use of the underscore
     gem install undies
 ## Usage
 1. Empty tag:
-
-    _br # "<br />"
+<pre>
+_br # => "<br />"
+</pre>
 
 2. Tag with content:
     _h1 {
