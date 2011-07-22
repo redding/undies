@@ -50,11 +50,7 @@ module Undies
     protected
 
     def pretty_print(data, level, indent)
-      if indent
-        "#{' '*level*indent}#{data}\n"
-      else
-        data
-      end
+      indent ? "#{' '*level*indent}#{data}\n" : data
     end
 
     private

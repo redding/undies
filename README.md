@@ -1,5 +1,5 @@
 # Undies
-A pure-Ruby HTML templating DSL.  Named for its gratuitus use of the underscore.
+A pure-Ruby HTML templating DSL.  Named for its gratuitous use of the underscore.
 ## Installation
     gem install undies
 ## Usage
