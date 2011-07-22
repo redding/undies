@@ -9,6 +9,11 @@ class Undies::Template
     context 'template'
     subject { Undies::Template.new {} }
     should have_instance_methods :to_s
+
+    should "be a kind of Buffer" do
+      assert subject.kind_of?(Undies::Buffer)
+    end
+
   end
 
   class DefinitionTest < BasicTest

@@ -11,6 +11,11 @@ class Undies::Tag
     context 'a tag'
     subject { Undies::Tag.new(:div) }
     should have_instance_methods :to_s, :attrs
+
+    should "be a kind of Buffer" do
+      assert subject.kind_of?(Undies::Buffer)
+    end
+
   end
 
 
