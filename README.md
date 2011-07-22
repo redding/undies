@@ -5,8 +5,7 @@ A pure-Ruby HTML templating DSL.  Named for its gratuitous use of the underscore
 ## Usage
 1. Empty tag:
 
-    _br
-    # => "<br />"
+    _br # "<br />"
 
 2. Tag with content:
     _h1 {
