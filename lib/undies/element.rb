@@ -1,31 +1,25 @@
+require 'undies/node'
+
 module Undies
-  class Element
+  class Element < Node
 
     attr_reader :name, :attrs
-    attr_accessor :elements
+    attr_accessor :nodes
 
-    def initialize(stack=[], name=nil, attrs={}, &block)
+    def initialize(stack, name, attrs={}, &block)
+      super(@nodes = [])
       @stack = stack
       @name = name
       @attrs = attrs
-      @elements = []
       self.content = block
     end
 
     def start_tag
-      if @name
-        "<#{@name}#{html_attrs(@attrs)}" + (@elements.empty? ? " />" : ">")
-      end
+      "<#{@name}#{html_attrs(@attrs)}" + (@nodes.empty? ? " />" : ">")
     end
 
     def end_tag
-      if @name
-        @elements.empty? ? nil : "</#{@name}>"
-      end
-    end
-
-    def to_s(pp_indent=nil)
-      [start_tag, elements, end_tag].compact.join
+      @nodes.empty? ? nil : "</#{@name}>"
     end
 
     ID_METH_REGEX = /^([^_].+)!$/

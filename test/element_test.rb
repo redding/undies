@@ -10,23 +10,15 @@ class Undies::Element
 
     context 'an element'
     subject { Undies::Element.new([], :div) }
-    should have_instance_method :to_s, :start_tag, :end_tag
     should have_readers :name, :attrs
-    should have_accessor :elements
+    should have_accessor :nodes
 
-  end
-
-  class AnonymousTest < Test::Unit::TestCase
-    include TestBelt
-    context 'an aanonymous element'
-    subject { Undies::Element.new }
-
-    should "have no name" do
-      assert_equal(nil, subject.name)
+    should "be a Node" do
+      assert subject.kind_of?(Undies::Node)
     end
 
-    should "have no attrs" do
-      assert_equal({}, subject.attrs)
+    should "have its nodes be its content" do
+      assert_equal subject.nodes.object_id, subject.content.object_id
     end
 
   end
@@ -36,8 +28,8 @@ class Undies::Element
     context 'an empty element'
     subject { Undies::Element.new([], :br) }
 
-    should "have no elements" do
-      assert_equal([], subject.elements)
+    should "have no nodes" do
+      assert_equal([], subject.nodes)
     end
 
   end
