@@ -34,9 +34,7 @@ module Undies
 
     # add an element to the nodes of the current node
     def element(name, attrs={}, &block)
-      new_elem=Element.new(@stack, name, attrs, &block)
-      #@stack.last.nodes.append(Element.new(@stack, name, attrs, &block))
-      new_elem
+      @stack.last.nodes.append(Element.new(@stack, name, attrs, &block))
     end
     alias_method :tag, :element
 

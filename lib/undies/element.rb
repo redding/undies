@@ -10,19 +10,21 @@ module Undies
     def initialize(stack, name, attrs={}, &block)
       super(@nodes = NodeList.new)
       @stack = stack
-      @name = name
+      @name = name.to_s
       @attrs = attrs
+      @content_writes = 0
       self.content = block
     end
 
     def start_tag
-      "<#{@name}#{html_attrs(@attrs)}" + (@nodes.empty? ? " />" : ">")
+      "<#{@name}#{html_attrs(@attrs)}" + (@content_writes > 0 ? ">" : " />")
     end
 
     def end_tag
-      @nodes.empty? ? nil : "</#{@name}>"
+      @content_writes > 0 ? "</#{@name}>" : nil
     end
 
+    # CSS proxy methods ============================================
     ID_METH_REGEX = /^([^_].+)!$/
     CLASS_METH_REGEX = /^([^_].+)$/
 
@@ -42,6 +44,23 @@ module Undies
       else
         super
       end
+    end
+    # ==============================================================
+
+    def ==(other)
+      other.name == self.name &&
+      other.attrs == self.attrs &&
+      other.nodes == self.nodes
+    end
+
+    def to_str(*args)
+      "Undies::Element:#{self.object_id} " +
+      "@name=#{@name.inspect}, @attrs=#{@attrs.inspect}, @nodes=#{@nodes.inspect}"
+    end
+    alias_method :inspect, :to_str
+
+    def to_ary(*args)
+      @nodes
     end
 
     protected
@@ -77,6 +96,7 @@ module Undies
 
     def content=(block)
       if block
+        @content_writes += 1
         @stack.push(self)
         block.call
         @stack.pop

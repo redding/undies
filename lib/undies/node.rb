@@ -16,7 +16,7 @@ module Undies
     end
 
     def to_s(pp_indent=nil)
-      [start_tag, content, end_tag].compact.join
+      [start_tag.to_s, content.to_s, end_tag.to_s].compact.join
     end
 
   end

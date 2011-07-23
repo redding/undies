@@ -50,8 +50,54 @@ class Undies::Template
 
 
 
+  class ElementTest < BasicTest
+    context "when using the 'element' helper"
+
+    should "return an Element object" do
+      assert_equal Undies::Element.new([], :br), subject.element(:br)
+    end
+
+    should "be aliased by the 'tag' helper" do
+      assert_equal subject.element(:br), subject.tag(:br)
+    end
+
+    should "add a new Element object" do
+      subject.element(:br)
+      assert_equal 1, subject.nodes.size
+      assert_equal Undies::Element.new([], :br), subject.nodes.first
+    end
+
+    should "respond to any underscore prefix method" do
+      assert subject.respond_to?(:_div)
+    end
+
+    should "not respond to element methods without an underscore prefix" do
+      assert !subject.respond_to?(:div)
+      assert_raises NoMethodError do
+        subject.div
+      end
+    end
+
+    should "interpret underscore prefix methods as an element" do
+      assert_equal subject._div, subject.element(:div)
+    end
+
+  end
+
+
+
   class DefinitionTest < BasicTest
-    before { skip }
+    should "maintain the template's scope throughout content blocks" do
+      templ = Undies::Template.new do
+        _div {
+          _div {
+            __ self.object_id
+          }
+        }
+      end
+      assert_equal "<div><div>#{templ.object_id}</div></div>", templ.to_s
+    end
+
     should "generate markup given a block" do
       assert_equal(
         "<html><head></head><body><div class=\"loud element\" id=\"header\">YEA!!</div></body></html>",
@@ -77,6 +123,7 @@ class Undies::Template
     end
 
     should "generate pretty printed markup" do
+      skip
       file = 'test/test_template.html.rb'
       assert_equal(
         %{<html>

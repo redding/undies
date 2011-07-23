@@ -17,6 +17,10 @@ class Undies::Element
       assert_kind_of Undies::Node, subject
     end
 
+    should "store it's name as a string" do
+      assert_equal "div", subject.name
+    end
+
     should "have a NodeList as its nodes" do
       assert_kind_of Undies::NodeList, subject.nodes
     end
@@ -26,6 +30,8 @@ class Undies::Element
     end
 
   end
+
+
 
   class EmptyTest < Test::Unit::TestCase
     include TestBelt
@@ -37,6 +43,8 @@ class Undies::Element
     end
 
   end
+
+
 
   class HtmlAttrsTest < BasicTest
     context "html_attrs util"
@@ -77,8 +85,7 @@ class Undies::Element
       assert_equal '<br class="big" />', element.to_s
     end
 
-    should "buffer an html tag with attrs and content" do
-      skip
+    should "serialize with attrs and content" do
       templ = Undies::Template.new do
         element(:strong, {:class => 'big'}) { __ "Loud Noises!" }
       end
@@ -101,11 +108,10 @@ class Undies::Element
     end
 
     should "nest elements from proxy id call" do
-      skip
-      assert_equal(
-        "<div id=\"thing1\">stuff</div>",
-        subject.thing1! { _ 'stuff' }.to_s
-      )
+      templ = Undies::Template.new do
+        element(:div).thing1! { _ "stuff" }
+      end
+      assert_equal "<div id=\"thing1\">stuff</div>", templ.to_s
     end
 
     should "proxy id attr with last method call ending in '!'" do
@@ -137,11 +143,10 @@ class Undies::Element
     end
 
     should "nest elements from proxy class call" do
-      skip
-      assert_equal(
-        "<div class=\"thing\">stuff</div>",
-        subject.thing { _ 'stuff' }.to_s
-      )
+      templ = Undies::Template.new do
+        element(:div).thing { _ "stuff" }
+      end
+      assert_equal "<div class=\"thing\">stuff</div>", templ.to_s
     end
 
     should "proxy multi html class attrs" do
