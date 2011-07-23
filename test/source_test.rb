@@ -37,7 +37,7 @@ class Undies::Source
   class FileTest < BasicTest
     context 'from a file'
     subject do
-      file = 'test/test_template.html.rb'
+      file = 'test/templates/test.html.rb'
       Undies::Source.new(File.expand_path(file))
     end
 

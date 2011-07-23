@@ -5,27 +5,34 @@ module Undies
 
     attr_reader :name, :locals
 
-    def initialize(path, object=nil, locals = {})
-      self.object = object
-      self.locals = locals.dup
+    def initialize(path, o=nil, l={})
       super(path)
+      self.object, self.locals = parse_opts(o, l)
     end
 
     def name
-      @name ||= File.basename(self.source.file.to_s)#.split(".").first.gsub(/^[^A-z]+/).to_sym
+      @name ||= File.basename(self.source.file.to_s).split(".").first.gsub(/^[^A-Za-z]+/, '')
     end
 
     protected
 
     def object=(value)
       @locals ||= {}
-      @locals[self.name] = value
+      if value
+        @locals[self.name.to_sym] = value
+      end
     end
 
     def locals=(value)
-      raise ArgumentError unless value.kind_of?(::Hash)
+      raise ArgumentError if !value.kind_of?(::Hash)
       @locals ||= {}
       @locals.merge!(value)
+    end
+
+    private
+
+    def parse_opts(o, l)
+      o && o.kind_of?(::Hash) ? [nil, o] : [o, l]
     end
 
   end

@@ -116,7 +116,7 @@ class Undies::Template
     end
 
     should "generate markup given a file" do
-      file = 'test/test_template.html.rb'
+      file = 'test/templates/test.html.rb'
       assert_equal(
         "<html><head></head><body><div class=\"file\">FILE!!</div></body></html>",
         Undies::Template.new(File.expand_path(file)).to_s
@@ -124,7 +124,7 @@ class Undies::Template
     end
 
     should "generate pretty printed markup" do
-      file = 'test/test_template.html.rb'
+      file = 'test/templates/test.html.rb'
       assert_equal(
         %{<html>
   <head>
