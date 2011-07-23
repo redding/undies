@@ -6,17 +6,52 @@ class Undies::Template
   class BasicTest < Test::Unit::TestCase
     include TestBelt
 
-    context 'template'
+    context 'a template'
     subject { Undies::Template.new {} }
-    should have_instance_methods :to_s
+    should have_instance_method :to_s
+    should have_instance_methods :_, :__, :element, :tag
+    should have_accessor :nodes
 
-    should "be a kind of Buffer" do
-      assert subject.kind_of?(Undies::Buffer)
+    should "have a NodeList as its nodes" do
+      assert_kind_of Undies::NodeList, subject.nodes
     end
 
   end
 
+
+
+  class DataTest < BasicTest
+    context "with text data"
+    before do
+      @data = "stuff & <em>more stuff</em>"
+    end
+
+    should "return a text node using the '__' and '_' methods" do
+      assert_kind_of Undies::Node, subject.__(@data)
+      assert_kind_of Undies::Node, subject._(@data)
+    end
+
+    should "also add the node using the '__' and '_' methods" do
+      subject.__(@data)
+      assert_equal 1, subject.nodes.size
+      subject._(@data)
+      assert_equal 2, subject.nodes.size
+    end
+
+    should "add the text un-escaped using the '__' method" do
+      assert_equal @data, subject.__(@data).to_s
+    end
+
+    should "add the text escaped using the '_' method" do
+      assert_equal subject.send(:escape_html, @data), subject._(@data).to_s
+    end
+
+  end
+
+
+
   class DefinitionTest < BasicTest
+    before { skip }
     should "generate markup given a block" do
       assert_equal(
         "<html><head></head><body><div class=\"loud element\" id=\"header\">YEA!!</div></body></html>",

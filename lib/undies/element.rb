@@ -1,4 +1,5 @@
 require 'undies/node'
+require 'undies/node_list'
 
 module Undies
   class Element < Node
@@ -7,7 +8,7 @@ module Undies
     attr_accessor :nodes
 
     def initialize(stack, name, attrs={}, &block)
-      super(@nodes = [])
+      super(@nodes = NodeList.new)
       @stack = stack
       @name = name
       @attrs = attrs

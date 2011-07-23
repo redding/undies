@@ -14,7 +14,11 @@ class Undies::Element
     should have_accessor :nodes
 
     should "be a Node" do
-      assert subject.kind_of?(Undies::Node)
+      assert_kind_of Undies::Node, subject
+    end
+
+    should "have a NodeList as its nodes" do
+      assert_kind_of Undies::NodeList, subject.nodes
     end
 
     should "have its nodes be its content" do
