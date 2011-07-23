@@ -1,15 +1,31 @@
-require 'undies/buffer'
-
 module Undies
-  class Tag < Buffer
+  class Element
 
-    attr_reader :attrs
+    attr_reader :name, :attrs
+    attr_accessor :elements
 
-    def initialize(name=nil, attrs={}, &block)
-      super
+    def initialize(stack=[], name=nil, attrs={}, &block)
+      @stack = stack
       @name = name
       @attrs = attrs
+      @elements = []
       self.content = block
+    end
+
+    def start_tag
+      if @name
+        "<#{@name}#{html_attrs(@attrs)}" + (@elements.empty? ? " />" : ">")
+      end
+    end
+
+    def end_tag
+      if @name
+        @elements.empty? ? nil : "</#{@name}>"
+      end
+    end
+
+    def to_s(pp_indent=nil)
+      [start_tag, elements, end_tag].compact.join
     end
 
     ID_METH_REGEX = /^([^_].+)!$/
@@ -31,18 +47,6 @@ module Undies
       else
         super
       end
-    end
-
-    def to_s(pp_level=0, pp_indent=nil)
-      out = ""
-      if @content
-        out << pretty_print("<#{@name}#{html_attrs(@attrs)}>", pp_level, pp_indent)
-        out << super(pp_level+1, pp_indent)
-        out << pretty_print("</#{@name}>", pp_level, pp_indent)
-      else
-        out << pretty_print("<#{@name}#{html_attrs(@attrs)} />", pp_level, pp_indent)
-      end
-      out
     end
 
     protected
@@ -78,8 +82,9 @@ module Undies
 
     def content=(block)
       if block
-        @content = block
-        instance_eval(&@content)
+        @stack.push(self)
+        block.call
+        @stack.pop
       end
     end
 

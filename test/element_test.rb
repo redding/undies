@@ -1,24 +1,46 @@
 require "test/helper"
-require "undies/tag"
+require "undies/element"
 
-class Undies::Tag
+class Undies::Element
 
 
 
   class BasicTest < Test::Unit::TestCase
     include TestBelt
 
-    context 'a tag'
-    subject { Undies::Tag.new(:div) }
-    should have_instance_methods :to_s, :attrs
+    context 'an element'
+    subject { Undies::Element.new([], :div) }
+    should have_instance_method :to_s, :start_tag, :end_tag
+    should have_readers :name, :attrs
+    should have_accessor :elements
 
-    should "be a kind of Buffer" do
-      assert subject.kind_of?(Undies::Buffer)
+  end
+
+  class AnonymousTest < Test::Unit::TestCase
+    include TestBelt
+    context 'an aanonymous element'
+    subject { Undies::Element.new }
+
+    should "have no name" do
+      assert_equal(nil, subject.name)
+    end
+
+    should "have no attrs" do
+      assert_equal({}, subject.attrs)
     end
 
   end
 
+  class EmptyTest < Test::Unit::TestCase
+    include TestBelt
+    context 'an empty element'
+    subject { Undies::Element.new([], :br) }
 
+    should "have no elements" do
+      assert_equal([], subject.elements)
+    end
+
+  end
 
   class HtmlAttrsTest < BasicTest
     context "html_attrs util"
@@ -49,27 +71,29 @@ class Undies::Tag
 
 
   class SerializeTest < BasicTest
-    context "when serialized"
-
-    should "buffer an empty html tag with no attrs" do
-      tag = Undies::Tag.new(:br)
-      assert_equal "<br />", tag.to_s
+    should "serialize with no child elements" do
+      element = Undies::Element.new([], :br)
+      assert_equal "<br />", element.to_s
     end
 
-    should "buffer an html tag with attrs" do
-      tag = Undies::Tag.new(:br, {:class => 'big'})
-      assert_equal '<br class="big" />', tag.to_s
+    should "serialize with attrs" do
+      element = Undies::Element.new([], :br, {:class => 'big'})
+      assert_equal '<br class="big" />', element.to_s
     end
 
     should "buffer an html tag with attrs and content" do
-      tag = Undies::Tag.new(:strong, {:class => 'big'}) { __ "Loud Noises!" }
-      assert_equal '<strong class="big">Loud Noises!</strong>', tag.to_s
+      skip
+      templ = Undies::Template.new do
+        element(:strong, {:class => 'big'}) { __ "Loud Noises!" }
+      end
+      assert_equal '<strong class="big">Loud Noises!</strong>', templ.to_s
     end
   end
 
 
 
   class CSSProxyTest < BasicTest
+
     should "respond to any method ending in '!' as an id proxy" do
       assert subject.respond_to?(:asdgasdg!)
     end
@@ -80,7 +104,8 @@ class Undies::Tag
       }, subject.thing1!.attrs)
     end
 
-    should "nest tags from proxy id call" do
+    should "nest elements from proxy id call" do
+      skip
       assert_equal(
         "<div id=\"thing1\">stuff</div>",
         subject.thing1! { _ 'stuff' }.to_s
@@ -115,7 +140,8 @@ class Undies::Tag
       }, subject.thing.attrs)
     end
 
-    should "nest tags from proxy class call" do
+    should "nest elements from proxy class call" do
+      skip
       assert_equal(
         "<div class=\"thing\">stuff</div>",
         subject.thing { _ 'stuff' }.to_s
