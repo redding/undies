@@ -87,6 +87,7 @@ class Undies::Template
 
 
   class DefinitionTest < BasicTest
+
     should "maintain the template's scope throughout content blocks" do
       templ = Undies::Template.new do
         _div {

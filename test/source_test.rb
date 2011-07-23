@@ -11,11 +11,19 @@ class Undies::Source
     should have_instance_method :file?
     should have_readers :file, :block, :data
 
-    should "need a file or block to initialize" do
+    should "complain if no file or block given" do
       assert_raises ArgumentError do
         Undies::Source.new
       end
     end
+
+    should "complain if no block given and file does not exist" do
+      assert_raises ArgumentError do
+        Undies::Template.new "noexist.html.rb"
+      end
+    end
+
+
   end
 
   class BlockTest < BasicTest
