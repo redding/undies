@@ -23,7 +23,6 @@ class Undies::Source
       end
     end
 
-
   end
 
   class BlockTest < BasicTest

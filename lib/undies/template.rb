@@ -8,9 +8,10 @@ module Undies
     attr_accessor :nodes
 
     def initialize(file=nil, &block)
-      @source = Source.new(file, block)
       @nodes = NodeList.new
+      @source = Source.new(file, block)
       @stack = [self]
+
       if (@source).file?
         instance_eval(@source.data, @source.file, 1)
       else
@@ -57,6 +58,16 @@ module Undies
       end
     end
     # ==============================================================
+
+    protected
+
+    def source
+      @source
+    end
+
+    def stack
+      @stack
+    end
 
     private
 
