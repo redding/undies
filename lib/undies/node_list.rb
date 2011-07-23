@@ -20,5 +20,9 @@ module Undies
       super
     end
 
+    def to_s(pp_level=0, pp_indent=nil)
+      self.collect{|n| n.to_s(pp_level, pp_indent)}.join
+    end
+
   end
 end

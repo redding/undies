@@ -19,7 +19,7 @@ module Undies
     end
 
     def to_s(pp_indent=nil)
-      @nodes.join
+      @nodes.collect{|n| n.to_s(0, pp_indent)}.join
     end
 
     # Add a text node (data escaped) to the nodes of the current node
@@ -32,7 +32,7 @@ module Undies
       @stack.last.nodes.append(Node.new(data.to_s))
     end
 
-    # add an element to the nodes of the current node
+    # Add an element to the nodes of the current node
     def element(name, attrs={}, &block)
       @stack.last.nodes.append(Element.new(@stack, name, attrs, &block))
     end

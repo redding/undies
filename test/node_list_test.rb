@@ -45,6 +45,4 @@ class Undies::NodeList
 
   end
 
-  # TODO: pretty printing
-
 end

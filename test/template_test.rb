@@ -123,7 +123,6 @@ class Undies::Template
     end
 
     should "generate pretty printed markup" do
-      skip
       file = 'test/test_template.html.rb'
       assert_equal(
         %{<html>
