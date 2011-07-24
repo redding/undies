@@ -44,6 +44,10 @@ class Undies::Source
     should "be a file source" do
       assert subject.file?
     end
+
+    should "not be a file source if the file does not exists" do
+      assert !Undies::Source.new("noexist.html.rb", Proc.new {}).file?
+    end
   end
 
 end

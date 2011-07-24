@@ -9,6 +9,7 @@ module Undies
       end
       if block.nil? && !File.exists?(file)
         raise ArgumentError, "no template file '#{file}'"
+
       end
 
       @file = file
@@ -23,7 +24,7 @@ module Undies
     end
 
     def file?
-      !!self.file
+      !!@file && File.exists?(@file)
     end
 
   end
