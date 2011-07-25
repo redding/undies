@@ -1,7 +1,7 @@
 require "test/helper"
 require "undies/partial_data"
 
-class Undies::Partial
+class Undies::PartialData
 
   class BasicTest < Test::Unit::TestCase
     include TestBelt

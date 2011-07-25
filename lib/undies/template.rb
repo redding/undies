@@ -10,7 +10,7 @@ module Undies
     def initialize(*args, &block)
       @nodes = NodeList.new
       @stack = [self]
-      self.data, @source = source_data(args, block)
+      self.data, @source = data_source(args, block)
 
       if (@source).file?
         instance_eval(@source.data, @source.file, 1)
@@ -80,7 +80,7 @@ module Undies
 
     private
 
-    def source_data(args, block)
+    def data_source(args, block)
       [ args.last.kind_of?(::Hash) ? args.pop : {},
         Source.new(args.first.to_s, block)
       ]
