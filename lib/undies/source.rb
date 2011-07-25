@@ -23,7 +23,7 @@ module Undies
     end
 
     def file?
-      !!@file && File.exists?(@file)
+      @block.nil? && File.exists?(@file.to_s)
     end
 
   end

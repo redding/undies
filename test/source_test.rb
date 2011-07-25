@@ -32,6 +32,11 @@ class Undies::Source
     should "not be a file source" do
       assert !subject.file?
     end
+
+    should "not be a file source if block given" do
+      file = 'test/templates/test.html.rb'
+      assert !Undies::Source.new(file, Proc.new {}).file?
+    end
   end
 
   class FileTest < BasicTest
