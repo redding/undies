@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    undies (0.0.1)
+    undies (1.0.0)
 
 GEM
   remote: http://rubygems.org/
