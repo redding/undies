@@ -13,7 +13,7 @@ module Undies
       self.data, @source = data_source(args, block)
 
       if (@source).file?
-        instance_eval(@source.data, @source.file, 1)
+        instance_eval(@source.data, @source.source, 1)
       else
         instance_eval(&@source.data)
       end
@@ -82,7 +82,7 @@ module Undies
 
     def data_source(args, block)
       [ args.last.kind_of?(::Hash) ? args.pop : {},
-        Source.new(args.first.to_s, block)
+        Source.new(block || args.first.to_s)
       ]
     end
 

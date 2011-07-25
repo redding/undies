@@ -7,9 +7,9 @@ class Undies::Source
     include TestBelt
 
     context 'a source'
-    subject { Undies::Source.new(nil, Proc.new {}) }
+    subject { Undies::Source.new(Proc.new {}) }
+    should have_readers :source, :data
     should have_instance_method :file?
-    should have_readers :file, :block, :data
 
     should "complain if no file or block given" do
       assert_raises ArgumentError do
@@ -27,16 +27,12 @@ class Undies::Source
 
   class BlockTest < BasicTest
     context 'from a block'
-    subject { Undies::Source.new(nil, Proc.new {}) }
+    subject { Undies::Source.new(Proc.new {}) }
 
     should "not be a file source" do
       assert !subject.file?
     end
 
-    should "not be a file source if block given" do
-      file = 'test/templates/test.html.rb'
-      assert !Undies::Source.new(file, Proc.new {}).file?
-    end
   end
 
   class FileTest < BasicTest
@@ -50,9 +46,6 @@ class Undies::Source
       assert subject.file?
     end
 
-    should "not be a file source if the file does not exists" do
-      assert !Undies::Source.new("noexist.html.rb", Proc.new {}).file?
-    end
   end
 
 end

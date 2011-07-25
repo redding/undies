@@ -1,29 +1,26 @@
 module Undies
   class Source
 
-    attr_reader :file, :block, :data
+    attr_reader :source, :data
 
-    def initialize(file=nil, block=nil)
-      if (file || block).nil?
-        raise ArgumentError, "file or block required"
+    def initialize(source=nil)
+      raise ArgumentError, "file or block required" if source.nil?
+
+      @source = source
+      if self.file? && !File.exists?(@source.to_s)
+        raise ArgumentError, "no template file '#{@source}'"
       end
-      if block.nil? && !File.exists?(file)
-        raise ArgumentError, "no template file '#{file}'"
-      end
 
-      @file = file
-      @block = block
-
-      # load template data and prepare (uses binread to avoid encoding issues)
-      @data = @block || if File.respond_to?(:binread)
-        File.binread(@file)
+      # load source data and prepare (uses binread to avoid encoding issues)
+      @data = if self.file?
+        File.send(File.respond_to?(:binread) ? :binread : :read, @source.to_s)
       else
-        File.read(@file)
+        @source
       end
     end
 
     def file?
-      @block.nil? && File.exists?(@file.to_s)
+      !@source.kind_of?(::Proc)
     end
 
   end
