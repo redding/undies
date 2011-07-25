@@ -20,7 +20,7 @@ class Undies::Template
 
 
 
-  class DataTest < BasicTest
+  class NodeTest < BasicTest
     context "with text data"
     before do
       @data = "stuff & <em>more stuff</em>"
@@ -51,13 +51,13 @@ class Undies::Template
 
 
   class ElementTest < BasicTest
-    context "when using the 'element' helper"
+    context "using the 'element' helper"
 
     should "return an Element object" do
       assert_equal Undies::Element.new([], :br), subject.element(:br)
     end
 
-    should "be aliased by the 'tag' helper" do
+    should "alias it with 'tag'" do
       assert_equal subject.element(:br), subject.tag(:br)
     end
 
@@ -67,19 +67,47 @@ class Undies::Template
       assert_equal Undies::Element.new([], :br), subject.nodes.first
     end
 
-    should "respond to any underscore prefix method" do
+    should "respond to underscore-prefix methods" do
       assert subject.respond_to?(:_div)
     end
 
-    should "not respond to element methods without an underscore prefix" do
+    should "respond to underscore-prefix methods as element methods" do
+      assert_equal subject._div, subject.element(:div)
+    end
+
+    should "not respond to element methods without an underscore-prefix" do
       assert !subject.respond_to?(:div)
       assert_raises NoMethodError do
         subject.div
       end
     end
 
-    should "interpret underscore prefix methods as an element" do
-      assert_equal subject._div, subject.element(:div)
+  end
+
+
+
+  class DataTest < BasicTest
+
+    should "only accept the data if it is a Hash" do
+      assert_raises NoMethodError do
+        (Undies::Template.new("some_data") {}).some
+      end
+      assert_raises NoMethodError do
+        (Undies::Template.new('test/templates/test.html.rb', "some_data")).some
+      end
+      assert_respond_to(
+        (Undies::Template.new(:some => "data") {}),
+        :some
+      )
+      assert_respond_to(
+        Undies::Template.new('test/templates/test.html.rb', :some => "data"),
+        :some
+      )
+    end
+
+    should "respond to each data key with its value" do
+      templ = Undies::Template.new(:some => "data") {}
+      assert_equal "data", templ.some
     end
 
   end
@@ -97,6 +125,15 @@ class Undies::Template
         }
       end
       assert_equal "<div><div>#{templ.object_id}</div></div>", templ.to_s
+    end
+
+    should "be able to access its data in the template definition" do
+      templ = Undies::Template.new(:name => "awesome") do
+        _div {
+          _div { _ name }
+        }
+      end
+      assert_equal "<div><div>awesome</div></div>", templ.to_s
     end
 
     should "generate markup given a block" do

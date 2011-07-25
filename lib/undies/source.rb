@@ -9,7 +9,6 @@ module Undies
       end
       if block.nil? && !File.exists?(file)
         raise ArgumentError, "no template file '#{file}'"
-
       end
 
       @file = file

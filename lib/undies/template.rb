@@ -7,10 +7,10 @@ module Undies
 
     attr_accessor :nodes
 
-    def initialize(file=nil, &block)
+    def initialize(*args, &block)
       @nodes = NodeList.new
-      @source = Source.new(file, block)
       @stack = [self]
+      self.data, @source = source_data(args, block)
 
       if (@source).file?
         instance_eval(@source.data, @source.file, 1)
@@ -61,6 +61,15 @@ module Undies
 
     protected
 
+    def data=(data)
+      raise ArgumentError if !data.kind_of?(::Hash)
+      data.each do |key, value|
+        metaclass do
+          define_method(key) { value }
+        end
+      end
+    end
+
     def source
       @source
     end
@@ -70,6 +79,17 @@ module Undies
     end
 
     private
+
+    def source_data(args, block)
+      [ args.last.kind_of?(::Hash) ? args.pop : {},
+        Source.new(args.first.to_s, block)
+      ]
+    end
+
+    def metaclass(&block)
+      metaclass = class << self; self; end
+      metaclass.class_eval(&block)
+    end
 
     # Ripped from Rack v1.3.0 ======================================
     # => ripped b/c I don't want a dependency on Rack for just this
