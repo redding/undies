@@ -6,3 +6,5 @@ require 'test_belt'
 # required in.
 
 # put any IRB setup code here
+
+require 'undies'
