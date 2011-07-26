@@ -1,4 +1,4 @@
-require "test/helper"
+require "test_belt"
 require "undies/template"
 
 class Undies::Template
