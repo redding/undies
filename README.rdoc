@@ -1,5 +1,5 @@
 = Undies
-A pure-Ruby DSL for writing HTML templates.  Named for its gratuitous use of the underscore.
+A pure-Ruby DSL for writing HTML or plain text templates.  Named for its gratuitous use of the underscore.
 == Installation
     $ gem install undies
 == Usage
@@ -32,9 +32,33 @@ Tag with class attributes
     _h1.header.awesome
     # => "<h1 class=\"header awesome\" />"
 
+== Rendering Templates
+
+* basic render:
+    
+    # render a block of markup
+    Undies::Template.new do
+      _div {
+        _ "Some Content"
+      }
+    end.to_s
+
+* render passing local vars in and pretty printing:
+
+    # render a file with markup
+    # make the local vars 'four' and 'name' available the the template markup
+    # pretty print the output with 2-space indentation
+    Undies::Template.new("path/to/file", {
+      :four => 2 + 2,
+      :name => "Awesome"
+    }).to_s(2)
+
+=== Pretty Printing
+If you want to pretty print the output, pass an integer specifying the number of spaces to indent to the `to_s` method.
+
 == License
 
-Copyright (c) 2011 Kelly D. Redding
+Copyright (c) 2011 Kelly Redding
 
 Permission is hereby granted, free of charge, to any person
 obtaining a copy of this software and associated documentation
