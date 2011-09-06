@@ -8,7 +8,7 @@ class Undies::Template
 
     context 'a template'
     subject { Undies::Template.new {} }
-    should have_instance_method :to_s
+    should have_instance_method :to_s, :escape_html
     should have_instance_methods :_, :__, :element, :tag
     should have_accessor :nodes
 
@@ -86,7 +86,7 @@ class Undies::Template
 
 
 
-  class DataTest < BasicTest
+  class LocalsTest < BasicTest
 
     should "only accept the data if it is a Hash" do
       assert_raises NoMethodError do
@@ -105,7 +105,13 @@ class Undies::Template
       )
     end
 
-    should "respond to each data key with its value" do
+    should "complain if trying to set locals that conflict with public methods" do
+      assert_raises ArgumentError do
+        Undies::Template.new(:_ => "yay!") {}
+      end
+    end
+
+    should "respond to each locals key with its value" do
       templ = Undies::Template.new(:some => "data") {}
       assert_equal "data", templ.some
     end
@@ -127,7 +133,7 @@ class Undies::Template
       assert_equal "<div><div>#{templ.object_id}</div></div>", templ.to_s
     end
 
-    should "be able to access its data in the template definition" do
+    should "be able to access its locals in the template definition" do
       templ = Undies::Template.new(:name => "awesome") do
         _div {
           _div { _ name }
