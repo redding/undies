@@ -10,7 +10,7 @@ module Undies
     def initialize(*args, &block)
       @nodes = NodeList.new
       @stack = [self]
-      self.data, @source = data_source(args, block)
+      self.locals, @source = data_source(args, block)
 
       if (@source).file?
         instance_eval(@source.data, @source.source, 1)
@@ -61,7 +61,7 @@ module Undies
 
     protected
 
-    def data=(data)
+    def locals=(data)
       raise ArgumentError if !data.kind_of?(::Hash)
       data.each do |key, value|
         metaclass do
