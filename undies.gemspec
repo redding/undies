@@ -9,8 +9,8 @@ Gem::Specification.new do |s|
   s.authors     = ["Kelly D. Redding"]
   s.email       = ["kelly@kelredd.com"]
   s.homepage    = "http://github.com/kelredd/undies"
-  s.summary     = %q{A pure-Ruby HTML templating DSL.}
-  s.description = %q{A pure-Ruby HTML templating DSL.}
+  s.summary     = %q{A pure-Ruby HTML and plain text templating DSL.}
+  s.description = %q{A pure-Ruby HTML and plain text templating DSL.}
 
   s.files         = `git ls-files`.split("\n")
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
