@@ -10,7 +10,7 @@ module Undies
     def initialize(*args, &block)
       @nodes = NodeList.new
       @stack = [self]
-      self.locals, @source = data_source(args, block)
+      self.locals, @source = template_args(args, block)
 
       if (@source).file?
         instance_eval(@source.data, @source.source, 1)
@@ -80,7 +80,7 @@ module Undies
 
     private
 
-    def data_source(args, block)
+    def template_args(args, block)
       [ args.last.kind_of?(::Hash) ? args.pop : {},
         Source.new(block || args.first.to_s)
       ]

@@ -4,7 +4,7 @@ module Undies
   class NodeList < ::Array
 
     def initialize(*args)
-      #always initialize empty
+      # always initialize empty
       super()
     end
 
