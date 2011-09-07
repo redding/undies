@@ -116,13 +116,13 @@ module Undies
     end
 
     def ___io=(value)
-      raise ArgumentError if value && !is_a_stream?(value)
+      raise ArgumentError if value && !self.___is_a_stream?(value)
       @io = value
     end
 
     def ___template_args(args, block)
       [ args.last.kind_of?(::Hash) ? args.pop : {},
-        is_a_stream?(args.last) ? args.pop : nil,
+        self.___is_a_stream?(args.last) ? args.pop : nil,
         Source.new(block || args.first.to_s)
       ]
     end
@@ -132,15 +132,15 @@ module Undies
       metaclass.class_eval(&block)
     end
 
+    def ___is_a_stream?(thing)
+      !thing.kind_of?(::String) && thing.respond_to?(:<<)
+    end
+
     private
 
     # you can't define locals that conflict with the template's public methods
     def invalid_locals?(keys)
       (keys.collect(&:to_s) & self.public_methods.collect(&:to_s)).size > 0
-    end
-
-    def is_a_stream?(thing)
-      !thing.kind_of?(::String) && thing.respond_to?(:<<)
     end
 
   end

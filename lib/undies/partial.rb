@@ -4,16 +4,19 @@ require 'undies/template'
 module Undies
   class Partial < Template
 
-    def initialize(path, object=nil, locals={})
-      data = PartialData.new(path)
-      data.object, data.values = object_locals(object, locals)
-      super(path, data)
+    def initialize(path, *args)
+      locals = PartialData.new(path)
+      locals.values, io, locals.object = self.___partial_args(*args)
+      super(path, io, locals)
     end
 
-    private
+    protected
 
-    def object_locals(o, l)
-      o && o.kind_of?(::Hash) ? [nil, o] : [o, l || {}]
+    def ___partial_args(*args)
+      [ args.last.kind_of?(::Hash) ? args.pop : {},
+        self.___is_a_stream?(args.last) ? args.pop : nil,
+        args.first
+      ]
     end
 
   end

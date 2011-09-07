@@ -201,7 +201,6 @@ class Undies::Template
     context "that is streaming"
 
     before do
-
       @output = ""
       @outstream = StringIO.new(@output)
     end

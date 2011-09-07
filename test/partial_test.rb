@@ -1,4 +1,6 @@
 require "test_belt"
+
+require "stringio"
 require "undies/partial"
 
 class Undies::Partial
@@ -7,7 +9,11 @@ class Undies::Partial
     include TestBelt
 
     context 'partial'
-    subject { Undies::Partial.new 'test/templates/index.html.rb' }
+    before do
+      @path = 'test/templates/test.html.rb'
+      @p = Undies::Partial.new @path
+    end
+    subject { @p }
 
     should "be a kind of Template" do
       assert subject.kind_of?(Undies::Template)
@@ -34,6 +40,22 @@ class Undies::Partial
     should "know its object" do
       partial = Undies::Partial.new(@path, "thing")
       assert_equal("thing", partial.index)
+    end
+
+  end
+
+  class StreamTest < BasicTest
+    context "that is streaming"
+
+    before do
+      @output = ""
+      @outstream = StringIO.new(@output)
+    end
+
+
+    should "should write to the stream as its being constructed" do
+      Undies::Partial.new @path, @outstream
+      assert_equal "<html><head></head><body><div class=\"file\">FILE!!</div></body></html>", @output
     end
 
   end
