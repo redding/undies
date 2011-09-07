@@ -25,17 +25,17 @@ module Undies
 
     # Add a text node (data escaped) to the nodes of the current node
     def _(data)
-      self.___stack.last.nodes.append(Node.new(self.escape_html(data.to_s)))
+      self.___add(Node.new(self.escape_html(data.to_s)))
     end
 
     # Add a text node with the data un-escaped
     def __(data)
-      self.___stack.last.nodes.append(Node.new(data.to_s))
+      self.___add(Node.new(data.to_s))
     end
 
     # Add an element to the nodes of the current node
     def element(name, attrs={}, &block)
-      self.___stack.last.nodes.append(Element.new(self.___stack, name, attrs, &block))
+      self.___add(Element.new(self.___stack, name, attrs, &block))
     end
     alias_method :tag, :element
 
@@ -99,6 +99,10 @@ module Undies
     def ___stack=(value)
       raise ArgumentError if !value.respond_to?(:push) || !value.respond_to?(:pop)
       @stack = value
+    end
+
+    def ___add(node)
+      self.___stack.last.nodes.append(node)
     end
 
     def ___stack
