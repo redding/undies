@@ -1,4 +1,6 @@
 require "test_belt"
+
+require "stringio"
 require "undies/template"
 
 class Undies::Template
@@ -14,6 +16,10 @@ class Undies::Template
 
     should "have a NodeList as its nodes" do
       assert_kind_of Undies::NodeList, subject.nodes
+    end
+
+    should "have no io stream by default" do
+      assert_nil subject.send(:___io)
     end
 
   end
@@ -184,4 +190,29 @@ class Undies::Template
     end
   end
 
+
+
+  class StreamTest < BasicTest
+    context "that is streaming"
+
+    before do
+
+      @output = ""
+      @outstream = StringIO.new(@output)
+    end
+
+    should "should write to the stream as its being constructed" do
+      templ = Undies::Template.new(@outstream) do
+        _div {
+          _div.good.thing!(:type => "something") {
+            __ "good streaming action"
+          }
+        }
+      end
+      assert_equal "<div><div class=\"good\" id=\"thing\" type=\"something\">good streaming action</div></div>", @output
+    end
+
+  end
+
 end
+

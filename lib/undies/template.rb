@@ -8,9 +8,9 @@ module Undies
     attr_accessor :nodes
 
     def initialize(*args, &block)
+      self.___locals, self.___io, source = self.___template_args(args, block)
+      self.___stack = ElementStack.new(self, self.___io)
       self.nodes = NodeList.new
-      self.___stack = ElementStack.new(self)
-      self.___locals, source = self.___template_args(args, block)
 
       if (source).file?
         instance_eval(source.data, source.source, 1)
@@ -96,12 +96,10 @@ module Undies
       end
     end
 
-    def ___stack=(value)
-      raise ArgumentError if !value.respond_to?(:push) || !value.respond_to?(:pop)
-      @stack = value
-    end
-
     def ___add(node)
+      if self.___io && !node.kind_of?(Element)
+        self.___io << node.to_s
+      end
       self.___stack.last.nodes.append(node)
     end
 
@@ -109,8 +107,23 @@ module Undies
       @stack
     end
 
+    def ___stack=(value)
+      raise ArgumentError if !value.respond_to?(:push) || !value.respond_to?(:pop)
+      @stack = value
+    end
+
+    def ___io
+      @io
+    end
+
+    def ___io=(value)
+      raise ArgumentError if value && !is_a_stream?(value)
+      @io = value
+    end
+
     def ___template_args(args, block)
       [ args.last.kind_of?(::Hash) ? args.pop : {},
+        is_a_stream?(args.last) ? args.pop : nil,
         Source.new(block || args.first.to_s)
       ]
     end
@@ -125,6 +138,10 @@ module Undies
     # you can't define locals that conflict with the template's public methods
     def invalid_locals?(keys)
       (keys.collect(&:to_s) & self.public_methods.collect(&:to_s)).size > 0
+    end
+
+    def is_a_stream?(thing)
+      !thing.kind_of?(::String) && thing.respond_to?(:<<)
     end
 
   end
