@@ -25,12 +25,14 @@ module Undies
 
     # Add a text node (data escaped) to the nodes of the current node
     def _(data="")
-      self.___add(Node.new(self.escape_html(data.to_s)))
+      self.__ self.escape_html(data.to_s)
     end
 
     # Add a text node with the data un-escaped
     def __(data="")
-      self.___add(Node.new(data.to_s))
+      node = Node.new(data.to_s)
+      self.___io << node.to_s if self.___io
+      self.___add(node)
     end
 
     # Add an element to the nodes of the current node
@@ -97,9 +99,6 @@ module Undies
     end
 
     def ___add(node)
-      if self.___io && !node.kind_of?(Element)
-        self.___io << node.to_s
-      end
       self.___stack.last.nodes.append(node)
     end
 
