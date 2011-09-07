@@ -1,5 +1,6 @@
 require 'undies/node'
 require 'undies/node_list'
+require 'undies/element_stack'
 
 module Undies
   class Element < Node
@@ -8,6 +9,9 @@ module Undies
     attr_accessor :nodes
 
     def initialize(stack, name, attrs={}, &block)
+      if !stack.kind_of?(ElementStack)
+        raise ArgumentError, "stack must be an Undies::ElementStack"
+      end
       super(@nodes = NodeList.new)
       @stack = stack
       @name = name.to_s

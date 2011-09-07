@@ -9,14 +9,11 @@ module Undies
 
     attr_reader :io
 
-    def initialize(io=nil, *args)
+    def initialize(first_item=nil, io=nil, *args)
       @io = io
       # always initialize empty
       super()
-    end
-
-    def <<(item)
-      self.push(item)
+      self.send(:<<, first_item) if first_item
     end
 
     def push(item)

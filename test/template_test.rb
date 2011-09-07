@@ -54,7 +54,7 @@ class Undies::Template
     context "using the 'element' helper"
 
     should "return an Element object" do
-      assert_equal Undies::Element.new([], :br), subject.element(:br)
+      assert_equal Undies::Element.new(Undies::ElementStack.new, :br), subject.element(:br)
     end
 
     should "alias it with 'tag'" do
@@ -64,7 +64,7 @@ class Undies::Template
     should "add a new Element object" do
       subject.element(:br)
       assert_equal 1, subject.nodes.size
-      assert_equal Undies::Element.new([], :br), subject.nodes.first
+      assert_equal Undies::Element.new(Undies::ElementStack.new, :br), subject.nodes.first
     end
 
     should "respond to underscore-prefix methods" do

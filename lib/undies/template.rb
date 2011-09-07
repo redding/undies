@@ -9,7 +9,7 @@ module Undies
 
     def initialize(*args, &block)
       self.nodes = NodeList.new
-      self.___stack = [self]
+      self.___stack = ElementStack.new(self)
       self.___locals, source = self.___template_args(args, block)
 
       if (source).file?

@@ -26,12 +26,17 @@ class Undies::ElementStack
 
     should "compain when trying to push non-elements" do
       assert_raises ArgumentError do
-        subject << 1
-      end
-
-      assert_raises ArgumentError do
         subject.push Undies::Node.new
       end
+
+      assert_nothing_raised do
+        subject << 1
+      end
+    end
+
+    should "initialize with a first item if one is given" do
+      stack = Undies::ElementStack.new(12)
+      assert_equal [12], stack
     end
 
   end
@@ -41,7 +46,7 @@ class Undies::ElementStack
     before do
       @output = ""
       @outstream = StringIO.new(@output)
-      @es = Undies::ElementStack.new(@outstream)
+      @es = Undies::ElementStack.new(nil, @outstream)
     end
 
     should "know its stream" do

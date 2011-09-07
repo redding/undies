@@ -1,5 +1,8 @@
 require "test_belt"
+
 require "undies/element"
+require "undies/element_stack"
+require "undies/template"
 
 class Undies::Element
 
@@ -9,7 +12,8 @@ class Undies::Element
     include TestBelt
 
     context 'an element'
-    subject { Undies::Element.new([], :div) }
+    before { @e = Undies::Element.new(Undies::ElementStack.new, :div) }
+    subject { @e }
     should have_readers :name, :attrs
     should have_accessor :nodes
 
@@ -29,6 +33,16 @@ class Undies::Element
       assert_equal subject.nodes.object_id, subject.content.object_id
     end
 
+    should "have an element stack as its stack" do
+      assert_kind_of Undies::ElementStack, subject.send(:instance_variable_get, "@stack")
+    end
+
+    should "complain is not created with an ElementStack" do
+      assert_raises ArgumentError do
+        Undies::Element.new([], :div)
+      end
+    end
+
   end
 
 
@@ -36,7 +50,8 @@ class Undies::Element
   class EmptyTest < Test::Unit::TestCase
     include TestBelt
     context 'an empty element'
-    subject { Undies::Element.new([], :br) }
+    before { @e = Undies::Element.new(Undies::ElementStack.new, :br) }
+    subject { @e }
 
     should "have no nodes" do
       assert_equal([], subject.nodes)
@@ -76,12 +91,12 @@ class Undies::Element
 
   class SerializeTest < BasicTest
     should "serialize with no child elements" do
-      element = Undies::Element.new([], :br)
+      element = Undies::Element.new(Undies::ElementStack.new, :br)
       assert_equal "<br />", element.to_s
     end
 
     should "serialize with attrs" do
-      element = Undies::Element.new([], :br, {:class => 'big'})
+      element = Undies::Element.new(Undies::ElementStack.new, :br, {:class => 'big'})
       assert_equal '<br class="big" />', element.to_s
     end
 
