@@ -43,6 +43,16 @@ Tag with class attributes
       }
     end.to_s
 
+* streaming render
+
+    # render the template and push it to the output stream as it is being constructed
+    # just pass an IO to the template constructor
+    Undies::Template.new(output_io).new do
+      _div {
+        _ "Some Content"
+      }
+    end
+
 * render passing local vars in and pretty printing:
 
     # render a file with markup
