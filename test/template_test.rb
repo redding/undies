@@ -52,6 +52,11 @@ class Undies::Template
       assert_equal subject.send(:escape_html, @data), subject._(@data).to_s
     end
 
+    should "add empty string nodes using '__' and '_' methods with no args" do
+      assert_equal "", subject._.to_s
+      assert_equal "", subject.__.to_s
+    end
+
   end
 
 

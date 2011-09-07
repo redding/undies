@@ -24,12 +24,12 @@ module Undies
     end
 
     # Add a text node (data escaped) to the nodes of the current node
-    def _(data)
+    def _(data="")
       self.___add(Node.new(self.escape_html(data.to_s)))
     end
 
     # Add a text node with the data un-escaped
-    def __(data)
+    def __(data="")
       self.___add(Node.new(data.to_s))
     end
 
