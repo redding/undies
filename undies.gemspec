@@ -6,7 +6,7 @@ Gem::Specification.new do |s|
   s.name        = "undies"
   s.version     = Undies::VERSION
   s.platform    = Gem::Platform::RUBY
-  s.authors     = ["Kelly D. Redding"]
+  s.authors     = ["Kelly Redding"]
   s.email       = ["kelly@kelredd.com"]
   s.homepage    = "http://github.com/kelredd/undies"
   s.summary     = %q{A pure-Ruby HTML and plain text templating DSL.}
