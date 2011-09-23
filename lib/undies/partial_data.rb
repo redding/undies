@@ -1,5 +1,5 @@
 module Undies
-  class PartialData < ::Hash
+  class PartialLocals < ::Hash
 
     attr_reader :path, :name
 

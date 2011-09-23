@@ -5,7 +5,7 @@ module Undies
   module PartialTemplate
 
     def initialize(path, *args)
-      locals = PartialData.new(path)
+      locals = PartialLocals.new(path)
       locals.values, io, locals.object = self.___partial_args(*args)
       super(path, io, locals)
     end

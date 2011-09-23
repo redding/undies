@@ -1,13 +1,13 @@
 require "test_belt"
 require "undies/partial_data"
 
-class Undies::PartialData
+class Undies::PartialLocals
 
   class BasicTest < Test::Unit::TestCase
     include TestBelt
 
     context 'partial data'
-    subject { Undies::PartialData.new 'test/templates/index.html.rb' }
+    subject { Undies::PartialLocals.new 'test/templates/index.html.rb' }
     should have_readers :path, :name
 
     should "be a kind of Hash" do
@@ -16,7 +16,7 @@ class Undies::PartialData
 
     should "complain if now path given" do
       assert_raises ArgumentError do
-        Undies::PartialData.new
+        Undies::PartialLocals.new
       end
     end
 
@@ -25,17 +25,17 @@ class Undies::PartialData
   class NameTest < BasicTest
 
     should "know its name given a file" do
-      data = Undies::PartialData.new('test/templates/current.html.rb')
+      data = Undies::PartialLocals.new('test/templates/current.html.rb')
       assert_equal 'current', data.name
     end
 
     should "know its name given a file name with a leading char" do
-      data = Undies::PartialData.new('test/templates/_partial.html.rb')
+      data = Undies::PartialLocals.new('test/templates/_partial.html.rb')
       assert_equal 'partial', data.name
     end
 
     should "know its name given a file name with multiple leading chars" do
-      data = Undies::PartialData.new('test/templates/__partial.html.rb')
+      data = Undies::PartialLocals.new('test/templates/__partial.html.rb')
       assert_equal 'partial', data.name
     end
 
@@ -45,7 +45,7 @@ class Undies::PartialData
     before do
       @path = 'test/templates/index.html.rb'
     end
-    subject { Undies::PartialData.new(@path) }
+    subject { Undies::PartialLocals.new(@path) }
 
     should "not have any values by default" do
       assert_equal({}, subject)
