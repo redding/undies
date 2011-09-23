@@ -20,7 +20,7 @@ module Undies
     end
 
     def to_s(pp_indent=nil)
-      self.nodes.collect{|n| n.to_s(0, pp_indent)}.join
+      self.nodes.to_s(0, pp_indent)
     end
 
     # Add a text node (data escaped) to the nodes of the current node
