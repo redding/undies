@@ -1,6 +1,12 @@
 require "undies/node"
 
 module Undies
+
+  # a node list is an ordered collection of node data
+  # * the Template class builds one as the template source is evaluated
+  # * a list may contains nodes and/or other node lists
+  # * serialize a list using 'to_s' using optional pretty printing args
+  # * any pretty printing args are used to render the individual nodes/lists
   class NodeList < ::Array
 
     def initialize(*args)
@@ -14,8 +20,8 @@ module Undies
     end
 
     def <<(item)
-      unless item.kind_of?(Node)
-        raise ArgumentError, 'you can only append nodes to a NodeList'
+      unless item.kind_of?(Node) || item.kind_of?(NodeList)
+        raise ArgumentError, 'you can only append nodes or other node lists to a NodeList'
       end
       super
     end
@@ -25,4 +31,5 @@ module Undies
     end
 
   end
+
 end

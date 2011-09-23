@@ -4,7 +4,7 @@ require "undies/node"
 
 class Undies::NodeList
 
-  class BasicTest < Test::Unit::TestCase
+  class BasicTests < Test::Unit::TestCase
     include TestBelt
 
     context 'a node list'
@@ -29,18 +29,39 @@ class Undies::NodeList
       end
       assert_nothing_raised do
         subject.append(Undies::Node.new('hey!'))
+        subject.append(Undies::NodeList.new)
         subject << Undies::Node.new('hey!')
       end
     end
 
+  end
+
+  class NodeHandlingTests < BasicTests
+    setup do
+      @hey = Undies::Node.new "hey!"
+      @you = Undies::Node.new " you..."
+      @there = Undies::Node.new " there."
+      @node_list = Undies::NodeList.new
+      @node_list.append(@you)
+      @node_list.append(@there)
+    end
+
     should "append nodes with the 'append' method" do
-      subject.append(Undies::Node.new "hey!")
+      subject.append(@hey)
       assert_equal 1, subject.size
     end
 
     should "return the node when appending" do
-      node = Undies::Node.new "hey!"
-      assert_equal node.object_id, subject.append(node).object_id
+      assert_equal @hey.object_id, subject.append(@hey).object_id
+    end
+
+    should "serialize to a string" do
+      assert_equal " you... there.", @node_list.to_s
+
+      to_serialize = Undies::NodeList.new
+      to_serialize.append(@hey)
+      to_serialize.append(@node_list)
+      assert_equal "hey! you... there.", to_serialize.to_s
     end
 
   end
