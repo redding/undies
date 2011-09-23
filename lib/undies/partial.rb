@@ -2,7 +2,7 @@ require 'undies/partial_data'
 require 'undies/template'
 
 module Undies
-  class Partial < Template
+  module Partial
 
     def initialize(path, *args)
       locals = PartialData.new(path)

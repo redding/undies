@@ -1,9 +1,9 @@
 require "test_belt"
 
 require "stringio"
-require "undies/partial"
+require "test/fixtures/partial_template"
 
-class Undies::Partial
+class Undies::PartialTests
 
   class BasicTest < Test::Unit::TestCase
     include TestBelt
@@ -11,7 +11,7 @@ class Undies::Partial
     context 'partial'
     before do
       @path = 'test/templates/test.html.rb'
-      @p = Undies::Partial.new @path
+      @p = TestPartial.new @path
     end
     subject { @p }
 
@@ -21,7 +21,7 @@ class Undies::Partial
 
     should "complain if no path given" do
       assert_raises ArgumentError do
-        Undies::Partial.new
+        TestPartial.new
       end
     end
 
@@ -33,12 +33,12 @@ class Undies::Partial
     end
 
     should "know its data" do
-      partial = Undies::Partial.new(@path, :name => 'A Name')
+      partial = TestPartial.new(@path, :name => 'A Name')
       assert_equal("A Name", partial.name)
     end
 
     should "know its object" do
-      partial = Undies::Partial.new(@path, "thing")
+      partial = TestPartial.new(@path, "thing")
       assert_equal("thing", partial.index)
     end
 
@@ -54,7 +54,7 @@ class Undies::Partial
 
 
     should "should write to the stream as its being constructed" do
-      Undies::Partial.new @path, @outstream
+      TestPartial.new @path, @outstream
       assert_equal "<html><head></head><body><div class=\"file\">FILE!!</div></body></html>", @output
     end
 
