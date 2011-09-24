@@ -9,7 +9,7 @@ class Undies::Source
     context 'a source'
     subject { Undies::Source.new(&Proc.new {}) }
     should have_readers :file, :block
-    should have_instance_methods :markup, :layout
+    should have_instance_methods :layout?, :file_data
 
     should "complain if no file or block given" do
       assert_raises ArgumentError do
@@ -32,12 +32,8 @@ class Undies::Source
     should "have a block source and no file source" do
       assert subject.block
       assert_nil subject.file
-    end
-
-    should "use the block source as markup w/ no layout" do
-      assert subject.markup
-      assert_equal subject.block, subject.markup
-      assert_nil subject.layout
+      assert_nil subject.file_data
+      assert_equal false, subject.layout?
     end
 
   end
@@ -52,12 +48,8 @@ class Undies::Source
     should "have a file source and no block source" do
       assert_nil subject.block
       assert subject.file
-    end
-
-    should "use the file source as markup w/ no layout" do
-      assert subject.markup
-      assert_equal subject.file, subject.markup
-      assert_nil subject.layout
+      assert subject.file_data
+      assert_equal false, subject.layout?
     end
 
   end
@@ -72,16 +64,9 @@ class Undies::Source
     should "have a file source and a block source" do
       assert subject.block
       assert subject.file
+      assert subject.file_data
+      assert_equal true, subject.layout?
     end
-
-    should "use the block source as markup and the file source as layout" do
-      assert subject.markup
-      assert_equal subject.block, subject.markup
-      assert subject.layout
-      assert_equal subject.file, subject.layout
-    end
-
-
 
   end
 

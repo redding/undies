@@ -13,11 +13,15 @@ module Undies
     end
 
     def markup
-      self.block || self.file
+      self.block || self.file_data
     end
 
-    def layout
-      self.file if self.block
+    def layout?
+      !!(self.block && self.file)
+    end
+
+    def file_data
+      File.send(File.respond_to?(:binread) ? :binread : :read, self.file) if self.file
     end
 
   end
