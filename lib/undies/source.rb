@@ -12,5 +12,13 @@ module Undies
       @block = block
     end
 
+    def markup
+      self.block || self.file
+    end
+
+    def layout
+      self.file if self.block
+    end
+
   end
 end
