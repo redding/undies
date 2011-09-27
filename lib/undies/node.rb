@@ -1,10 +1,10 @@
 module Undies
   class Node
 
-    attr_reader :content
+    attr_reader :___content
 
     def initialize(content)
-      @content = content
+      @___content = content
     end
 
     def start_tag
@@ -17,7 +17,7 @@ module Undies
 
     def to_s(pp_level=0, pp_indent=nil)
       [ self.start_tag,
-        self.content,
+        self.___content,
         self.end_tag
       ].compact.collect do |item|
         pretty_print(item, pp_level, pp_indent)

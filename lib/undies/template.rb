@@ -5,30 +5,20 @@ require 'undies/element'
 module Undies
   class Template
 
-    attr_accessor :nodes
+    # prefixing with a triple underscore to not pollut metaclass locals scope
+
+    attr_accessor :___nodes
 
     def initialize(*args, &block)
-      self.nodes = NodeList.new
+      self.___nodes = NodeList.new
       targs = self.___template_args(args.compact, block)
       self.___locals, self.___io, self.___layout, self.___markup = targs
       self.___stack = ElementStack.new(self, self.___io)
-      self.compile { self.render(self.___markup) if self.___layout }
-    end
-
-    def compile
-      self.render(self.___layout || self.___markup)
-    end
-
-    def render(source)
-      if source.file?
-        instance_eval(source.data, source.source, 1)
-      else
-        instance_eval(&source.data)
-      end
+      self.___compile { self.___render(self.___markup) if self.___layout }
     end
 
     def to_s(pp_indent=nil)
-      self.nodes.to_s(0, pp_indent)
+      self.___nodes.to_s(0, pp_indent)
     end
 
     # Add a text node (data escaped) to the nodes of the current node
@@ -92,6 +82,18 @@ module Undies
     # prefixing non-public methods with a triple underscore to not pollute
     # metaclass locals scope
 
+    def ___compile
+      self.___render(self.___layout || self.___markup)
+    end
+
+    def ___render(source)
+      if source.file?
+        instance_eval(source.data, source.source, 1)
+      else
+        instance_eval(&source.data)
+      end
+    end
+
     def ___locals=(data)
       if !data.kind_of?(::Hash)
         raise ArgumentError
@@ -107,7 +109,7 @@ module Undies
     end
 
     def ___add(node)
-      self.___stack.last.nodes.append(node)
+      self.___stack.last.___nodes.append(node)
     end
 
     def ___stack

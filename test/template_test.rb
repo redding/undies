@@ -12,10 +12,10 @@ class Undies::Template
     subject { Undies::Template.new {} }
     should have_instance_method :to_s, :escape_html
     should have_instance_methods :_, :__, :element, :tag
-    should have_accessor :nodes
+    should have_accessor :___nodes
 
     should "have a NodeList as its nodes" do
-      assert_kind_of Undies::NodeList, subject.nodes
+      assert_kind_of Undies::NodeList, subject.___nodes
     end
 
     should "have no io stream by default" do
@@ -67,9 +67,9 @@ class Undies::Template
 
     should "also add the node using the '__' and '_' methods" do
       subject.__(@data)
-      assert_equal 1, subject.nodes.size
+      assert_equal 1, subject.___nodes.size
       subject._(@data)
-      assert_equal 2, subject.nodes.size
+      assert_equal 2, subject.___nodes.size
     end
 
     should "add the text un-escaped using the '__' method" do
@@ -102,8 +102,8 @@ class Undies::Template
 
     should "add a new Element object" do
       subject.element(:br)
-      assert_equal 1, subject.nodes.size
-      assert_equal Undies::Element.new(Undies::ElementStack.new, :br), subject.nodes.first
+      assert_equal 1, subject.___nodes.size
+      assert_equal Undies::Element.new(Undies::ElementStack.new, :br), subject.___nodes.first
     end
 
     should "respond to underscore-prefix methods" do

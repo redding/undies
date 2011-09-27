@@ -5,27 +5,30 @@ require 'undies/element_stack'
 module Undies
   class Element < Node
 
-    attr_reader :name, :attrs
-    attr_accessor :nodes
+    attr_reader :___name, :___attrs
+    attr_accessor :___nodes
 
     def initialize(stack, name, attrs={}, &block)
       if !stack.kind_of?(ElementStack)
         raise ArgumentError, "stack must be an Undies::ElementStack"
       end
-      super(@nodes = NodeList.new)
+      if !attrs.kind_of?(::Hash)
+        raise ArgumentError, "#{name.inspect} attrs must be provided as a Hash."
+      end
+      super(@___nodes = NodeList.new)
       @stack = stack
-      @name = name.to_s
-      @attrs = attrs
       @content_writes = 0
-      self.content = block
+      @___name = name.to_s
+      @___attrs = attrs
+      self.___content = block
     end
 
     def start_tag
-      "<#{@name}#{html_attrs(@attrs)}" + (@content_writes > 0 ? ">" : " />")
+      "<#{@___name}#{html_attrs(@___attrs)}" + (@content_writes > 0 ? ">" : " />")
     end
 
     def end_tag
-      @content_writes > 0 ? "</#{@name}>" : nil
+      @content_writes > 0 ? "</#{@___name}>" : nil
     end
 
     # CSS proxy methods ============================================
@@ -52,19 +55,19 @@ module Undies
     # ==============================================================
 
     def ==(other)
-      other.name == self.name &&
-      other.attrs == self.attrs &&
-      other.nodes == self.nodes
+      other.___name  == self.___name  &&
+      other.___attrs == self.___attrs &&
+      other.___nodes == self.___nodes
     end
 
     def to_str(*args)
       "Undies::Element:#{self.object_id} " +
-      "@name=#{@name.inspect}, @attrs=#{@attrs.inspect}, @nodes=#{@nodes.inspect}"
+      "@name=#{self.___name.inspect}, @attrs=#{self.___attrs.inspect}, @nodes=#{self.___nodes.inspect}"
     end
     alias_method :inspect, :to_str
 
     def to_ary(*args)
-      @nodes
+      self.___nodes
     end
 
     protected
@@ -85,20 +88,20 @@ module Undies
     private
 
     def proxy_id_attr(value, attrs={}, &block)
-      @attrs.merge!(:id => value)
-      @attrs.merge!(attrs)
-      self.content = block
+      self.___attrs.merge!(:id => value)
+      self.___attrs.merge!(attrs)
+      self.___content = block
       self
     end
 
     def proxy_class_attr(value, attrs={}, &block)
-      @attrs[:class] = [@attrs[:class], value].compact.join(' ')
-      @attrs.merge!(attrs)
-      self.content = block
+      self.___attrs[:class] = [self.___attrs[:class], value].compact.join(' ')
+      self.___attrs.merge!(attrs)
+      self.___content = block
       self
     end
 
-    def content=(block)
+    def ___content=(block)
       if block
         @content_writes += 1
         @stack.push(self)
