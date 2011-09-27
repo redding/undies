@@ -8,11 +8,19 @@ module Undies
     attr_accessor :nodes
 
     def initialize(*args, &block)
-      self.___locals, self.___io, source = self.___template_args(args, block)
+      targs = self.___template_args(args.compact, block)
+      self.___locals, self.___io, self.___layout, self.___markup = targs
       self.___stack = ElementStack.new(self, self.___io)
       self.nodes = NodeList.new
+      self.compile { self.render(self.___markup) if self.___layout }
+    end
 
-      if (source).file?
+    def compile
+      self.render(self.___layout || self.___markup)
+    end
+
+    def render(source)
+      if source.file?
         instance_eval(source.data, source.source, 1)
       else
         instance_eval(&source.data)
@@ -120,10 +128,29 @@ module Undies
       @io = value
     end
 
+    def ___layout
+      @layout
+    end
+
+    def ___layout=(value)
+      raise ArgumentError if value && !value.kind_of?(Source)
+      @layout = value
+    end
+
+    def ___markup
+      @markup
+    end
+
+    def ___markup=(value)
+      raise ArgumentError if value && !value.kind_of?(Source)
+      @markup = value
+    end
+
     def ___template_args(args, block)
       [ args.last.kind_of?(::Hash) ? args.pop : {},
         self.___is_a_stream?(args.last) ? args.pop : nil,
-        Source.new(block || args.first.to_s)
+        self.___layout_arg?(args, block) ? Source.new(args.pop) : nil,
+        Source.new(args.first || block)
       ]
     end
 
@@ -134,6 +161,16 @@ module Undies
 
     def ___is_a_stream?(thing)
       !thing.kind_of?(::String) && thing.respond_to?(:<<)
+    end
+
+    def ___layout_arg?(args, block)
+      if args.size >= 2
+        true
+      elsif args.size <= 0
+        false
+      else # args.size == 1
+        !block.nil?
+      end
     end
 
     private

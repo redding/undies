@@ -22,6 +22,34 @@ class Undies::Template
       assert_nil subject.send(:___io)
     end
 
+    should "maintain the template's scope throughout content blocks" do
+      templ = Undies::Template.new do
+        _div {
+          _div {
+            __ self.object_id
+          }
+        }
+      end
+      assert_equal "<div><div>#{templ.object_id}</div></div>", templ.to_s
+    end
+
+    should "generate pretty printed markup" do
+      file = 'test/templates/test.html.rb'
+      assert_equal(
+        %{<html>
+  <head>
+  </head>
+  <body>
+    <div>
+      Hi
+    </div>
+  </body>
+</html>
+},
+        Undies::Template.new(File.expand_path(file)).to_s(2)
+      )
+    end
+
   end
 
 
@@ -100,10 +128,10 @@ class Undies::Template
   class LocalsTest < BasicTest
 
     should "only accept the data if it is a Hash" do
-      assert_raises NoMethodError do
+      assert_raises ArgumentError do
         (Undies::Template.new("some_data") {}).some
       end
-      assert_raises NoMethodError do
+      assert_raises ArgumentError do
         (Undies::Template.new('test/templates/test.html.rb', "some_data")).some
       end
       assert_respond_to(
@@ -127,23 +155,6 @@ class Undies::Template
       assert_equal "data", templ.some
     end
 
-  end
-
-
-
-  class DefinitionTest < BasicTest
-
-    should "maintain the template's scope throughout content blocks" do
-      templ = Undies::Template.new do
-        _div {
-          _div {
-            __ self.object_id
-          }
-        }
-      end
-      assert_equal "<div><div>#{templ.object_id}</div></div>", templ.to_s
-    end
-
     should "be able to access its locals in the template definition" do
       templ = Undies::Template.new(:name => "awesome") do
         _div {
@@ -153,46 +164,96 @@ class Undies::Template
       assert_equal "<div><div>awesome</div></div>", templ.to_s
     end
 
-    should "generate markup given a block" do
-      assert_equal(
-        "<html><head></head><body><div class=\"loud element\" id=\"header\">YEA!!</div></body></html>",
-        Undies::Template.new do
-          _html {
-            _head {}
-            _body {
-              _div.header!.loud.element {
-                __ "YEA!!"
-              }
-            }
+  end
+
+
+
+  class DefinitionTest < BasicTest
+    setup do
+      @expected_output = "<html><head></head><body><div>Hi</div></body></html>"
+      @content_proc = Proc.new do
+        _div { _ "Hi" }
+      end
+      @layout_proc = Proc.new do
+        _html { _head {}; _body { yield } }
+      end
+      @layout_file = File.expand_path "test/templates/layout.html.rb"
+      @content_file = File.expand_path "test/templates/content.html.rb"
+      @test_content_file = File.expand_path "test/templates/test.html.rb"
+    end
+
+    should "generate markup given the content in a passed block" do
+      template = Undies::Template.new do
+        _html {
+          _head {}
+          _body {
+            _div { _ "Hi" }
           }
-        end.to_s
-      )
+        }
+      end
+      assert_equal @expected_output, template.to_s
     end
 
-    should "generate markup given a file" do
-      file = 'test/templates/test.html.rb'
-      assert_equal(
-        "<html><head></head><body><div class=\"file\">FILE!!</div></body></html>",
-        Undies::Template.new(File.expand_path(file)).to_s
-      )
+    should "generate markup given the content in a first arg Proc, even if passed block" do
+      proc = Proc.new do
+        _html {
+          _head {}
+          _body {
+            _div { _ "Hi" }
+          }
+        }
+      end
+      template_no_block = Undies::Template.new(proc)
+      template_w_block = Undies::Template.new(proc) do
+        _div { _ "Should not render b/c template prefers a file" }
+      end
+      assert_equal @expected_output, template_no_block.to_s
+      assert_equal @expected_output, template_w_block.to_s
     end
 
-    should "generate pretty printed markup" do
-      file = 'test/templates/test.html.rb'
-      assert_equal(
-        %{<html>
-  <head>
-  </head>
-  <body>
-    <div class="file">
-      FILE!!
-    </div>
-  </body>
-</html>
-},
-        Undies::Template.new(File.expand_path(file)).to_s(2)
-      )
+    should "generate markup given the content in a file, even if passed a block" do
+      template_no_block = Undies::Template.new(@test_content_file)
+      template_w_block = Undies::Template.new(@test_content_file) do
+        _div { _ "Should not render b/c template prefers a file" }
+      end
+      assert_equal @expected_output, template_no_block.to_s
+      assert_equal @expected_output, template_w_block.to_s
     end
+
+    should "generate markup given the layout in a file and the content in a passed block" do
+      template = Undies::Template.new(@layout_file) do
+        _div { _ "Hi" }
+      end
+      assert_equal @expected_output, template.to_s
+    end
+
+    should "generate markup given the layout in a Proc and the content in a Proc as first arg" do
+      template = Undies::Template.new(@content_proc, @layout_file)
+      assert_equal @expected_output, template.to_s
+    end
+
+    should "generate markup given the layout in a file and the content in a file" do
+      template = Undies::Template.new(@content_file, @layout_file)
+      assert_equal @expected_output, template.to_s
+    end
+
+    # should "generate markup given the layout in a Proc and the content in a passed block" do
+    #   template = Undies::Template.new(@layout_proc) do
+    #     _div { _ "Hi" }
+    #   end
+    #   assert_equal @expected_output, template.to_s
+    # end
+
+    # should "generate markup given the layout in a Proc and the content in a Proc as first arg" do
+    #   template = Undies::Template.new(@content_proc, @layout_proc)
+    #   assert_equal @expected_output, template.to_s
+    # end
+
+    # should "generate markup given the layout in a Proc and the content in a file" do
+    #   template = Undies::Template.new(@content_file, @layout_proc)
+    #   assert_equal @expected_output, template.to_s
+    # end
+
   end
 
 
