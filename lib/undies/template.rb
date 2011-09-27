@@ -8,10 +8,10 @@ module Undies
     attr_accessor :nodes
 
     def initialize(*args, &block)
+      self.nodes = NodeList.new
       targs = self.___template_args(args.compact, block)
       self.___locals, self.___io, self.___layout, self.___markup = targs
       self.___stack = ElementStack.new(self, self.___io)
-      self.nodes = NodeList.new
       self.compile { self.render(self.___markup) if self.___layout }
     end
 
@@ -133,7 +133,9 @@ module Undies
     end
 
     def ___layout=(value)
-      raise ArgumentError if value && !value.kind_of?(Source)
+      if value && !(value.kind_of?(Source) && value.file?)
+        raise ArgumentError, "layout must be a file source"
+      end
       @layout = value
     end
 

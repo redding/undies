@@ -171,11 +171,19 @@ class Undies::Template
   class DefinitionTest < BasicTest
     setup do
       @expected_output = "<html><head></head><body><div>Hi</div></body></html>"
+      @proc = Proc.new do
+        _html {
+          _head {}
+          _body {
+            _div { _ "Hi" }
+          }
+        }
+      end
       @content_proc = Proc.new do
         _div { _ "Hi" }
       end
       @layout_proc = Proc.new do
-        _html { _head {}; _body { yield } }
+        _html { _head {}; _body { yield if block_given? } }
       end
       @layout_file = File.expand_path "test/templates/layout.html.rb"
       @content_file = File.expand_path "test/templates/content.html.rb"
@@ -183,32 +191,16 @@ class Undies::Template
     end
 
     should "generate markup given the content in a passed block" do
-      template = Undies::Template.new do
-        _html {
-          _head {}
-          _body {
-            _div { _ "Hi" }
-          }
-        }
-      end
+      template = Undies::Template.new(&@proc)
       assert_equal @expected_output, template.to_s
     end
 
-    should "generate markup given the content in a first arg Proc, even if passed block" do
-      proc = Proc.new do
-        _html {
-          _head {}
-          _body {
-            _div { _ "Hi" }
-          }
-        }
+    should "complain if given a proc both as the first arg and passed as a block" do
+      assert_raises ArgumentError do
+        Undies::Template.new(@proc) do
+          _div { _ "Should not render b/c argument error" }
+        end
       end
-      template_no_block = Undies::Template.new(proc)
-      template_w_block = Undies::Template.new(proc) do
-        _div { _ "Should not render b/c template prefers a file" }
-      end
-      assert_equal @expected_output, template_no_block.to_s
-      assert_equal @expected_output, template_w_block.to_s
     end
 
     should "generate markup given the content in a file, even if passed a block" do
@@ -237,22 +229,25 @@ class Undies::Template
       assert_equal @expected_output, template.to_s
     end
 
-    # should "generate markup given the layout in a Proc and the content in a passed block" do
-    #   template = Undies::Template.new(@layout_proc) do
-    #     _div { _ "Hi" }
-    #   end
-    #   assert_equal @expected_output, template.to_s
-    # end
+    should "complain if given the layout in a Proc and the content in a passed block" do
+      assert_raises ArgumentError do
+        Undies::Template.new(@layout_proc) do
+          _div { _ "Hi" }
+        end
+      end
+    end
 
-    # should "generate markup given the layout in a Proc and the content in a Proc as first arg" do
-    #   template = Undies::Template.new(@content_proc, @layout_proc)
-    #   assert_equal @expected_output, template.to_s
-    # end
+    should "complain given the layout in a Proc and the content in a Proc as first arg" do
+      assert_raises ArgumentError do
+        Undies::Template.new(@content_proc, @layout_proc)
+      end
+    end
 
-    # should "generate markup given the layout in a Proc and the content in a file" do
-    #   template = Undies::Template.new(@content_file, @layout_proc)
-    #   assert_equal @expected_output, template.to_s
-    # end
+    should "complain given the layout in a Proc and the content in a file" do
+      assert_raises ArgumentError do
+        Undies::Template.new(@content_file, @layout_proc)
+      end
+    end
 
   end
 
