@@ -1,4 +1,4 @@
-require "test_belt"
+require "assert"
 
 require "undies/element"
 require "undies/element_stack"
@@ -8,10 +8,8 @@ class Undies::Element
 
 
 
-  class BasicTest < Test::Unit::TestCase
-    include TestBelt
-
-    context 'an element'
+  class BasicTests < Assert::Context
+    desc 'an element'
     before { @e = Undies::Element.new(Undies::ElementStack.new, :div) }
     subject { @e }
     should have_readers :___name, :___attrs
@@ -47,9 +45,8 @@ class Undies::Element
 
 
 
-  class EmptyTest < Test::Unit::TestCase
-    include TestBelt
-    context 'an empty element'
+  class EmptyTests < Assert::Context
+    desc 'an empty element'
     before { @e = Undies::Element.new(Undies::ElementStack.new, :br) }
     subject { @e }
 
@@ -61,8 +58,8 @@ class Undies::Element
 
 
 
-  class HtmlAttrsTest < BasicTest
-    context "html_attrs util"
+  class HtmlAttrsTest < BasicTests
+    desc "html_attrs util"
 
     should "convert an empty hash to html attrs" do
       assert_equal('', subject.send(:html_attrs, {}))
@@ -89,7 +86,8 @@ class Undies::Element
 
 
 
-  class SerializeTest < BasicTest
+  class SerializeTests < BasicTests
+
     should "serialize with no child elements" do
       element = Undies::Element.new(Undies::ElementStack.new, :br)
       assert_equal "<br />", element.to_s
@@ -110,7 +108,7 @@ class Undies::Element
 
 
 
-  class CSSProxyTest < BasicTest
+  class CSSProxyTests < BasicTests
 
     should "respond to any method ending in '!' as an id proxy" do
       assert subject.respond_to?(:asdgasdg!)

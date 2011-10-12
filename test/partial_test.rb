@@ -1,14 +1,12 @@
-require "test_belt"
+require "assert"
 
 require "stringio"
 require "test/fixtures/partial_template"
 
 class Undies::PartialTests
 
-  class BasicTest < Test::Unit::TestCase
-    include TestBelt
-
-    context 'partial'
+  class BasicTests < Assert::Context
+    desc 'partial'
     before do
       @path = 'test/templates/test.html.rb'
       @p = TestPartial.new @path
@@ -27,7 +25,7 @@ class Undies::PartialTests
 
   end
 
-  class LocalsTest < BasicTest
+  class LocalsTests < BasicTests
     before do
       @path = 'test/templates/index.html.rb'
     end
@@ -44,9 +42,8 @@ class Undies::PartialTests
 
   end
 
-  class StreamTest < BasicTest
-    context "that is streaming"
-
+  class StreamTests < BasicTests
+    desc "that is streaming"
     before do
       @output = ""
       @outstream = StringIO.new(@output)

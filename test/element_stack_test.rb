@@ -1,4 +1,4 @@
-require "test_belt"
+require "assert"
 
 require "stringio"
 require "undies/element_stack"
@@ -6,10 +6,8 @@ require "undies/node"
 
 class Undies::ElementStack
 
-  class BasicTest < Test::Unit::TestCase
-    include TestBelt
-
-    context 'an element stack'
+  class BasicTests < Assert::Context
+    desc 'an element stack'
     before { @es = Undies::ElementStack.new }
     subject { @es }
 
@@ -41,8 +39,8 @@ class Undies::ElementStack
 
   end
 
-  class StreamingTest < BasicTest
-    context "when streaming"
+  class StreamingTests < BasicTests
+    desc "when streaming"
     before do
       @output = ""
       @outstream = StringIO.new(@output)
