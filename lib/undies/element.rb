@@ -72,16 +72,15 @@ module Undies
 
     protected
 
-    def html_attrs(attrs={})
-      raise ArgumentError unless attrs.kind_of? ::Hash
-      if attrs.empty?
-        ''
+    def html_attrs(attrs="", ns=nil)
+      if attrs.kind_of? ::Hash
+        attrs.empty? ? '' : (attrs.keys.map(&:to_s).sort.map(&:to_sym).inject('') do |html, key|
+          ak = ns ? "#{ns}_#{key}" : key.to_s
+          av = attrs[key]
+          html + (av.kind_of?(::Hash) ? html_attrs(av, ak) : " #{ak}=\"#{av}\"")
+        end)
       else
-        ' '+attrs.
-        sort {|a,b|  a[0].to_s <=> b[0].to_s}.
-        collect {|k_v| "#{k_v[0]}=\"#{k_v[1]}\""}.
-        join(' ').
-        strip
+        attrs.to_s
       end
     end
 

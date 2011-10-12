@@ -77,10 +77,11 @@ class Undies::Element
         :class => "testing", :id => "test_2",
         :nested => {:something => 'is_awesome'}
       })
+      puts attrs.inspect
       assert_match /^\s{1}/, attrs
-      assert attrs.include?('class="testing"')
-      assert attrs.include?('id="test_2"')
-      assert attrs.include?('nested="somethingis_awesome"')
+      assert_included 'class="testing"', attrs
+      assert_included 'id="test_2"', attrs
+      assert_included 'nested_something="is_awesome"', attrs
     end
   end
 
