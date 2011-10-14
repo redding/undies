@@ -1,13 +1,13 @@
-require "test_belt"
+require "assert"
 require "undies/source"
 
 class Undies::Source
 
-  class BasicTest < Test::Unit::TestCase
-    include TestBelt
+  class BasicTests < Assert::Context
+    desc 'a source'
+    before { @s = Undies::Source.new(Proc.new {}) }
+    subject { @s }
 
-    context 'a source'
-    subject { Undies::Source.new(Proc.new {}) }
     should have_readers :source, :data
     should have_instance_method :file?
 
@@ -25,8 +25,8 @@ class Undies::Source
 
   end
 
-  class BlockTest < BasicTest
-    context 'from a block'
+  class BlockTests < BasicTests
+    desc 'from a block'
     subject { Undies::Source.new(Proc.new {}) }
 
     should "not be a file source" do
@@ -35,8 +35,8 @@ class Undies::Source
 
   end
 
-  class FileTest < BasicTest
-    context 'from a file'
+  class FileTests < BasicTests
+    desc 'from a file'
     subject do
       file = 'test/templates/test.html.rb'
       Undies::Source.new(File.expand_path(file))

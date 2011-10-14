@@ -1,13 +1,13 @@
-require "test_belt"
+require "assert"
+
 require "undies/node"
 
 class Undies::Node
 
-  class BasicTest < Test::Unit::TestCase
-    include TestBelt
-
-    context 'a node'
-    subject { Undies::Node.new("a text node here") }
+  class BasicTests < Assert::Context
+    desc 'a node'
+    before { @n = Undies::Node.new("a text node here") }
+    subject { @n }
     should have_instance_method :to_s, :start_tag, :end_tag
     should have_reader :___content
 

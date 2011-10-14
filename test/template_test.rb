@@ -1,15 +1,15 @@
-require "test_belt"
+require "assert"
 
 require "stringio"
 require "undies/template"
 
 class Undies::Template
 
-  class BasicTest < Test::Unit::TestCase
-    include TestBelt
+  class BasicTests < Assert::Context
+    desc 'a template'
+    before { @t = Undies::Template.new {} }
+    subject { @t }
 
-    context 'a template'
-    subject { Undies::Template.new {} }
     should have_instance_method :to_s, :escape_html
     should have_instance_methods :_, :__, :element, :tag
     should have_accessor :___nodes
@@ -54,8 +54,8 @@ class Undies::Template
 
 
 
-  class NodeTest < BasicTest
-    context "with text data"
+  class NodeTests < BasicTests
+    desc "with text data"
     before do
       @data = "stuff & <em>more stuff</em>"
     end
@@ -89,8 +89,8 @@ class Undies::Template
 
 
 
-  class ElementTest < BasicTest
-    context "using the 'element' helper"
+  class ElementTests < BasicTests
+    desc "using the 'element' helper"
 
     should "return an Element object" do
       assert_equal Undies::Element.new(Undies::ElementStack.new, :br), subject.element(:br)
@@ -125,7 +125,7 @@ class Undies::Template
 
 
 
-  class LocalsTest < BasicTest
+  class LocalsTests < BasicTests
 
     should "only accept the data if it is a Hash" do
       assert_raises ArgumentError do
@@ -135,12 +135,12 @@ class Undies::Template
         (Undies::Template.new('test/templates/test.html.rb', "some_data")).some
       end
       assert_respond_to(
-        (Undies::Template.new(:some => "data") {}),
-        :some
+        :some,
+        (Undies::Template.new(:some => "data") {})
       )
       assert_respond_to(
-        Undies::Template.new('test/templates/test.html.rb', :some => "data"),
-        :some
+        :some,
+        Undies::Template.new('test/templates/test.html.rb', :some => "data")
       )
     end
 
@@ -168,7 +168,7 @@ class Undies::Template
 
 
 
-  class DefinitionTest < BasicTest
+  class DefinitionTests < BasicTests
     setup do
       @expected_output = "<html><head></head><body><div>Hi</div></body></html>"
       @proc = Proc.new do
@@ -253,8 +253,8 @@ class Undies::Template
 
 
 
-  class StreamTest < BasicTest
-    context "that is streaming"
+  class StreamTests < BasicTests
+    desc "that is streaming"
 
     before do
       @output = ""

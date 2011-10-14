@@ -1,13 +1,12 @@
-require "test_belt"
+require "assert"
 require "undies/partial_locals"
 
 class Undies::PartialLocals
 
-  class BasicTest < Test::Unit::TestCase
-    include TestBelt
-
-    context 'partial data'
-    subject { Undies::PartialLocals.new 'test/templates/index.html.rb' }
+  class BasicTests < Assert::Context
+    desc 'partial data'
+    before { @pl = Undies::PartialLocals.new 'test/templates/index.html.rb' }
+    subject { @pl }
     should have_readers :path, :name
 
     should "be a kind of Hash" do
@@ -22,7 +21,7 @@ class Undies::PartialLocals
 
   end
 
-  class NameTest < BasicTest
+  class NameTests < BasicTests
 
     should "know its name given a file" do
       data = Undies::PartialLocals.new('test/templates/current.html.rb')
@@ -41,11 +40,12 @@ class Undies::PartialLocals
 
   end
 
-  class ValuesTest < BasicTest
+  class ValuesTests < BasicTests
     before do
       @path = 'test/templates/index.html.rb'
+      @pl = Undies::PartialLocals.new(@path)
     end
-    subject { Undies::PartialLocals.new(@path) }
+    subject { @pl }
 
     should "not have any values by default" do
       assert_equal({}, subject)

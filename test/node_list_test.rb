@@ -1,14 +1,15 @@
-require "test_belt"
+require "assert"
+
 require "undies/node_list"
 require "undies/node"
 
 class Undies::NodeList
 
-  class BasicTests < Test::Unit::TestCase
-    include TestBelt
+  class BasicTests < Assert::Context
+    desc 'a node list'
+    before { @nl = Undies::NodeList.new }
+    subject { @nl }
 
-    context 'a node list'
-    subject { Undies::NodeList.new }
     should have_instance_method :append
 
     should "be an Array" do
@@ -37,7 +38,7 @@ class Undies::NodeList
   end
 
   class NodeHandlingTests < BasicTests
-    setup do
+    before do
       @hey = Undies::Node.new "hey!"
       @you = Undies::Node.new " you..."
       @there = Undies::Node.new " there."
