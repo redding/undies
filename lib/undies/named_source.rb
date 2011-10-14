@@ -1,5 +1,7 @@
 module Undies
 
+  class Source; end
+
   class NamedSource
 
     attr_reader :name
@@ -26,23 +28,29 @@ module Undies
     end
 
     def args
-      { :file => self.file,
-        :opts => self.opts,
-        :proc => self.proc
-      }
+      [self.file, self.opts, self.proc]
     end
 
   end
 
-  # singleton accessor for named sources
+  # singleton accessors for named sources
 
-  def self.source(name, *args, &block)
+  def self.named_sources
+    @@sources ||= {}
+  end
+
+  def self.named_source(name, *args, &block)
     raise ArgumentError, "name must be a symbol" unless name.kind_of?(::Symbol)
-    @@sources ||={}
     if args.empty? && block.nil?
-      @@sources[name]
+      self.named_sources[name]
     else
-      @@sources[name] = Undies::NamedSource.new(name, *args, &block)
+      self.named_sources[name] = Undies::NamedSource.new(name, *args, &block)
+    end
+  end
+
+  def self.source(name)
+    if ns = self.named_source(name)
+      Undies::Source.new(ns)
     end
   end
 

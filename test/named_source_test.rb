@@ -10,6 +10,7 @@ class Undies::NamedSource
       @content_file = File.expand_path('test/templates/content.html.rb')
       @content_file_data = File.read(@content_file)
       @content_file_nsource = Undies::NamedSource.new(:cf, @content_file)
+      @content_file_source = Undies::Source.new(@content_file)
       @hi_proc = Proc.new do
         _div { _ "Hi!" }
       end
@@ -34,18 +35,10 @@ class Undies::NamedSource
       subject.file = @content_file
       subject.opts = {:layout => :another}
       subject.proc = @hi_proc
-      @subject_args = {
-        :file => @content_file,
-        :opts => {:layout => :another},
-        :proc => @hi_proc
-      }
+      @subject_args = [@content_file, {:layout => :another}, @hi_proc]
 
       @another = Undies::NamedSource.new(:another, @content_file, &@hi_proc)
-      @another_args = {
-        :file => @content_file,
-        :opts => {},
-        :proc => @hi_proc
-      }
+      @another_args = [@content_file, {}, @hi_proc]
     end
 
 
@@ -67,17 +60,37 @@ class Undies::NamedSource
   end
 
   class UndiesTests < BasicTests
+    before do
+      Undies.named_sources.clear
+    end
+    after do
+      Undies.named_sources.clear
+    end
 
     should "provide a singleton method for accessing named sources" do
+      assert_respond_to :named_sources, Undies
+      assert_respond_to :named_source, Undies
       assert_respond_to :source, Undies
     end
 
+    should "access the singleton set of named sources" do
+      assert_equal({}, Undies.named_sources)
+    end
+
     should "build new and retrieve named sources from the singleton" do
-      assert_equal @content_file_nsource, Undies.source(:cf, @content_file)
-      assert_equal @content_file_nsource, Undies.source(:cf)
+      assert_equal @content_file_nsource, Undies.named_source(:cf, @content_file)
+      assert_equal @content_file_nsource, Undies.named_source(:cf)
+    end
+
+    should "build retrieve sources from the source singleton accessor" do
+      Undies.named_source(:cf, @content_file)
+      assert_equal @content_file_source, Undies.source(:cf)
     end
 
     should "not retrieve unknown named sources" do
+      assert_nil Undies.named_source(:wtf)
+      assert_raises(ArgumentError) { Undies.named_source('wtf') }
+
       assert_nil Undies.source(:wtf)
       assert_raises(ArgumentError) { Undies.source('wtf') }
     end

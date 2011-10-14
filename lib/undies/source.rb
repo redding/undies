@@ -1,13 +1,14 @@
+require 'undies/named_source'
+
 module Undies
   class Source
 
     attr_reader :source, :data, :layout
 
     def initialize(*args, &block)
-      named = args.first.kind_of?(::Symbol) ? args.first : nil
+      named = args.first.kind_of?(NamedSource) ? args.first : nil
       args << block if block
-      # TODO: retrieve named source args
-      self.args = named ? Undies.source(named).args : args
+      self.args = named ? named.args.compact : args
     end
 
     def file?
@@ -32,13 +33,13 @@ module Undies
     end
 
     def args=(values)
-      block, opts, path = [
+      proc, opts, file = [
         values.last.kind_of?(::Proc)   ? values.pop : nil,
         values.last.kind_of?(::Hash)   ? values.pop : {},
         values.last.kind_of?(::String) ? values.pop : nil
       ]
 
-      self.source = path || block
+      self.source = file || proc
       self.layout = opts[:layout]
     end
 
@@ -63,9 +64,8 @@ module Undies
         Source.new(&value)
       when ::String
         Source.new(value)
-      # TODO:
-      # when ::Symbol
-      #   Source.new(Undies.source(value).args)
+      when ::Symbol
+        Undies.source(value)
       else
         raise ArgumentError, "invalid layout"
       end
