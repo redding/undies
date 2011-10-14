@@ -1,4 +1,4 @@
-require 'undies/partial_data'
+require 'undies/partial_locals'
 require 'undies/template'
 
 module Undies

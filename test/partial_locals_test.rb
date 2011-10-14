@@ -1,5 +1,5 @@
 require "test_belt"
-require "undies/partial_data"
+require "undies/partial_locals"
 
 class Undies::PartialLocals
 
