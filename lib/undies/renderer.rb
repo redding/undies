@@ -21,10 +21,19 @@ module Undies
       if !opts.kind_of?(::Hash)
         raise ArgumentError, "please provide a hash to set options with"
       end
+
       @io = opts[:io] if opts.has_key?(:io)
       @pp = opts[:pp] if opts.has_key?(:pp)
       @element_stack = ElementStack.new(self, @io)
     end
+
+    # convenience method so api matches up with element api
+    def ___nodes___; self.nodes; end
+
+    def to_s
+      self.nodes.to_s(0, @pp)
+    end
+
 
   end
 end

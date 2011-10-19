@@ -1,23 +1,17 @@
 module Undies
   class Node
 
-    # wrapping most public methods in triple underscore to not pollute
-    # the public scope.  trying to make the element class's method missing
-    # as effective as possible.
-
-    attr_reader :___content___
+    # wrapping as many public methods as possible in triple underscore to not
+    # pollute the public scope.  trying to make the element class's method
+    # missing as effective as possible.
 
     def initialize(content)
-      @___content___ = content
+      @content = content
     end
 
-    def ___start_tag___
-      nil
-    end
-
-    def ___end_tag___
-      nil
-    end
+    def ___content___;   @content; end
+    def ___start_tag___; nil;      end
+    def ___end_tag___;   nil;      end
 
     def to_s(pp_level=0, pp_indent=nil)
       [ self.___start_tag___,
