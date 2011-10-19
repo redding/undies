@@ -27,10 +27,6 @@ module Undies
       self.layouts.collect{|l| l.source}
     end
 
-    def stack
-      [self, self.layouts].flatten.compact
-    end
-
     def ==(other_source)
       self.source == other_source.source &&
       self.layout_sources == other_source.layout_sources
