@@ -26,7 +26,7 @@ class Undies::Source
 
     should have_readers :source, :data, :layout
     should have_writers :args, :source, :layout
-    should have_instance_method :file?, :layouts, :layout_sources
+    should have_instance_method :file?, :layouts, :layout_sources, :stack
 
     should "know whether its a file source or not" do
       assert @content_file_source.file?
@@ -98,7 +98,7 @@ class Undies::Source
       assert_raises(ArgumentError) { subject.layout = true }
     end
 
-    should "know its layouts and layout sources" do
+    should "know its layouts, layout sources, and stack" do
       assert_equal [], subject.layouts
       assert_equal [], subject.layout_sources
 
@@ -110,6 +110,7 @@ class Undies::Source
 
       assert_equal [lay1, lay2, lay3], subject.layouts
       assert_equal [@content_file, @content_file, @content_file], subject.layout_sources
+      assert_equal [subject, lay1, lay2, lay3], subject.stack
     end
 
   end
