@@ -5,25 +5,25 @@ require 'undies/node_list'
 module Undies
   class Renderer
 
-    attr_reader :io, :pp
-    attr_accessor :source_stack
+    attr_reader :io, :pp, :nodes, :source_stack, :element_stack
 
     def initialize(source, opts={})
-      # @io = opts[:io]
-      # @pp = opts[:pp]
       self.source = source
+      self.options = opts
+      @nodes = NodeList.new
     end
 
     def source=(source)
-      self.source_stack = SourceStack.new(source)
+      @source_stack = SourceStack.new(source)
     end
 
-    def element_stack
-      @element_stack ||= ElementStack.new(self)
-    end
-
-    def nodes
-      @nodes ||= NodeList.new
+    def options=(opts)
+      if !opts.kind_of?(::Hash)
+        raise ArgumentError, "please provide a hash to set options with"
+      end
+      @io = opts[:io] if opts.has_key?(:io)
+      @pp = opts[:pp] if opts.has_key?(:pp)
+      @element_stack = ElementStack.new(self, @io)
     end
 
   end

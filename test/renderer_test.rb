@@ -1,4 +1,5 @@
 require "assert"
+require 'stringio'
 
 require "undies/renderer"
 
@@ -21,9 +22,8 @@ class Undies::Renderer
     end
     subject { @r }
 
-    should have_readers :io, :pp
-    should have_accessors :source_stack
-    should have_instance_methods :source=, :element_stack, :nodes
+    should have_readers :io, :pp, :nodes, :source_stack, :element_stack
+    should have_instance_methods :source=, :options=
 
     should "have a source stack based on its source" do
       assert_kind_of Undies::SourceStack, subject.source_stack
@@ -41,6 +41,48 @@ class Undies::Renderer
 
     should "have a node list that is empty to start" do
       assert_kind_of Undies::NodeList, subject.nodes
+    end
+
+    should "have no option values by default" do
+      assert_nil subject.io
+      assert_nil subject.pp
+    end
+
+
+  end
+
+  class OptionsTests < BasicTests
+    before do
+      @io = StringIO.new("")
+      subject.options = {:io => @io}
+    end
+
+    should "complain if setting options to something not a Hash" do
+      assert_nothing_raised do
+        subject.options = {}
+      end
+      assert_raises ArgumentError do
+        subject.options = 12
+      end
+    end
+
+    should "set its io stream from an :io option" do
+      assert_equal @io, subject.io
+    end
+
+    should "create its element stack with the io stream option" do
+      assert_equal subject.io, subject.element_stack.io
+    end
+
+    should "set its pretty print from an :pp option" do
+      subject.options = {:pp => 2}
+      assert_equal 2, subject.pp
+    end
+
+    should "not override option values when not present in an options hash" do
+      assert_equal @io, subject.io
+      subject.options = {:blahblah => "bbbb"}
+      assert_equal @io, subject.io
     end
 
   end
