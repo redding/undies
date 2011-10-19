@@ -9,10 +9,10 @@ class Undies::Node
     before { @n = Undies::Node.new("a text node here") }
     subject { @n }
     should have_instance_method :to_s, :start_tag, :end_tag
-    should have_reader :___content
+    should have_reader :content
 
     should "know it's content" do
-      assert_equal "a text node here", subject.___content.to_s
+      assert_equal "a text node here", subject.content.to_s
     end
 
     should "know how to serialize itself" do
