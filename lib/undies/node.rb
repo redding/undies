@@ -1,37 +1,35 @@
 module Undies
   class Node
 
-    attr_reader :content
+    # wrapping most public methods in triple underscore to not pollute
+    # the public scope.  trying to make the element class's method missing
+    # as effective as possible.
+
+    attr_reader :___content___
 
     def initialize(content)
-      @content = content
+      @___content___ = content
     end
 
-    def start_tag
+    def ___start_tag___
       nil
     end
 
-    def end_tag
+    def ___end_tag___
       nil
     end
 
     def to_s(pp_level=0, pp_indent=nil)
-      [ self.start_tag,
-        self.content,
-        self.end_tag
+      [ self.___start_tag___,
+        self.___content___,
+        self.___end_tag___
       ].compact.collect do |item|
-        pretty_print(item, pp_level, pp_indent)
+        if item.kind_of? NodeList
+          item.to_s(pp_level+1, pp_indent)
+        else
+          pp_indent ? "#{' '*pp_level*pp_indent}#{item}\n" : item.to_s
+        end
       end.join
-    end
-
-    private
-
-    def pretty_print(data, level, indent)
-      if data.kind_of? NodeList
-        data.to_s(level+1, indent)
-      else
-        indent ? "#{' '*level*indent}#{data}\n" : data
-      end
     end
 
   end

@@ -8,11 +8,11 @@ class Undies::Node
     desc 'a node'
     before { @n = Undies::Node.new("a text node here") }
     subject { @n }
-    should have_instance_method :to_s, :start_tag, :end_tag
-    should have_reader :content
+    should have_instance_method :to_s, :___start_tag___, :___end_tag___
+    should have_reader :___content___
 
     should "know it's content" do
-      assert_equal "a text node here", subject.content.to_s
+      assert_equal "a text node here", subject.___content___.to_s
     end
 
     should "know how to serialize itself" do
