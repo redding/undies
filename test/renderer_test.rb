@@ -22,10 +22,10 @@ class Undies::Renderer
     subject { @r }
 
     should have_readers :io, :pp
-    should have_instance_methods :source_stack, :element_stack, :nodes
+    should have_accessors :source_stack
+    should have_instance_methods :source=, :element_stack, :nodes
 
     should "have a source stack based on its source" do
-      skip
       assert_kind_of Undies::SourceStack, subject.source_stack
       assert_equal Undies::SourceStack.new(@hi_proc_source), subject.source_stack
 
