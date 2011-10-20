@@ -51,7 +51,7 @@ class Undies::PartialTests
 
 
     should "should write to the stream as its being constructed" do
-      TestPartial.new @path, @outstream
+      TestPartial.new @path, {}, :io => @outstream
       assert_equal "<html><head></head><body><div>Hi</div></body></html>", @output
     end
 

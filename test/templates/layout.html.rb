@@ -1,6 +1,6 @@
 _html {
   _head {}
   _body {
-    yield
+    __yield
   }
 }

@@ -21,13 +21,13 @@ module Undies
         raise ArgumentError, 'you can only push element nodes to an ElementStack'
       end
       super
-      @io << item.start_tag if @io
+      @io << item.___start_tag___ if @io
       item
     end
 
     def pop
       item = super
-      @io << item.end_tag if @io
+      @io << item.___end_tag___ if @io
       item
     end
 
