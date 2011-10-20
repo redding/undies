@@ -27,9 +27,6 @@ module Undies
       @element_stack = ElementStack.new(self, @io)
     end
 
-    # convenience method so api matches up with element api
-    def ___nodes___; self.nodes; end
-
     def to_s
       self.nodes.to_s(0, @pp)
     end

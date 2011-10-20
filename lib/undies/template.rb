@@ -106,7 +106,7 @@ module Undies
     # template data data scope
 
     def ___add___(node)
-      self.___renderer___.element_stack.last.___nodes___.append(node)
+      self.___renderer___.element_stack.last.instance_variable_get("@nodes").append(node)
     end
 
     def ___renderer___

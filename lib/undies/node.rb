@@ -1,23 +1,27 @@
 module Undies
+
   class Node
 
-    # wrapping as many public methods as possible in triple underscore to not
-    # pollute the public scope.  trying to make the element class's method
-    # missing as effective as possible.
+    # moving as many methods to the class level as possilbe to keep from
+    # polluting the public instance methods and to maximize the effectiveness
+    # of the Element#method_missing logic
+
+    def self.content(node)
+      node.instance_variable_get("@content")
+    end
+
+    def self.start_tag(node); nil; end
+    def self.end_tag(node);   nil; end
 
     def initialize(content)
       @content = content
     end
 
-    def ___content___;   @content; end
-    def ___start_tag___; nil;      end
-    def ___end_tag___;   nil;      end
-
     def to_s(pp_level=0, pp_indent=nil)
-      [ self.___start_tag___,
-        self.___content___,
-        self.___end_tag___
-      ].compact.collect do |item|
+      [ self.class.start_tag(self),
+        self.class.content(self),
+        self.class.end_tag(self)
+      ].compact.map do |item|
         if item.kind_of? NodeList
           item.to_s(pp_level+1, pp_indent)
         else

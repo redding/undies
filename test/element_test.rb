@@ -13,9 +13,7 @@ class Undies::Element
     before { @e = Undies::Element.new(Undies::ElementStack.new, :div) }
     subject { @e }
 
-    should have_class_method :html_attrs
-    should have_instance_methods :___name___, :___attrs___, :___nodes___
-    should have_instance_methods :___start_tag___, :___end_tag___
+    should have_class_method :html_attrs, :start_tag, :end_tag
     should have_instance_method  :___yield___
     should have_instance_methods :to_str, :to_ary
 
@@ -24,15 +22,15 @@ class Undies::Element
     end
 
     should "store it's name as a string" do
-      assert_equal "div", subject.___name___
+      assert_equal "div", subject.instance_variable_get("@name")
     end
 
     should "have a NodeList as its nodes" do
-      assert_kind_of Undies::NodeList, subject.___nodes___
+      assert_kind_of Undies::NodeList, subject.instance_variable_get("@nodes")
     end
 
     should "have its nodes be its content" do
-      assert_equal subject.___nodes___.object_id, subject.___content___.object_id
+      assert_equal subject.instance_variable_get("@nodes").object_id, subject.class.content(subject).object_id
     end
 
     should "have an element stack as its stack" do
@@ -80,7 +78,7 @@ class Undies::Element
     subject { @e }
 
     should "have no nodes" do
-      assert_equal([], subject.___nodes___)
+      assert_equal([], subject.instance_variable_get("@nodes"))
     end
 
   end
@@ -115,7 +113,7 @@ class Undies::Element
     should "proxy id attr with methods ending in '!'" do
       assert_equal({
         :id => 'thing1'
-      }, subject.thing1!.___attrs___)
+      }, subject.thing1!.instance_variable_get("@attrs"))
     end
 
     should "nest elements from proxy id call" do
@@ -128,19 +126,19 @@ class Undies::Element
     should "proxy id attr with last method call ending in '!'" do
       assert_equal({
         :id => 'thing2'
-      }, subject.thing1!.thing2!.___attrs___)
+      }, subject.thing1!.thing2!.instance_variable_get("@attrs"))
     end
 
     should "set id attr to explicit if called last " do
       assert_equal({
         :id => 'thing3'
-      }, subject.thing1!.thing2!(:id => 'thing3').___attrs___)
+      }, subject.thing1!.thing2!(:id => 'thing3').instance_variable_get("@attrs"))
     end
 
     should "set id attr to proxy if called last" do
       assert_equal({
         :id => 'thing1'
-      }, subject.thing2!(:id => 'thing3').thing1!.___attrs___)
+      }, subject.thing2!(:id => 'thing3').thing1!.instance_variable_get("@attrs"))
     end
 
     should "respond to any other method as a class proxy" do
@@ -150,7 +148,7 @@ class Undies::Element
     should "proxy single html class attr" do
       assert_equal({
         :class => 'thing'
-      }, subject.thing.___attrs___)
+      }, subject.thing.instance_variable_get("@attrs"))
     end
 
     should "nest elements from proxy class call" do
@@ -163,19 +161,19 @@ class Undies::Element
     should "proxy multi html class attrs" do
       assert_equal({
         :class => 'list thing awesome'
-      }, subject.list.thing.awesome.___attrs___)
+      }, subject.list.thing.awesome.instance_variable_get("@attrs"))
     end
 
     should "set class attr with explicit if called last " do
       assert_equal({
         :class => 'list'
-      }, subject.thing.awesome(:class => "list").___attrs___)
+      }, subject.thing.awesome(:class => "list").instance_variable_get("@attrs"))
     end
 
     should "update class attr with proxy if called last" do
       assert_equal({
         :class => 'list is good'
-      }, subject.thing.awesome(:class => "list is").good.___attrs___)
+      }, subject.thing.awesome(:class => "list is").good.instance_variable_get("@attrs"))
     end
 
     should "proxy mixed class and id selector attrs" do
@@ -185,7 +183,7 @@ class Undies::Element
       }, subject.thing1!.awesome({
         :class => "list is",
         :id => "thing2"
-      }).good.thing3!.___attrs___)
+      }).good.thing3!.instance_variable_get("@attrs"))
     end
 
   end

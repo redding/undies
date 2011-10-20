@@ -5,9 +5,9 @@ require 'undies/element_stack'
 module Undies
   class Element < Node
 
-    # wrapping as many public methods as possible in triple underscore to not
-    # pollute the public scope.  trying to make the method missing stuff as
-    # effective as possible.
+    # moving as many methods to the class level as possilbe to keep from
+    # polluting the public instance methods and to maximize the effectiveness
+    # of the Element#method_missing logic
 
     def self.html_attrs(attrs="", ns=nil)
       if attrs.kind_of? ::Hash
@@ -21,43 +21,46 @@ module Undies
       end
     end
 
-    def initialize(stack, name, attrs={}, &block)
-      if !stack.kind_of?(ElementStack)
+    def self.start_tag(element)
+      name = element.instance_variable_get("@name")
+      html_attrs = self.html_attrs(element.instance_variable_get("@attrs"))
+      yield_count = element.instance_variable_get("@yield_count")
+      "<#{name}#{html_attrs}" + (yield_count > 0 ? ">" : " />")
+    end
+
+    def self.end_tag(element)
+      name = element.instance_variable_get("@name")
+      yield_count = element.instance_variable_get("@yield_count")
+      yield_count > 0 ? "</#{name}>" : nil
+    end
+
+
+    def initialize(element_stack, name, attrs={}, &block)
+      if !element_stack.kind_of?(ElementStack)
         raise ArgumentError, "stack must be an Undies::ElementStack"
       end
       if !attrs.kind_of?(::Hash)
         raise ArgumentError, "#{name.inspect} attrs must be provided as a Hash."
       end
 
-      super(@nodes = NodeList.new)
-      @element_stack = stack
-      @yields = 0
-      @name = name.to_s
+      @name  = name.to_s
       @attrs = attrs
+      @nodes = NodeList.new
 
+      @element_stack = element_stack
+      @yield_count = 0
+
+      super(@nodes)
       self.___yield___(block)
     end
 
     def ___yield___(content_block)
       if content_block
-        @yields += 1
+        @yield_count += 1
         @element_stack.push(self)
         content_block.call
         @element_stack.pop
       end
-    end
-
-    def ___name___;  @name;  end
-    def ___attrs___; @attrs; end
-    # def ___attrs___=(value); @attrs = value; end
-    def ___nodes___; @nodes; end
-
-    def ___start_tag___
-      "<#{@name}#{self.class.html_attrs(@attrs)}" + (@yields > 0 ? ">" : " />")
-    end
-
-    def ___end_tag___
-      @yields > 0 ? "</#{@name}>" : nil
     end
 
     # CSS proxy methods ============================================
@@ -66,9 +69,23 @@ module Undies
 
     def method_missing(meth, *args, &block)
       if meth.to_s =~ ID_METH_REGEX
-        ___proxy_id_attr___($1, *args, &block)
+        value = $1
+        attrs = args.first || {}
+        content_block = block
+
+        @attrs.merge!(:id => value)
+        @attrs.merge!(attrs)
+        self.___yield___(content_block)
+        self
       elsif meth.to_s =~ CLASS_METH_REGEX
-        ___proxy_class_attr___($1, *args, &block)
+        value = $1
+        attrs = args.first || {}
+        content_block = block
+
+        @attrs[:class] = [@attrs[:class], value].compact.join(' ')
+        @attrs.merge!(attrs)
+        self.___yield___(content_block)
+        self
       else
         super
       end
@@ -84,9 +101,9 @@ module Undies
     # ==============================================================
 
     def ==(other)
-      other.___name___  == self.___name___  &&
-      other.___attrs___ == self.___attrs___ &&
-      other.___nodes___ == self.___nodes___
+      other.instance_variable_get("@name")  == @name  &&
+      other.instance_variable_get("@attrs") == @attrs &&
+      other.instance_variable_get("@nodes") == @nodes
     end
 
     # overriding this because the base Node class defines a 'to_s' method that
@@ -98,22 +115,6 @@ module Undies
     alias_method :inspect, :to_str
 
     def to_ary(*args); @nodes; end
-
-    private
-
-    def ___proxy_id_attr___(value, attrs={}, &content_block)
-      @attrs.merge!(:id => value)
-      @attrs.merge!(attrs)
-      self.___yield___(content_block)
-      self
-    end
-
-    def ___proxy_class_attr___(value, attrs={}, &content_block)
-      @attrs[:class] = [@attrs[:class], value].compact.join(' ')
-      @attrs.merge!(attrs)
-      self.___yield___(content_block)
-      self
-    end
 
   end
 end
