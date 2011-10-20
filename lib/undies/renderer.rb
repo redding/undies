@@ -31,6 +31,14 @@ module Undies
       self.element_stack.last.instance_variable_get("@nodes").append(node)
     end
 
+    def node(data="")
+      self.append(Node.new(data.to_s))
+    end
+
+    def element(name, attrs={}, &block)
+      self.append(Element.new(self.element_stack, name, attrs, &block))
+    end
+
     def to_s
       self.nodes.to_s(0, @pp)
     end

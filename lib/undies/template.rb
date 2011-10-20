@@ -1,6 +1,4 @@
 require 'undies/renderer'
-require 'undies/node'
-require 'undies/element'
 
 module Undies
   class Template
@@ -53,14 +51,12 @@ module Undies
 
     # Add a text node with the data un-escaped
     def __(data="")
-      node = Node.new(data.to_s)
-      self.___renderer___.append(node)
+      self.___renderer___.node(data.to_s)
     end
 
     # Add an element to the nodes of the current node
     def element(name, attrs={}, &block)
-      node = Element.new(self.___renderer___.element_stack, name, attrs, &block)
-      self.___renderer___.append(node)
+      self.___renderer___.element(name, attrs, &block)
     end
     alias_method :tag, :element
 

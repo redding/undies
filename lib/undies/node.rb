@@ -17,6 +17,12 @@ module Undies
       @content = content
     end
 
+    def ==(other_node)
+      self.class.content(self) == other_node.class.content(other_node) &&
+      self.class.start_tag(self) == other_node.class.start_tag(other_node) &&
+      self.class.end_tag(self) == other_node.class.end_tag(other_node)
+    end
+
     def to_s(pp_level=0, pp_indent=nil)
       [ self.class.start_tag(self),
         self.class.content(self),

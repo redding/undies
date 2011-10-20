@@ -23,7 +23,8 @@ class Undies::Renderer
     subject { @r }
 
     should have_readers :io, :pp, :nodes, :source_stack, :element_stack
-    should have_instance_methods :source=, :options=, :append, :to_s
+    should have_instance_methods :source=, :options=, :to_s
+    should have_instance_methods :append, :node, :element
 
     should "have a source stack based on its source" do
       assert_kind_of Undies::SourceStack, subject.source_stack
@@ -109,6 +110,17 @@ class Undies::Renderer
 
     should "return the node when appending" do
       assert_equal @hey.object_id, subject.append(@hey).object_id
+    end
+
+    should "create and append nodes" do
+      assert_equal @hey, subject.node("hey!")
+      assert_equal 1, subject.element_stack.last.instance_variable_get("@nodes").size
+    end
+
+    should "create and append elements" do
+      elem = Undies::Element.new(subject.element_stack, :div)
+      assert_equal elem, subject.element(:div)
+      assert_equal 1, subject.element_stack.last.instance_variable_get("@nodes").size
     end
 
   end
