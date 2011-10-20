@@ -11,6 +11,7 @@ class Undies::NodeList
     subject { @nl }
 
     should have_instance_method :append
+    should have_reader :io
 
     should "be an Array" do
       assert_kind_of ::Array, subject
@@ -66,5 +67,28 @@ class Undies::NodeList
     end
 
   end
+
+  class StreamingTests < NodeHandlingTests
+    desc "when streaming"
+    before do
+      @stream_list = Undies::NodeList.new(@outstream = StringIO.new(@output = ""))
+    end
+
+    should "know its stream" do
+      assert_same @outstream, @stream_list.io
+    end
+
+    should "stream a node when appended" do
+      assert_equal "", @output
+      @stream_list.append(@hey)
+      assert_equal "hey!", @output
+      @stream_list.append(@you)
+      assert_equal "hey! you...", @output
+      @stream_list.append(@there)
+      assert_equal "hey! you... there.", @output
+    end
+
+  end
+
 
 end

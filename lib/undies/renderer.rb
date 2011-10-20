@@ -10,7 +10,7 @@ module Undies
     def initialize(source, opts={})
       self.source = source
       self.options = opts
-      @nodes = NodeList.new
+      @nodes = NodeList.new(@io)
     end
 
     def source=(source)

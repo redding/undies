@@ -44,7 +44,7 @@ module Undies
 
       @name  = name.to_s
       @attrs = attrs
-      @nodes = NodeList.new
+      @nodes = NodeList.new(element_stack.io)
 
       @element_stack = element_stack
       @yield_count = 0

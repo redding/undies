@@ -54,7 +54,6 @@ module Undies
     # Add a text node with the data un-escaped
     def __(data="")
       node = Node.new(data.to_s)
-      self.___renderer___.io << node.to_s if self.___renderer___.io
       self.___renderer___.append(node)
     end
 

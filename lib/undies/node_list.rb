@@ -9,7 +9,10 @@ module Undies
   # * any pretty printing args are used to render the individual nodes/lists
   class NodeList < ::Array
 
-    def initialize(*args)
+    attr_reader :io
+
+    def initialize(io=nil, *args)
+      @io = io
       # always initialize empty
       super()
     end
@@ -23,6 +26,7 @@ module Undies
       unless item.kind_of?(Node) || item.kind_of?(NodeList)
         raise ArgumentError, 'you can only append nodes or other node lists to a NodeList'
       end
+      self.io << item.to_s if self.io && !item.kind_of?(Element)
       super
     end
 

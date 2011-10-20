@@ -42,8 +42,7 @@ class Undies::ElementStack
   class StreamingTests < BasicTests
     desc "when streaming"
     before do
-      @output = ""
-      @outstream = StringIO.new(@output)
+      @outstream = StringIO.new(@output = "")
       @es = Undies::ElementStack.new(nil, @outstream)
     end
 
