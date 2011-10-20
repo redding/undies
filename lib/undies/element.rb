@@ -5,7 +5,7 @@ require 'undies/element_stack'
 module Undies
   class Element < Node
 
-    # moving as many methods to the class level as possilbe to keep from
+    # have as many methods to the class level as possilbe to keep from
     # polluting the public instance methods and to maximize the effectiveness
     # of the Element#method_missing logic
 

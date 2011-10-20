@@ -8,7 +8,9 @@ class Undies::Template
   class BasicTests < Assert::Context
     desc 'a template'
     before do
-      @t = Undies::Template.new(Undies::Source.new(Proc.new {}))
+      src = Undies::Source.new(Proc.new {})
+      @r = Undies::RenderData.new(src)
+      @t = Undies::Template.new(src)
     end
     subject { @t }
 
@@ -16,6 +18,14 @@ class Undies::Template
     should have_instance_methods :element, :tag, :escape_html
     should have_instance_methods :_, :__
     should have_instance_method  :__yield
+    should have_class_method :render_data
+
+    should "store and retrieve render data objects using a class level accessor" do
+      assert_nothing_raised do
+        subject.class.render_data(subject, @r)
+      end
+      assert_same @r, subject.class.render_data(subject)
+    end
 
     should "maintain the template's scope throughout content blocks" do
       templ = Undies::Template.new(Undies::Source.new do
@@ -60,9 +70,9 @@ class Undies::Template
 
     should "also add the node using the '__' and '_' methods" do
       subject.__(@data)
-      assert_equal 1, subject.send(:___renderer___).nodes.size
+      assert_equal 1, subject.class.render_data(subject).nodes.size
       subject._(@data)
-      assert_equal 2, subject.send(:___renderer___).nodes.size
+      assert_equal 2, subject.class.render_data(subject).nodes.size
     end
 
     should "add the text un-escaped using the '__' method" do
@@ -93,8 +103,8 @@ class Undies::Template
 
     should "add a new Element object" do
       subject.element(:br)
-      assert_equal 1, subject.send(:___renderer___).nodes.size
-      assert_equal Undies::Element.new(Undies::ElementStack.new, :br), subject.send(:___renderer___).nodes.first
+      assert_equal 1, subject.class.render_data(subject).nodes.size
+      assert_equal Undies::Element.new(Undies::ElementStack.new, :br), subject.class.render_data(subject).nodes.first
     end
 
     should "respond to underscore-prefix methods" do

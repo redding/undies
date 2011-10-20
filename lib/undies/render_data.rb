@@ -3,7 +3,7 @@ require 'undies/element_stack'
 require 'undies/node_list'
 
 module Undies
-  class Renderer
+  class RenderData
 
     attr_reader :io, :pp, :nodes, :source_stack, :element_stack
 
@@ -39,10 +39,10 @@ module Undies
       self.append(Element.new(self.element_stack, name, attrs, &block))
     end
 
-    def to_s
+    # TODO: may be obsolete if we do full streaming solution
+    def output
       self.nodes.to_s(0, @pp)
     end
-
 
   end
 end
