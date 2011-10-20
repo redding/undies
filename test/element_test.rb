@@ -14,7 +14,6 @@ class Undies::Element
     subject { @e }
 
     should have_class_method :html_attrs, :start_tag, :end_tag
-    should have_instance_method  :___yield___
     should have_instance_methods :to_str, :to_ary
 
     should "be a Node" do

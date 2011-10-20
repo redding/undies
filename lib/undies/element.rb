@@ -34,7 +34,6 @@ module Undies
       yield_count > 0 ? "</#{name}>" : nil
     end
 
-
     def initialize(element_stack, name, attrs={}, &block)
       if !element_stack.kind_of?(ElementStack)
         raise ArgumentError, "stack must be an Undies::ElementStack"
@@ -49,18 +48,23 @@ module Undies
 
       @element_stack = element_stack
       @yield_count = 0
+      @yield_lambda = lambda do |content_block|
+        if content_block
+          @yield_count += 1
+          @element_stack.push(self)
+          content_block.call
+          @element_stack.pop
+        end
+      end
+      @proxy_lambda = lambda do |value, attrs, content_block, &block|
+        block.call(value)
+        @attrs.merge!(attrs)
+        @yield_lambda.call(content_block)
+        self
+      end
 
       super(@nodes)
-      self.___yield___(block)
-    end
-
-    def ___yield___(content_block)
-      if content_block
-        @yield_count += 1
-        @element_stack.push(self)
-        content_block.call
-        @element_stack.pop
-      end
+      @yield_lambda.call(block)
     end
 
     # CSS proxy methods ============================================
@@ -69,23 +73,13 @@ module Undies
 
     def method_missing(meth, *args, &block)
       if meth.to_s =~ ID_METH_REGEX
-        value = $1
-        attrs = args.first || {}
-        content_block = block
-
-        @attrs.merge!(:id => value)
-        @attrs.merge!(attrs)
-        self.___yield___(content_block)
-        self
+        @proxy_lambda.call($1, args.first || {}, block) do |value|
+          @attrs.merge!(:id => value)
+        end
       elsif meth.to_s =~ CLASS_METH_REGEX
-        value = $1
-        attrs = args.first || {}
-        content_block = block
-
-        @attrs[:class] = [@attrs[:class], value].compact.join(' ')
-        @attrs.merge!(attrs)
-        self.___yield___(content_block)
-        self
+        @proxy_lambda.call($1, args.first || {}, block) do |value|
+          @attrs[:class] = [@attrs[:class], value].compact.join(' ')
+        end
       else
         super
       end
