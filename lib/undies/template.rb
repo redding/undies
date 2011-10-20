@@ -29,6 +29,8 @@ module Undies
       self.__yield
     end
 
+    # call this to render the templates source
+    # use this method in layouts to insert a layout's content source
     def __yield
       if source = self.___renderer___.source_stack.pop
         if source.file?
@@ -53,12 +55,13 @@ module Undies
     def __(data="")
       node = Node.new(data.to_s)
       self.___renderer___.io << node.to_s if self.___renderer___.io
-      self.___add___(node)
+      self.___renderer___.append(node)
     end
 
     # Add an element to the nodes of the current node
     def element(name, attrs={}, &block)
-      self.___add___(Element.new(self.___renderer___.element_stack, name, attrs, &block))
+      node = Element.new(self.___renderer___.element_stack, name, attrs, &block)
+      self.___renderer___.append(node)
     end
     alias_method :tag, :element
 
@@ -104,10 +107,6 @@ module Undies
 
     # wrapping non-public methods with a triple underscore to not pollute
     # template data data scope
-
-    def ___add___(node)
-      self.___renderer___.element_stack.last.instance_variable_get("@nodes").append(node)
-    end
 
     def ___renderer___
       @___renderer___

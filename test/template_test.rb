@@ -196,9 +196,7 @@ class Undies::Template
     desc "that is streaming"
 
     before do
-      @output = ""
-      outstream = StringIO.new(@output)
-
+      outstream = StringIO.new(@output = "")
       src = Undies::Source.new do
         _div.good.thing!(:type => "something") {
           __ "action"
