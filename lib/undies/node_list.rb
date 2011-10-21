@@ -2,17 +2,14 @@ require "undies/node"
 
 module Undies
 
-  # a node list is an ordered collection of node data
-  # * the Template class builds one as the template source is evaluated
-  # * a list may contains nodes and/or other node lists
-  # * serialize a list using 'to_s' using optional pretty printing args
-  # * any pretty printing args are used to render the individual nodes/lists
+  # TODO: don't need to subclass array if we aren't storing in memory
   class NodeList < ::Array
 
-    attr_reader :io
+    attr_reader :output
 
-    def initialize(io=nil, *args)
-      @io = io
+    def initialize(output, *args)
+      # reference the to output class being used to output rendered results
+      @output = output
       # always initialize empty
       super()
     end
@@ -22,14 +19,18 @@ module Undies
       node
     end
 
+    # TODO: this won't be necessary (move to append method) once we stop storing in memory
     def <<(item)
       unless item.kind_of?(Node) || item.kind_of?(NodeList)
         raise ArgumentError, 'you can only append nodes or other node lists to a NodeList'
       end
-      self.io << item.to_s if self.io && !item.kind_of?(Element)
+
+      # don't output elements when they are pushed b/c the element stack handles their output
+      self.output << item.to_s if !item.kind_of?(Element)
       super
     end
 
+    # TODO: don't need to_s if we are storing in memory
     def to_s(pp_level=0, pp_indent=nil)
       self.collect{|n| n.to_s(pp_level, pp_indent)}.join
     end

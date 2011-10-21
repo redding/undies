@@ -9,7 +9,10 @@ class Undies::Template
     desc 'a template'
     before do
       src = Undies::Source.new(Proc.new {})
-      @r = Undies::RenderData.new(src)
+      @outstream = StringIO.new(@output = "")
+      @output = Undies::Output.new(@outstream)
+
+      @r = Undies::RenderData.new(src, @output)
       @t = Undies::Template.new(src)
     end
     subject { @t }
@@ -92,9 +95,12 @@ class Undies::Template
 
   class ElementTests < BasicTests
     desc "using the 'element' helper"
+    before do
+      @es = Undies::ElementStack.new(subject.instance_variable_get("@___output___"))
+    end
 
     should "return an Element object" do
-      assert_equal Undies::Element.new(Undies::ElementStack.new, :br), subject.element(:br)
+      assert_equal Undies::Element.new(@es, :br), subject.element(:br)
     end
 
     should "alias it with 'tag'" do
@@ -104,7 +110,7 @@ class Undies::Template
     should "add a new Element object" do
       subject.element(:br)
       assert_equal 1, subject.class.render_data(subject).nodes.size
-      assert_equal Undies::Element.new(Undies::ElementStack.new, :br), subject.class.render_data(subject).nodes.first
+      assert_equal Undies::Element.new(@es, :br), subject.class.render_data(subject).nodes.first
     end
 
     should "respond to underscore-prefix methods" do

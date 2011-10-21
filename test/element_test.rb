@@ -6,11 +6,12 @@ require "undies/template"
 
 class Undies::Element
 
-
-
   class BasicTests < Assert::Context
     desc 'an element'
-    before { @e = Undies::Element.new(Undies::ElementStack.new, :div) }
+    before do
+      @es = Undies::ElementStack.new(@output = Undies::Output.new(StringIO.new("")))
+      @e = Undies::Element.new(@es, :div)
+    end
     subject { @e }
 
     should have_class_method :html_attrs, :start_tag, :end_tag
@@ -71,9 +72,9 @@ class Undies::Element
     end
   end
 
-  class EmptyTests < Assert::Context
+  class EmptyTests < BasicTests
     desc 'an empty element'
-    before { @e = Undies::Element.new(Undies::ElementStack.new, :br) }
+    before { @e = Undies::Element.new(@es, :br) }
     subject { @e }
 
     should "have no nodes" do
@@ -85,12 +86,12 @@ class Undies::Element
   class SerializeTests < BasicTests
 
     should "serialize with no child elements" do
-      element = Undies::Element.new(Undies::ElementStack.new, :br)
+      element = Undies::Element.new(@es, :br)
       assert_equal "<br />", element.to_s
     end
 
     should "serialize with attrs" do
-      element = Undies::Element.new(Undies::ElementStack.new, :br, {:class => 'big'})
+      element = Undies::Element.new(@es, :br, {:class => 'big'})
       assert_equal '<br class="big" />', element.to_s
     end
 

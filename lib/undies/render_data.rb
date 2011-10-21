@@ -1,30 +1,40 @@
 require 'undies/source_stack'
 require 'undies/element_stack'
 require 'undies/node_list'
+require 'undies/output'
 
 module Undies
   class RenderData
 
     attr_reader :io, :pp, :nodes, :source_stack, :element_stack
 
-    def initialize(source, opts={})
+    def initialize(source, output)
       self.source = source
-      self.options = opts
-      @nodes = NodeList.new(@io)
+      self.output = output
+
+      # TODO: may not be needed going forward
+      @nodes = NodeList.new(@output)
     end
 
-    def source=(source)
-      @source_stack = SourceStack.new(source)
+    def source=(value)
+      @source_stack = SourceStack.new(value)
     end
 
-    def options=(opts)
-      if !opts.kind_of?(::Hash)
-        raise ArgumentError, "please provide a hash to set options with"
+    def output=(value)
+      if !value.kind_of?(Output)
+        raise ArgumentError, "please provide an Output object"
       end
 
-      @io = opts[:io] if opts.has_key?(:io)
-      @pp = opts[:pp] if opts.has_key?(:pp)
-      @element_stack = ElementStack.new(self, @io)
+      @output = value
+
+      # TODO: pass the output obj to the element stack
+      @element_stack = ElementStack.new(@output, self)
+
+      # TODO: not needed going forward
+      @io = @output.io
+      @pp = @output.pp
+
+      @output
     end
 
     def append(node)

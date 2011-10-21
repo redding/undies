@@ -8,11 +8,14 @@ class Undies::ElementStack
 
   class BasicTests < Assert::Context
     desc 'an element stack'
-    before { @es = Undies::ElementStack.new }
+    before do
+      @output = Undies::Output.new(StringIO.new(""))
+      @es = Undies::ElementStack.new(@output)
+    end
     subject { @es }
 
+    should have_reader :output
     should have_instance_method :push, :pop
-    should have_reader :io
 
     should "be an Array" do
       assert_kind_of Array, subject
@@ -27,13 +30,14 @@ class Undies::ElementStack
         subject.push Undies::Node.new
       end
 
+      # you can append anything to an element stack, just verifying
       assert_nothing_raised do
         subject << 1
       end
     end
 
     should "initialize with a first item if one is given" do
-      stack = Undies::ElementStack.new(12)
+      stack = Undies::ElementStack.new(@output, 12)
       assert_equal [12], stack
     end
 
@@ -42,31 +46,31 @@ class Undies::ElementStack
   class StreamingTests < BasicTests
     desc "when streaming"
     before do
-      @outstream = StringIO.new(@output = "")
-      @es = Undies::ElementStack.new(nil, @outstream)
+      @stream_test_output = Undies::Output.new(@outstream = StringIO.new(@out = ""))
+      @es = Undies::ElementStack.new(@stream_test_output)
     end
 
-    should "know its stream" do
-      assert_same @outstream, subject.io
+    should "know its output" do
+      assert_same @stream_test_output, subject.output
     end
 
     should "stream an elements start tag when that element is pushed" do
-      subject.push(Undies::Element.new(Undies::ElementStack.new, "div") {})
-      assert_equal "<div>", @output
+      subject.push(Undies::Element.new(Undies::ElementStack.new(@output), "div") {})
+      assert_equal "<div>", @out
     end
 
     should "stream an elements end tag when that element is popped" do
-      elem = Undies::Element.new(Undies::ElementStack.new, "div") {}
+      elem = Undies::Element.new(Undies::ElementStack.new(@output), "div") {}
       subject.push(elem)
       popped_elem = subject.pop
-      assert_equal "<div></div>", @output
+      assert_equal "<div></div>", @out
       assert_same elem, popped_elem
     end
 
     should "stream an element with no content when pushed/popped" do
-      subject.push(Undies::Element.new(Undies::ElementStack.new, "span"))
+      subject.push(Undies::Element.new(Undies::ElementStack.new(subject.output), "span"))
       subject.pop
-      assert_equal "<span />", @output
+      assert_equal "<span />", @out
     end
 
   end

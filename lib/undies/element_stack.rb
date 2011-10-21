@@ -1,18 +1,23 @@
 require "undies/element"
 
 module Undies
+
+  # TODO: don't need to subclass array if we aren't storing in memory
   class ElementStack < ::Array
 
     # an element stack is used to manage which element is receiving content
     # if an undies template is streaming io, then when an element is pushed,
     # its start tag is added to the stream and its end tag is added when popped.
 
-    attr_reader :io
+    attr_reader :output
 
-    def initialize(first_item=nil, io=nil, *args)
-      @io = io
+    def initialize(output, first_item=nil, *args)
+      # reference the to output class being used to output rendered results
+      @output = output
       # always initialize empty
       super()
+
+      # apply any first_item
       self.send(:<<, first_item) if first_item
     end
 
@@ -21,13 +26,13 @@ module Undies
         raise ArgumentError, 'you can only push element nodes to an ElementStack'
       end
       super
-      @io << item.class.start_tag(item) if @io
+      self.output << item.class.start_tag(item)
       item
     end
 
     def pop
       item = super
-      @io << item.class.end_tag(item) if @io
+      self.output << item.class.end_tag(item)
       item
     end
 

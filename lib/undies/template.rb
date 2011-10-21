@@ -14,7 +14,9 @@ module Undies
 
     def initialize(source, data={}, opts={})
       # setup the render data
-      self.class.render_data(self, RenderData.new(source, opts))
+
+      @___output___ = Output.new(opts[:io] || StringIO.new(@___out___ = ""), opts)
+      self.class.render_data(self, RenderData.new(source, @___output___))
 
       # apply data to template scope
       raise ArgumentError if !data.kind_of?(::Hash)
