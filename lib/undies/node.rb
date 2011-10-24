@@ -10,6 +10,10 @@ module Undies
       node.instance_variable_get("@content")
     end
 
+    def self.flush(node, node_stack)
+      node_stack.output << self.content(node)
+    end
+
     def self.start_tag(node); nil; end
     def self.end_tag(node);   nil; end
 
@@ -23,12 +27,12 @@ module Undies
       self.class.end_tag(self) == other_node.class.end_tag(other_node)
     end
 
-    def to_s
-      [ self.class.start_tag(self),
-        self.class.content(self),
-        self.class.end_tag(self)
-      ].compact.map{ |item| item.to_s }.join
-    end
+    # def to_s
+    #   [ self.class.start_tag(self),
+    #     self.class.content(self),
+    #     self.class.end_tag(self)
+    #   ].compact.map{ |item| item.to_s }.join
+    # end
 
   end
 end
