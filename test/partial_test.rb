@@ -9,7 +9,10 @@ class Undies::PartialTests
     desc 'partial'
     before do
       @path = 'test/templates/test.html.rb'
-      @p = TestPartial.new @path
+      @outstream = StringIO.new(@out = "")
+      @output = Undies::Output.new(@outstream)
+
+      @p = TestPartial.new @path, {}, @output
     end
     subject { @p }
 
@@ -23,6 +26,10 @@ class Undies::PartialTests
       end
     end
 
+    should "should write to the stream as its being constructed" do
+      assert_equal "<html><head></head><body><div>Hi</div></body></html>", @out
+    end
+
   end
 
   class LocalsTests < BasicTests
@@ -31,28 +38,19 @@ class Undies::PartialTests
     end
 
     should "know its data" do
-      partial = TestPartial.new(@path, :name => 'A Name')
+      partial = TestPartial.new(@path, {:name => 'A Name'}, @output)
       assert_equal("A Name", partial.name)
     end
 
     should "know its object" do
-      partial = TestPartial.new(@path, "thing")
+      partial = TestPartial.new(@path, "thing", @output)
       assert_equal("thing", partial.index)
     end
 
-  end
-
-  class StreamTests < BasicTests
-    desc "that is streaming"
-    before do
-      @output = ""
-      @outstream = StringIO.new(@output)
-    end
-
-
-    should "should write to the stream as its being constructed" do
-      TestPartial.new @path, {}, :io => @outstream
-      assert_equal "<html><head></head><body><div>Hi</div></body></html>", @output
+    should "know its object and other data" do
+      partial = TestPartial.new(@path, "thing", {:name => 'A Name'}, @output)
+      assert_equal("thing", partial.index)
+      assert_equal("A Name", partial.name)
     end
 
   end

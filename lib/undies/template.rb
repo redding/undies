@@ -12,11 +12,9 @@ module Undies
       args.size > 0 ? @template_rd[t] = args.first : @template_rd[t]
     end
 
-    def initialize(source, data={}, opts={})
+    def initialize(source, data, output)
       # setup the render data
-
-      @___output___ = Output.new(opts[:io] || StringIO.new(@___out___ = ""), opts)
-      self.class.render_data(self, RenderData.new(source, @___output___))
+      self.class.render_data(self, RenderData.new(source, output))
 
       # apply data to template scope
       raise ArgumentError if !data.kind_of?(::Hash)

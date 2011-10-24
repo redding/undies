@@ -13,7 +13,7 @@ class Undies::Template
       @output = Undies::Output.new(@outstream)
 
       @r = Undies::RenderData.new(src, @output)
-      @t = Undies::Template.new(src)
+      @t = Undies::Template.new(src, {}, @output)
     end
     subject { @t }
 
@@ -37,12 +37,13 @@ class Undies::Template
             __ self.object_id
           }
         }
-      end)
+      end, {}, @output)
       assert_equal "<div><div>#{templ.object_id}</div></div>", templ.to_s
     end
 
     should "generate pretty printed markup" do
       file = 'test/templates/test.html.rb'
+      output = Undies::Output.new(@outstream, :pp => 2)
       assert_equal(
         %{<html>
   <head>
@@ -54,7 +55,7 @@ class Undies::Template
   </body>
 </html>
 },
-        Undies::Template.new(Undies::Source.new(File.expand_path(file)), {}, :pp => 2).to_s
+        Undies::Template.new(Undies::Source.new(File.expand_path(file)), {}, output).to_s
       )
     end
 
@@ -138,7 +139,7 @@ class Undies::Template
       end
       assert_respond_to(
         :some,
-        Undies::Template.new(Undies::Source.new(Proc.new {}), {:some => 'data'})
+        Undies::Template.new(Undies::Source.new(Proc.new {}), {:some => 'data'}, @output)
       )
     end
 
@@ -149,7 +150,7 @@ class Undies::Template
     end
 
     should "respond to each locals key with its value" do
-      templ = Undies::Template.new(Undies::Source.new(Proc.new {}), {:some => 'data'})
+      templ = Undies::Template.new(Undies::Source.new(Proc.new {}), {:some => 'data'}, @output)
       assert_equal "data", templ.some
     end
 
@@ -159,7 +160,7 @@ class Undies::Template
           _div { _ name }
         }
       end
-      templ = Undies::Template.new(src, {:name => "awesome"})
+      templ = Undies::Template.new(src, {:name => "awesome"}, @output)
       assert_equal "<div><div>awesome</div></div>", templ.to_s
     end
 
@@ -191,19 +192,19 @@ class Undies::Template
     end
 
     should "generate markup given proc content in a proc layout" do
-      assert_equal @expected_output, Undies::Template.new(@cp_lp_source).to_s
+      assert_equal @expected_output, Undies::Template.new(@cp_lp_source, {}, @output).to_s
     end
 
     should "generate markup given proc content in a layout file" do
-      assert_equal @expected_output, Undies::Template.new(@cp_lf_source).to_s
+      assert_equal @expected_output, Undies::Template.new(@cp_lf_source, {}, @output).to_s
     end
 
     should "generate markup given a content file in a proc layout" do
-      assert_equal @expected_output, Undies::Template.new(@cf_lp_source).to_s
+      assert_equal @expected_output, Undies::Template.new(@cf_lp_source, {}, @output).to_s
     end
 
     should "generate markup given a content file in a layout file" do
-      assert_equal @expected_output, Undies::Template.new(@cf_lf_source).to_s
+      assert_equal @expected_output, Undies::Template.new(@cf_lf_source, {}, @output).to_s
     end
 
   end
@@ -220,7 +221,7 @@ class Undies::Template
       end
       @expected_output = "<div class=\"good\" id=\"thing\" type=\"something\">action</div>"
 
-      Undies::Template.new(src, {}, :io => outstream)
+      Undies::Template.new(src, {}, Undies::Output.new(outstream))
     end
 
     should "should write to the stream as its being constructed" do
