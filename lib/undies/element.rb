@@ -1,5 +1,4 @@
 require 'undies/node'
-require 'undies/node_list'
 require 'undies/element_stack'
 
 module Undies
@@ -21,50 +20,53 @@ module Undies
       end
     end
 
+    def self.content_blocks(element)
+      element.instance_variable_get("@content_blocks")
+    end
+
+    def self.content(element)
+      self.content_blocks(element).each{ |content| content.call }
+      nil
+    end
+
     def self.start_tag(element)
       name = element.instance_variable_get("@name")
       html_attrs = self.html_attrs(element.instance_variable_get("@attrs"))
-      yield_count = element.instance_variable_get("@yield_count")
-      "<#{name}#{html_attrs}" + (yield_count > 0 ? ">" : " />")
+      cb_count = self.content_blocks(element).size
+      "<#{name}#{html_attrs}" + (cb_count > 0 ? ">" : " />")
     end
 
     def self.end_tag(element)
       name = element.instance_variable_get("@name")
-      yield_count = element.instance_variable_get("@yield_count")
-      yield_count > 0 ? "</#{name}>" : nil
+      cb_count = self.content_blocks(element).size
+      cb_count > 0 ? "</#{name}>" : nil
     end
 
-    def initialize(element_stack, name, attrs={}, &block)
-      if !element_stack.kind_of?(ElementStack)
-        raise ArgumentError, "stack must be an Undies::ElementStack"
-      end
+    def self.flush(element, node_stack)
+      node_stack.output << self.start_tag(element)
+      node_stack.output.pp_level(:up)
+      node_stack.output << self.content(element)
+      node_stack.pop
+      node_stack.output.pp_level(:down)
+      node_stack.output << self.end_tag(element)
+    end
+
+    def initialize(name, attrs={}, &block)
       if !attrs.kind_of?(::Hash)
         raise ArgumentError, "#{name.inspect} attrs must be provided as a Hash."
       end
 
       @name  = name.to_s
       @attrs = attrs
-      @nodes = NodeList.new(element_stack.output)
+      @content_blocks = []
+      @content_blocks << block if block
 
-      @element_stack = element_stack
-      @yield_count = 0
-      @yield_lambda = lambda do |content_block|
-        if content_block
-          @yield_count += 1
-          @element_stack.push(self)
-          content_block.call
-          @element_stack.pop
-        end
-      end
       @proxy_lambda = lambda do |value, attrs, content_block, &block|
         block.call(value)
         @attrs.merge!(attrs)
-        @yield_lambda.call(content_block)
+        @content_blocks << content_block if content_block
         self
       end
-
-      super(@nodes)
-      @yield_lambda.call(block)
     end
 
     # CSS proxy methods ============================================
@@ -107,8 +109,6 @@ module Undies
       "@name=#{@name.inspect}, @attrs=#{@attrs.inspect}, @nodes=#{@nodes.inspect}"
     end
     alias_method :inspect, :to_str
-
-    def to_ary(*args); @nodes; end
 
   end
 end

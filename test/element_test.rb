@@ -9,14 +9,13 @@ class Undies::Element
   class BasicTests < Assert::Context
     desc 'an element'
     before do
-      @out = ""
-      @es = Undies::ElementStack.new(@output = Undies::Output.new(StringIO.new(@out)))
-      @e = Undies::Element.new(@es, :div)
+      @e = Undies::Element.new(:div)
     end
     subject { @e }
 
-    should have_class_method :html_attrs, :start_tag, :end_tag
-    should have_instance_methods :to_str, :to_ary
+    should have_class_methods :html_attrs, :content_blocks
+    should have_class_methods :content, :start_tag, :end_tag, :flush
+    should have_instance_method :to_str
 
     should "be a Node" do
       assert_kind_of Undies::Node, subject
@@ -26,27 +25,13 @@ class Undies::Element
       assert_equal "div", subject.instance_variable_get("@name")
     end
 
-    should "have a NodeList as its nodes" do
-      assert_kind_of Undies::NodeList, subject.instance_variable_get("@nodes")
-    end
-
-    should "have its nodes be its content" do
-      assert_equal subject.instance_variable_get("@nodes").object_id, subject.class.content(subject).object_id
-    end
-
-    should "have an element stack as its stack" do
-      assert_kind_of Undies::ElementStack, subject.send(:instance_variable_get, "@element_stack")
-    end
-
-    should "complain if not created with an ElementStack" do
-      assert_raises ArgumentError do
-        Undies::Element.new([], :div)
-      end
+    should "have no content itself" do
+      assert_nil subject.class.content(subject)
     end
 
   end
 
-  class HtmlAttrsTest < Assert::Context
+  class HtmlAttrsTest < BasicTests
     desc "the element class html_attrs util"
 
     should "convert an empty hash to html attrs" do
@@ -65,45 +50,11 @@ class Undies::Element
         :class => "testing", :id => "test_2",
         :nested => {:something => 'is_awesome'}
       })
-      puts attrs.inspect
       assert_match /^\s{1}/, attrs
       assert_included 'class="testing"', attrs
       assert_included 'id="test_2"', attrs
       assert_included 'nested_something="is_awesome"', attrs
     end
-  end
-
-  class EmptyTests < BasicTests
-    desc 'an empty element'
-    before { @e = Undies::Element.new(@es, :br) }
-    subject { @e }
-
-    should "have no nodes" do
-      assert_equal([], subject.instance_variable_get("@nodes"))
-    end
-
-  end
-
-  class SerializeTests < BasicTests
-
-    should "serialize with no child elements" do
-      element = Undies::Element.new(@es, :br)
-      assert_equal "<br />", element.to_s
-    end
-
-    should "serialize with attrs" do
-      element = Undies::Element.new(@es, :br, {:class => 'big'})
-      assert_equal '<br class="big" />', element.to_s
-    end
-
-    should "serialize with attrs and content" do
-      src = Undies::Source.new do
-        element(:strong, {:class => 'big'}) { __ "Loud Noises!" }
-      end
-      templ = Undies::Template.new(src, {}, @output)
-      assert_equal '<strong class="big">Loud Noises!</strong>', @out
-    end
-
   end
 
   class CSSProxyTests < BasicTests
@@ -116,14 +67,6 @@ class Undies::Element
       assert_equal({
         :id => 'thing1'
       }, subject.thing1!.instance_variable_get("@attrs"))
-    end
-
-    should "nest elements from proxy id call" do
-      src = Undies::Source.new do
-        element(:div).thing1! { _ "stuff" }
-      end
-      templ = Undies::Template.new(src, {}, @output)
-      assert_equal "<div id=\"thing1\">stuff</div>", @out
     end
 
     should "proxy id attr with last method call ending in '!'" do
@@ -154,14 +97,6 @@ class Undies::Element
       }, subject.thing.instance_variable_get("@attrs"))
     end
 
-    should "nest elements from proxy class call" do
-      src = Undies::Source.new do
-        element(:div).thing { _ "stuff" }
-      end
-      templ = Undies::Template.new(src, {}, @output)
-      assert_equal "<div class=\"thing\">stuff</div>", @out
-    end
-
     should "proxy multi html class attrs" do
       assert_equal({
         :class => 'list thing awesome'
@@ -188,6 +123,83 @@ class Undies::Element
         :class => "list is",
         :id => "thing2"
       }).good.thing3!.instance_variable_get("@attrs"))
+    end
+
+  end
+
+  class SerializeTests < BasicTests
+    before do
+      @output = Undies::Output.new(StringIO.new(@out = ""))
+    end
+
+    should "serialize with no child elements" do
+      src = Undies::Source.new do
+        element(:br)
+      end
+      templ = Undies::Template.new(src, {}, @output)
+      assert_equal "<br />", @out
+    end
+
+    should "serialize with attrs" do
+      src = Undies::Source.new do
+        element(:br, :class => 'big')
+      end
+      templ = Undies::Template.new(src, {}, @output)
+      assert_equal '<br class="big" />', @out
+    end
+
+    should "serialize with attrs and content" do
+      src = Undies::Source.new do
+        element(:strong, {:class => 'big'}) { __ "Loud Noises!" }
+      end
+      templ = Undies::Template.new(src, {}, @output)
+      assert_equal '<strong class="big">Loud Noises!</strong>', @out
+    end
+
+    should "serialize element proxy id call" do
+      src = Undies::Source.new do
+        element(:div).thing1! { _ "stuff" }
+      end
+      templ = Undies::Template.new(src, {}, @output)
+      assert_equal "<div id=\"thing1\">stuff</div>", @out
+    end
+
+    should "serialize element proxy class call" do
+      src = Undies::Source.new do
+        element(:div).thing { _ "stuff" }
+      end
+      templ = Undies::Template.new(src, {}, @output)
+      assert_equal "<div class=\"thing\">stuff</div>", @out
+    end
+
+    should "serialize content from separate content blocks" do
+      src = Undies::Source.new do
+        element(:div){ _ "stuff" }.thing1!{ _ " and more stuff" }
+      end
+      templ = Undies::Template.new(src, {}, @output)
+      assert_equal "<div id=\"thing1\">stuff and more stuff</div>", @out
+    end
+
+    should "serialize nested elements with pp" do
+      output = Undies::Output.new(StringIO.new(@out = ""), :pp => 4)
+      src = Undies::Source.new do
+        element(:div) {
+          element(:span) { _ "Content!" }
+          __ "Raw"
+          element(:span) { _ "More content" }
+        }
+      end
+      templ = Undies::Template.new(src, {}, output)
+      assert_equal "<div>
+    <span>
+        Content!
+    </span>
+    Raw
+    <span>
+        More content
+    </span>
+</div>
+", @out
     end
 
   end
