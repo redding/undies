@@ -27,11 +27,13 @@ module Undies
       end
       super
       self.output << item.class.start_tag(item)
+      self.output.pp_level(:up)
       item
     end
 
     def pop
       item = super
+      self.output.pp_level(:down)
       self.output << item.class.end_tag(item)
       item
     end

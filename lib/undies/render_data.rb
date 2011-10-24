@@ -49,10 +49,5 @@ module Undies
       self.append(Element.new(self.element_stack, name, attrs, &block))
     end
 
-    # TODO: may be obsolete if we do full streaming solution
-    def output
-      self.nodes.to_s(0, @pp)
-    end
-
   end
 end

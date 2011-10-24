@@ -9,7 +9,7 @@ class Undies::Template
     desc 'a template'
     before do
       src = Undies::Source.new(Proc.new {})
-      @outstream = StringIO.new(@output = "")
+      @outstream = StringIO.new(@out = "")
       @output = Undies::Output.new(@outstream)
 
       @r = Undies::RenderData.new(src, @output)
@@ -38,12 +38,13 @@ class Undies::Template
           }
         }
       end, {}, @output)
-      assert_equal "<div><div>#{templ.object_id}</div></div>", templ.to_s
+      assert_equal "<div><div>#{templ.object_id}</div></div>", @out
     end
 
     should "generate pretty printed markup" do
       file = 'test/templates/test.html.rb'
       output = Undies::Output.new(@outstream, :pp => 2)
+      Undies::Template.new(Undies::Source.new(File.expand_path(file)), {}, output)
       assert_equal(
         %{<html>
   <head>
@@ -55,7 +56,7 @@ class Undies::Template
   </body>
 </html>
 },
-        Undies::Template.new(Undies::Source.new(File.expand_path(file)), {}, output).to_s
+        @out
       )
     end
 
@@ -160,8 +161,8 @@ class Undies::Template
           _div { _ name }
         }
       end
-      templ = Undies::Template.new(src, {:name => "awesome"}, @output)
-      assert_equal "<div><div>awesome</div></div>", templ.to_s
+      Undies::Template.new(src, {:name => "awesome"}, @output)
+      assert_equal "<div><div>awesome</div></div>", @out
     end
 
   end
@@ -192,19 +193,23 @@ class Undies::Template
     end
 
     should "generate markup given proc content in a proc layout" do
-      assert_equal @expected_output, Undies::Template.new(@cp_lp_source, {}, @output).to_s
+      Undies::Template.new(@cp_lp_source, {}, @output)
+      assert_equal @expected_output, @out
     end
 
     should "generate markup given proc content in a layout file" do
-      assert_equal @expected_output, Undies::Template.new(@cp_lf_source, {}, @output).to_s
+      Undies::Template.new(@cp_lf_source, {}, @output)
+      assert_equal @expected_output, @out
     end
 
     should "generate markup given a content file in a proc layout" do
-      assert_equal @expected_output, Undies::Template.new(@cf_lp_source, {}, @output).to_s
+      Undies::Template.new(@cf_lp_source, {}, @output)
+      assert_equal @expected_output, @out
     end
 
     should "generate markup given a content file in a layout file" do
-      assert_equal @expected_output, Undies::Template.new(@cf_lf_source, {}, @output).to_s
+      Undies::Template.new(@cf_lf_source, {}, @output)
+      assert_equal @expected_output, @out
     end
 
   end

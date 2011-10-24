@@ -30,11 +30,6 @@ module Undies
       super
     end
 
-    # TODO: don't need to_s if we are storing in memory
-    def to_s(pp_level=0, pp_indent=nil)
-      self.collect{|n| n.to_s(pp_level, pp_indent)}.join
-    end
-
   end
 
 end

@@ -9,7 +9,8 @@ class Undies::Element
   class BasicTests < Assert::Context
     desc 'an element'
     before do
-      @es = Undies::ElementStack.new(@output = Undies::Output.new(StringIO.new("")))
+      @out = ""
+      @es = Undies::ElementStack.new(@output = Undies::Output.new(StringIO.new(@out)))
       @e = Undies::Element.new(@es, :div)
     end
     subject { @e }
@@ -100,7 +101,7 @@ class Undies::Element
         element(:strong, {:class => 'big'}) { __ "Loud Noises!" }
       end
       templ = Undies::Template.new(src, {}, @output)
-      assert_equal '<strong class="big">Loud Noises!</strong>', templ.to_s
+      assert_equal '<strong class="big">Loud Noises!</strong>', @out
     end
 
   end
@@ -122,7 +123,7 @@ class Undies::Element
         element(:div).thing1! { _ "stuff" }
       end
       templ = Undies::Template.new(src, {}, @output)
-      assert_equal "<div id=\"thing1\">stuff</div>", templ.to_s
+      assert_equal "<div id=\"thing1\">stuff</div>", @out
     end
 
     should "proxy id attr with last method call ending in '!'" do
@@ -158,7 +159,7 @@ class Undies::Element
         element(:div).thing { _ "stuff" }
       end
       templ = Undies::Template.new(src, {}, @output)
-      assert_equal "<div class=\"thing\">stuff</div>", templ.to_s
+      assert_equal "<div class=\"thing\">stuff</div>", @out
     end
 
     should "proxy multi html class attrs" do

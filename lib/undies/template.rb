@@ -42,8 +42,6 @@ module Undies
       end
     end
 
-    def to_s; self.class.render_data(self).output; end
-
     # Add a text node (data escaped) to the nodes of the current node
     def _(data=""); self.__ self.escape_html(data.to_s); end
 
