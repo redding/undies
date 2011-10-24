@@ -27,8 +27,11 @@ module Undies
       # yield to recursivley render the source stack
       self.__yield
 
-      # TODO: teardown the render data to prevent memory leaks
-      #self.class.render_data(self, nil)
+      # teardown the render data to prevent memory leaks
+      # - flush any remaining render_data to the stream
+      # - dereference the render data object
+      self.class.render_data(self).flush
+      # TODO: self.class.render_data(self, nil)
     end
 
     # call this to render the templates source
