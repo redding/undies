@@ -1,6 +1,7 @@
 require "assert"
 
 require "undies/node"
+require "undies/node_stack"
 
 class Undies::Node
 
@@ -22,7 +23,7 @@ class Undies::Node
 
     should "output its content when flushed" do
       output = Undies::Output.new(StringIO.new(out = ""))
-      ns = Undies::ElementStack.new(output)
+      ns = Undies::NodeStack.new(output)
       subject.class.flush(subject, ns)
 
       assert_equal "a text node here", out

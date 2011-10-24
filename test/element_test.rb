@@ -1,7 +1,6 @@
 require "assert"
 
 require "undies/element"
-require "undies/element_stack"
 require "undies/template"
 
 class Undies::Element

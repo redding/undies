@@ -1,5 +1,4 @@
 require 'undies/node'
-require 'undies/element_stack'
 
 module Undies
   class Element < Node
