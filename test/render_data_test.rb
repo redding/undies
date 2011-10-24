@@ -25,7 +25,7 @@ class Undies::RenderData
     end
     subject { @r }
 
-    should have_readers :io, :pp, :source_stack, :node_stack
+    should have_readers :source_stack, :node_stack
     should have_instance_methods :source=, :output=
     should have_instance_methods :node, :element, :flush
 
@@ -40,10 +40,6 @@ class Undies::RenderData
     should "have an empty node stack" do
       assert_kind_of Undies::NodeStack, subject.node_stack
       assert_equal 0, subject.node_stack.size
-    end
-
-    should "have no option values by default" do
-      assert_nil subject.pp
     end
 
   end

@@ -8,8 +8,6 @@ module Undies
   class RenderData
 
     attr_reader :source_stack, :node_stack
-    # TODO: not needed
-    attr_reader :io, :pp
 
     def initialize(source, output)
       self.source = source
@@ -24,17 +22,8 @@ module Undies
       if !value.kind_of?(Output)
         raise ArgumentError, "please provide an Output object"
       end
-
-      # TODO: needed?
-      @output = value
-
-      @node_stack = NodeStack.new(@output)
-
-      # TODO: not needed going forward
-      @io = @output.io
-      @pp = @output.pp
-
-      @output
+      @node_stack = NodeStack.new(value)
+      value
     end
 
     def node(data="")
