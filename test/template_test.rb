@@ -68,37 +68,25 @@ class Undies::Template
       @data = "stuff & <em>more stuff</em>"
     end
 
-    should "return a text node using the '__' and '_' methods" do
-      assert_kind_of Undies::Node, subject.__(@data)
-      assert_kind_of Undies::Node, subject._(@data)
-    end
-
-    should "also add the node using the '__' and '_' methods" do
-      subject.__(@data)
-      assert_equal 1, subject.class.render_data(subject).node_stack.size
-      subject._(@data)
-      assert_equal 1, subject.class.render_data(subject).node_stack.size
-      # size still 1 after 2nd add b/c the first gets streamed
-    end
-
     should "add the text un-escaped using the '__' method" do
-      subject.__(@data)
-      subject.class.render_data(subject).flush
+      Undies::Template.new(Undies::Source.new do
+        __ data
+      end, {:data => @data}, @output)
       assert_equal @data, @out
     end
 
     should "add the text escaped using the '_' method" do
-      subject._(@data)
-      subject.class.render_data(subject).flush
+      Undies::Template.new(Undies::Source.new do
+        _ data
+      end, {:data => @data}, @output)
       assert_equal subject.send(:escape_html, @data), @out
     end
 
     should "add empty string nodes using '__' and '_' methods with no args" do
-      subject._
-      subject.class.render_data(subject).flush
-      assert_equal "", @out
-      subject.__
-      subject.class.render_data(subject).flush
+      Undies::Template.new(Undies::Source.new do
+        _
+        __
+      end, {:data => @data}, @output)
       assert_equal "", @out
     end
 
@@ -107,27 +95,29 @@ class Undies::Template
   class ElementTests < BasicTests
     desc "using the 'element' helper"
 
-    should "return an Element object" do
-      assert_equal Undies::Element.new(:br), subject.element(:br)
+    should "stream element output" do
+      Undies::Template.new(Undies::Source.new do
+        element(:br)
+      end, {}, @output)
+      assert_equal "<br />", @out
     end
 
     should "alias it with 'tag'" do
-      assert_equal subject.element(:br), subject.tag(:br)
-    end
-
-    should "add a new Element object" do
-      raw_elem = Undies::Element.new(:br)
-      subject.element(:br)
-      assert_equal 1, subject.class.render_data(subject).node_stack.size
-      assert_equal raw_elem, subject.class.render_data(subject).node_stack.first
+      Undies::Template.new(Undies::Source.new do
+        tag(:br)
+      end, {}, @output)
+      assert_equal "<br />", @out
     end
 
     should "respond to underscore-prefix methods" do
-      assert subject.respond_to?(:_div)
+      assert subject.respond_to?(:_br)
     end
 
     should "respond to underscore-prefix methods as element methods" do
-      assert_equal subject._div, subject.element(:div)
+      Undies::Template.new(Undies::Source.new do
+        _br
+      end, {}, @output)
+      assert_equal "<br />", @out
     end
 
     should "not respond to element methods without an underscore-prefix" do

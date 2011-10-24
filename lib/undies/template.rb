@@ -31,7 +31,7 @@ module Undies
       # - flush any remaining render_data to the stream
       # - dereference the render data object
       self.class.render_data(self).flush
-      # TODO: self.class.render_data(self, nil)
+      self.class.render_data(self, nil)
     end
 
     # call this to render the templates source
