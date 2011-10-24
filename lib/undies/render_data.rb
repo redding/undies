@@ -1,19 +1,19 @@
 require 'undies/source_stack'
-require 'undies/element_stack'
-require 'undies/node_list'
+require 'undies/node_stack'
+require 'undies/node'
+require 'undies/element'
 require 'undies/output'
 
 module Undies
   class RenderData
 
-    attr_reader :io, :pp, :nodes, :source_stack, :element_stack
+    attr_reader :source_stack, :node_stack
+    # TODO: not needed
+    attr_reader :io, :pp
 
     def initialize(source, output)
       self.source = source
       self.output = output
-
-      # TODO: may not be needed going forward
-      @nodes = NodeList.new(@output)
     end
 
     def source=(value)
@@ -25,10 +25,10 @@ module Undies
         raise ArgumentError, "please provide an Output object"
       end
 
+      # TODO: needed?
       @output = value
 
-      # TODO: pass the output obj to the element stack
-      @element_stack = ElementStack.new(@output, self)
+      @node_stack = NodeStack.new(@output)
 
       # TODO: not needed going forward
       @io = @output.io
@@ -37,16 +37,18 @@ module Undies
       @output
     end
 
-    def append(node)
-      self.element_stack.last.instance_variable_get("@nodes").append(node)
-    end
-
     def node(data="")
-      self.append(Node.new(data.to_s))
+      self.flush
+      self.node_stack.push(Node.new(data))
     end
 
     def element(name, attrs={}, &block)
-      self.append(Element.new(self.element_stack, name, attrs, &block))
+      self.flush
+      self.node_stack.push(Element.new(name, attrs, &block))
+    end
+
+    def flush
+      self.node_stack.pop
     end
 
   end

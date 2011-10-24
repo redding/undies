@@ -25,9 +25,9 @@ class Undies::RenderData
     end
     subject { @r }
 
-    should have_readers :io, :pp, :nodes, :source_stack, :element_stack
+    should have_readers :io, :pp, :source_stack, :node_stack
     should have_instance_methods :source=, :output=
-    should have_instance_methods :append, :node, :element
+    should have_instance_methods :node, :element, :flush
 
     should "have a source stack based on its source" do
       assert_kind_of Undies::SourceStack, subject.source_stack
@@ -37,14 +37,9 @@ class Undies::RenderData
       assert_equal Undies::SourceStack.new(@hi_proc_content_file_source), r.source_stack
     end
 
-    should "have an element stack with the render data as the base element on the stack" do
-      assert_kind_of Undies::ElementStack, subject.element_stack
-      assert_equal 1, subject.element_stack.size
-      assert_equal subject, subject.element_stack.first
-    end
-
-    should "have a node list that is empty to start" do
-      assert_kind_of Undies::NodeList, subject.nodes
+    should "have an empty node stack" do
+      assert_kind_of Undies::NodeStack, subject.node_stack
+      assert_equal 0, subject.node_stack.size
     end
 
     should "have no option values by default" do
@@ -65,24 +60,15 @@ class Undies::RenderData
       @expected_output = "hey!"
     end
 
-    should "append nodes with the 'append' method" do
-      subject.append(@hey)
-      assert_equal 1, subject.element_stack.last.instance_variable_get("@nodes").size
-    end
-
-    should "return the node when appending" do
-      assert_equal @hey.object_id, subject.append(@hey).object_id
-    end
-
     should "create and append nodes" do
       assert_equal @hey, subject.node("hey!")
-      assert_equal 1, subject.element_stack.last.instance_variable_get("@nodes").size
+      assert_equal 1, subject.node_stack.size
     end
 
     should "create and append elements" do
-      elem = Undies::Element.new(subject.element_stack, :div)
+      elem = Undies::Element.new(:div)
       assert_equal elem, subject.element(:div)
-      assert_equal 1, subject.element_stack.last.instance_variable_get("@nodes").size
+      assert_equal 1, subject.node_stack.size
     end
 
   end
