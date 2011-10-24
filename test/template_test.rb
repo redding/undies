@@ -7,34 +7,44 @@ class Undies::Template
 
   class BasicTests < Assert::Context
     desc 'a template'
-    before { @t = Undies::Template.new {} }
+    before do
+      src = Undies::Source.new(Proc.new {})
+      @outstream = StringIO.new(@out = "")
+      @output = Undies::Output.new(@outstream)
+
+      @r = Undies::RenderData.new(src, @output)
+      @t = Undies::Template.new(src, {}, @output)
+    end
     subject { @t }
 
-    should have_instance_method :to_s, :escape_html
-    should have_instance_methods :_, :__, :element, :tag
-    should have_accessor :___nodes
+    should have_instance_method  :to_s
+    should have_instance_methods :element, :tag, :escape_html
+    should have_instance_methods :_, :__
+    should have_instance_method  :__yield
+    should have_class_method :render_data
 
-    should "have a NodeList as its nodes" do
-      assert_kind_of Undies::NodeList, subject.___nodes
-    end
-
-    should "have no io stream by default" do
-      assert_nil subject.send(:___io)
+    should "store and retrieve render data objects using a class level accessor" do
+      assert_nothing_raised do
+        subject.class.render_data(subject, @r)
+      end
+      assert_same @r, subject.class.render_data(subject)
     end
 
     should "maintain the template's scope throughout content blocks" do
-      templ = Undies::Template.new do
+      templ = Undies::Template.new(Undies::Source.new do
         _div {
           _div {
             __ self.object_id
           }
         }
-      end
-      assert_equal "<div><div>#{templ.object_id}</div></div>", templ.to_s
+      end, {}, @output)
+      assert_equal "<div><div>#{templ.object_id}</div></div>", @out
     end
 
     should "generate pretty printed markup" do
       file = 'test/templates/test.html.rb'
+      output = Undies::Output.new(@outstream, :pp => 2)
+      Undies::Template.new(Undies::Source.new(File.expand_path(file)), {}, output)
       assert_equal(
         %{<html>
   <head>
@@ -46,13 +56,11 @@ class Undies::Template
   </body>
 </html>
 },
-        Undies::Template.new(File.expand_path(file)).to_s(2)
+        @out
       )
     end
 
   end
-
-
 
   class NodeTests < BasicTests
     desc "with text data"
@@ -60,58 +68,56 @@ class Undies::Template
       @data = "stuff & <em>more stuff</em>"
     end
 
-    should "return a text node using the '__' and '_' methods" do
-      assert_kind_of Undies::Node, subject.__(@data)
-      assert_kind_of Undies::Node, subject._(@data)
-    end
-
-    should "also add the node using the '__' and '_' methods" do
-      subject.__(@data)
-      assert_equal 1, subject.___nodes.size
-      subject._(@data)
-      assert_equal 2, subject.___nodes.size
-    end
-
     should "add the text un-escaped using the '__' method" do
-      assert_equal @data, subject.__(@data).to_s
+      Undies::Template.new(Undies::Source.new do
+        __ data
+      end, {:data => @data}, @output)
+      assert_equal @data, @out
     end
 
     should "add the text escaped using the '_' method" do
-      assert_equal subject.send(:escape_html, @data), subject._(@data).to_s
+      Undies::Template.new(Undies::Source.new do
+        _ data
+      end, {:data => @data}, @output)
+      assert_equal subject.send(:escape_html, @data), @out
     end
 
     should "add empty string nodes using '__' and '_' methods with no args" do
-      assert_equal "", subject._.to_s
-      assert_equal "", subject.__.to_s
+      Undies::Template.new(Undies::Source.new do
+        _
+        __
+      end, {:data => @data}, @output)
+      assert_equal "", @out
     end
 
   end
 
-
-
   class ElementTests < BasicTests
     desc "using the 'element' helper"
 
-    should "return an Element object" do
-      assert_equal Undies::Element.new(Undies::ElementStack.new, :br), subject.element(:br)
+    should "stream element output" do
+      Undies::Template.new(Undies::Source.new do
+        element(:br)
+      end, {}, @output)
+      assert_equal "<br />", @out
     end
 
     should "alias it with 'tag'" do
-      assert_equal subject.element(:br), subject.tag(:br)
-    end
-
-    should "add a new Element object" do
-      subject.element(:br)
-      assert_equal 1, subject.___nodes.size
-      assert_equal Undies::Element.new(Undies::ElementStack.new, :br), subject.___nodes.first
+      Undies::Template.new(Undies::Source.new do
+        tag(:br)
+      end, {}, @output)
+      assert_equal "<br />", @out
     end
 
     should "respond to underscore-prefix methods" do
-      assert subject.respond_to?(:_div)
+      assert subject.respond_to?(:_br)
     end
 
     should "respond to underscore-prefix methods as element methods" do
-      assert_equal subject._div, subject.element(:div)
+      Undies::Template.new(Undies::Source.new do
+        _br
+      end, {}, @output)
+      assert_equal "<br />", @out
     end
 
     should "not respond to element methods without an underscore-prefix" do
@@ -123,153 +129,105 @@ class Undies::Template
 
   end
 
-
-
-  class LocalsTests < BasicTests
+  class LocalDataTests < BasicTests
 
     should "only accept the data if it is a Hash" do
       assert_raises ArgumentError do
-        (Undies::Template.new("some_data") {}).some
-      end
-      assert_raises ArgumentError do
-        (Undies::Template.new('test/templates/test.html.rb', "some_data")).some
+        Undies::Template.new(Undies::Source.new(Proc.new {}), "some data")
       end
       assert_respond_to(
         :some,
-        (Undies::Template.new(:some => "data") {})
-      )
-      assert_respond_to(
-        :some,
-        Undies::Template.new('test/templates/test.html.rb', :some => "data")
+        Undies::Template.new(Undies::Source.new(Proc.new {}), {:some => 'data'}, @output)
       )
     end
 
     should "complain if trying to set locals that conflict with public methods" do
       assert_raises ArgumentError do
-        Undies::Template.new(:_ => "yay!") {}
+        Undies::Template.new(Undies::Source.new(Proc.new {}), {:_ => "yay!"})
       end
     end
 
     should "respond to each locals key with its value" do
-      templ = Undies::Template.new(:some => "data") {}
+      templ = Undies::Template.new(Undies::Source.new(Proc.new {}), {:some => 'data'}, @output)
       assert_equal "data", templ.some
     end
 
     should "be able to access its locals in the template definition" do
-      templ = Undies::Template.new(:name => "awesome") do
+      src = Undies::Source.new do
         _div {
           _div { _ name }
         }
       end
-      assert_equal "<div><div>awesome</div></div>", templ.to_s
+      Undies::Template.new(src, {:name => "awesome"}, @output)
+      assert_equal "<div><div>awesome</div></div>", @out
     end
 
   end
 
-
-
-  class DefinitionTests < BasicTests
+  class LayoutTests < BasicTests
     setup do
       @expected_output = "<html><head></head><body><div>Hi</div></body></html>"
-      @proc = Proc.new do
+
+      @layout_proc = Proc.new do
         _html {
           _head {}
           _body {
-            _div { _ "Hi" }
+            __yield
           }
         }
       end
+      @layout_file = File.expand_path "test/templates/layout.html.rb"
+
       @content_proc = Proc.new do
         _div { _ "Hi" }
       end
-      @layout_proc = Proc.new do
-        _html { _head {}; _body { yield if block_given? } }
-      end
-      @layout_file = File.expand_path "test/templates/layout.html.rb"
       @content_file = File.expand_path "test/templates/content.html.rb"
-      @test_content_file = File.expand_path "test/templates/test.html.rb"
+
+      @cp_lp_source = Undies::Source.new(:layout => @layout_proc, &@content_proc)
+      @cp_lf_source = Undies::Source.new(:layout => @layout_file, &@content_proc)
+      @cf_lp_source = Undies::Source.new(@content_file, :layout => @layout_proc)
+      @cf_lf_source = Undies::Source.new(@content_file, :layout => @layout_file)
     end
 
-    should "generate markup given the content in a passed block" do
-      template = Undies::Template.new(&@proc)
-      assert_equal @expected_output, template.to_s
+    should "generate markup given proc content in a proc layout" do
+      Undies::Template.new(@cp_lp_source, {}, @output)
+      assert_equal @expected_output, @out
     end
 
-    should "complain if given a proc both as the first arg and passed as a block" do
-      assert_raises ArgumentError do
-        Undies::Template.new(@proc) do
-          _div { _ "Should not render b/c argument error" }
-        end
-      end
+    should "generate markup given proc content in a layout file" do
+      Undies::Template.new(@cp_lf_source, {}, @output)
+      assert_equal @expected_output, @out
     end
 
-    should "generate markup given the content in a file, even if passed a block" do
-      template_no_block = Undies::Template.new(@test_content_file)
-      template_w_block = Undies::Template.new(@test_content_file) do
-        _div { _ "Should not render b/c template prefers a file" }
-      end
-      assert_equal @expected_output, template_no_block.to_s
-      assert_equal @expected_output, template_w_block.to_s
+    should "generate markup given a content file in a proc layout" do
+      Undies::Template.new(@cf_lp_source, {}, @output)
+      assert_equal @expected_output, @out
     end
 
-    should "generate markup given the layout in a file and the content in a passed block" do
-      template = Undies::Template.new(@layout_file) do
-        _div { _ "Hi" }
-      end
-      assert_equal @expected_output, template.to_s
-    end
-
-    should "generate markup given the layout in a Proc and the content in a Proc as first arg" do
-      template = Undies::Template.new(@content_proc, @layout_file)
-      assert_equal @expected_output, template.to_s
-    end
-
-    should "generate markup given the layout in a file and the content in a file" do
-      template = Undies::Template.new(@content_file, @layout_file)
-      assert_equal @expected_output, template.to_s
-    end
-
-    should "complain if given the layout in a Proc and the content in a passed block" do
-      assert_raises ArgumentError do
-        Undies::Template.new(@layout_proc) do
-          _div { _ "Hi" }
-        end
-      end
-    end
-
-    should "complain given the layout in a Proc and the content in a Proc as first arg" do
-      assert_raises ArgumentError do
-        Undies::Template.new(@content_proc, @layout_proc)
-      end
-    end
-
-    should "complain given the layout in a Proc and the content in a file" do
-      assert_raises ArgumentError do
-        Undies::Template.new(@content_file, @layout_proc)
-      end
+    should "generate markup given a content file in a layout file" do
+      Undies::Template.new(@cf_lf_source, {}, @output)
+      assert_equal @expected_output, @out
     end
 
   end
-
-
 
   class StreamTests < BasicTests
     desc "that is streaming"
 
     before do
-      @output = ""
-      @outstream = StringIO.new(@output)
+      outstream = StringIO.new(@output = "")
+      src = Undies::Source.new do
+        _div.good.thing!(:type => "something") {
+          __ "action"
+        }
+      end
+      @expected_output = "<div class=\"good\" id=\"thing\" type=\"something\">action</div>"
+
+      Undies::Template.new(src, {}, Undies::Output.new(outstream))
     end
 
     should "should write to the stream as its being constructed" do
-      templ = Undies::Template.new(@outstream) do
-        _div {
-          _div.good.thing!(:type => "something") {
-            __ "good streaming action"
-          }
-        }
-      end
-      assert_equal "<div><div class=\"good\" id=\"thing\" type=\"something\">good streaming action</div></div>", @output
+      assert_equal @expected_output, @output
     end
 
   end

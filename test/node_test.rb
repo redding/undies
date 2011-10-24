@@ -1,6 +1,7 @@
 require "assert"
 
 require "undies/node"
+require "undies/node_stack"
 
 class Undies::Node
 
@@ -8,15 +9,24 @@ class Undies::Node
     desc 'a node'
     before { @n = Undies::Node.new("a text node here") }
     subject { @n }
-    should have_instance_method :to_s, :start_tag, :end_tag
-    should have_reader :___content
+
+    should have_class_methods :content, :start_tag, :end_tag, :flush
 
     should "know it's content" do
-      assert_equal "a text node here", subject.___content.to_s
+      assert_equal "a text node here", subject.class.content(subject)
     end
 
-    should "know how to serialize itself" do
-      assert_equal "a text node here", subject.to_s
+    should "know it's start/end tags" do
+      assert_nil subject.class.start_tag(subject)
+      assert_nil subject.class.end_tag(subject)
+    end
+
+    should "output its content when flushed" do
+      output = Undies::Output.new(StringIO.new(out = ""))
+      ns = Undies::NodeStack.new(output)
+      subject.class.flush(subject, ns)
+
+      assert_equal "a text node here", out
     end
 
   end
