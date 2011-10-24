@@ -33,6 +33,11 @@ class Undies::Output
       assert_equal @out, "some data"
     end
 
+    should "not stream nil data" do
+      subject << nil
+      assert_equal @out, ""
+    end
+
   end
 
   class PrettyPrintTests < BasicTests

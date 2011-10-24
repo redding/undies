@@ -34,12 +34,9 @@ module Undies
     end
 
     def <<(data)
-      # puts
-      # puts data.inspect
-      # puts "-------------"
-      # puts caller.join("\n")
-      # puts
-      @io << (@pp ? "#{' '*@pp_level*@pp}#{data}\n" : data.to_s)
+      unless data.nil?
+        @io << (@pp ? "#{' '*@pp_level*@pp}#{data}\n" : data.to_s)
+      end
     end
 
   end
