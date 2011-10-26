@@ -1,7 +1,7 @@
 require 'ruby-prof'
 require 'undies'
 
-file = 'test/templates/large.html.rb'
+file = "test/templates/#{ARGV[0]}.html.rb"
 out = ""
 outstream = StringIO.new(out)
 output = Undies::Output.new(outstream, :pp => 2)
@@ -12,8 +12,5 @@ result = RubyProf.profile do
   end
 end
 
-printer = RubyProf::FlatPrinter.new(result)
-printer.print(STDOUT)
-
-# printer = RubyProf::GraphPrinter.new(result)
-# printer.print(STDOUT, {})
+printer = RubyProf::FlatPrinter.new(result).print(STDOUT, :min_percent => 1)
+# printer = RubyProf::GraphPrinter.new(result).print(STDOUT)

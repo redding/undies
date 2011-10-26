@@ -2,7 +2,7 @@ _html {
   _head {}
   _body {
 
-    10.times do
+    100.times do
       _ "Yo"
       _ "Yo"
       _ "Yo"
