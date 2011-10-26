@@ -14,17 +14,16 @@ module Undies
       node_stack.output << self.content(node)
     end
 
-    def self.start_tag(node); nil; end
-    def self.end_tag(node);   nil; end
-
     def initialize(content)
+      @start_tag = nil
+      @end_tag = nil
       @content = content
     end
 
     def ==(other_node)
       self.class.content(self) == other_node.class.content(other_node) &&
-      self.class.start_tag(self) == other_node.class.start_tag(other_node) &&
-      self.class.end_tag(self) == other_node.class.end_tag(other_node)
+      self.instance_variable_get("@start_tag") == other_node.instance_variable_get("@start_tag") &&
+      self.instance_variable_get("@end_tag") == other_node.instance_variable_get("@end_tag")
     end
 
   end

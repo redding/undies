@@ -18,7 +18,7 @@ module Undies
 
       @pp = opts[:pp]
       self.pp_level = 0
-      opts
+      #opts
     end
 
     def pp_level
@@ -26,9 +26,9 @@ module Undies
     end
 
     def pp_level=(value)
+      @pp_indent = @pp ? "\n#{' '*value*@pp}" : ""
       @pp_level  = value
-      @pp_indent = @pp ? "\n#{' '*@pp_level*@pp}" : ""
-      value
+      #value
     end
 
     def <<(data)

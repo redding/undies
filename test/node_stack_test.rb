@@ -41,26 +41,20 @@ class Undies::NodeStack
 
     should "stream a node when popped" do
       node = Undies::Node.new("lala")
-      subject.push(node)
-      popped_node = subject.pop
+      subject.push(node); subject.pop
       assert_equal "lala", @out
-      assert_same node, popped_node
     end
 
     should "stream an element with no content when popped" do
       elem = Undies::Element.new("span")
-      subject.push(elem)
-      popped_elem = subject.pop
+      subject.push(elem); subject.pop
       assert_equal "<span />", @out
-      assert_same elem, popped_elem
     end
 
     should "stream an element with content when that element is popped" do
       elem = Undies::Element.new("div") {}
-      subject.push(elem)
-      popped_elem = subject.pop
+      subject.push(elem); subject.pop
       assert_equal "<div></div>", @out
-      assert_same elem, popped_elem
     end
 
   end

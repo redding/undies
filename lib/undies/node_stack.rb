@@ -19,14 +19,11 @@ module Undies
     end
 
     def pop
-      if self.size > 0
-        self.flush(item = super)
-        item
-      end
+      self.flush(item = super)
     end
 
     def flush(item)
-      item.class.flush(item, self)
+      item.class.flush(item, self) if item
     end
 
   end

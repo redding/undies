@@ -12,8 +12,7 @@ class Undies::Element
     end
     subject { @e }
 
-    should have_class_methods :html_attrs, :content_blocks
-    should have_class_methods :content, :start_tag, :end_tag, :flush
+    should have_class_methods :html_attrs, :content, :flush
     should have_instance_method :to_str
 
     should "be a Node" do
@@ -122,6 +121,11 @@ class Undies::Element
         :class => "list is",
         :id => "thing2"
       }).good.thing3!.instance_variable_get("@attrs"))
+    end
+
+    should "not proxy if private methods are called" do
+      assert_equal "<div />", subject.send(:start_tag)
+      assert_equal nil, subject.send(:end_tag)
     end
 
   end

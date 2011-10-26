@@ -19,37 +19,19 @@ module Undies
       end
     end
 
-    def self.content_blocks(element)
-      element.instance_variable_get("@content_blocks")
-    end
-
     def self.content(element)
-      self.content_blocks(element).each{ |content| content.call }
       nil
     end
 
-    def self.start_tag(element)
-      name = element.instance_variable_get("@name")
-      html_attrs = self.html_attrs(element.instance_variable_get("@attrs"))
-      cb_count = self.content_blocks(element).size
-      "<#{name}#{html_attrs}" + (cb_count > 0 ? ">" : " />")
-    end
-
-    def self.end_tag(element)
-      name = element.instance_variable_get("@name")
-      cb_count = self.content_blocks(element).size
-      cb_count > 0 ? "</#{name}>" : nil
-    end
-
     def self.flush(element, node_stack)
-      node_stack.output << self.start_tag(element)
-      node_stack.output.pp_level += 1
-      if (c = self.content(element))
-        node_stack.output << c
+      node_stack.output << element.instance_variable_get("@start_tag")
+      if (cbs = element.instance_variable_get("@content_blocks")).size > 0
+        node_stack.output.pp_level += 1
+        cbs.each{ |content| content.call }
+        node_stack.pop
+        node_stack.output.pp_level -= 1
       end
-      node_stack.pop
-      node_stack.output.pp_level -= 1
-      node_stack.output << self.end_tag(element)
+      node_stack.output << element.instance_variable_get("@end_tag")
     end
 
     def initialize(name, attrs={}, &block)
@@ -61,13 +43,8 @@ module Undies
       @attrs = attrs
       @content_blocks = []
       @content_blocks << block if block
-
-      @proxy_lambda = lambda do |value, attrs, content_block, &block|
-        block.call(value)
-        @attrs.merge!(attrs)
-        @content_blocks << content_block if content_block
-        self
-      end
+      @start_tag = start_tag
+      @end_tag = end_tag
     end
 
     # CSS proxy methods ============================================
@@ -76,11 +53,11 @@ module Undies
 
     def method_missing(meth, *args, &block)
       if meth.to_s =~ ID_METH_REGEX
-        @proxy_lambda.call($1, args.first || {}, block) do |value|
+        proxy($1, args.first || {}, block) do |value|
           @attrs.merge!(:id => value)
         end
       elsif meth.to_s =~ CLASS_METH_REGEX
-        @proxy_lambda.call($1, args.first || {}, block) do |value|
+        proxy($1, args.first || {}, block) do |value|
           @attrs[:class] = [@attrs[:class], value].compact.join(' ')
         end
       else
@@ -110,6 +87,25 @@ module Undies
       "@name=#{@name.inspect}, @attrs=#{@attrs.inspect}, @nodes=#{@nodes.inspect}"
     end
     alias_method :inspect, :to_str
+
+    private
+
+    def proxy(value, attrs, content_block)
+      yield value if block_given?
+      @attrs.merge!(attrs)
+      @content_blocks << content_block if content_block
+      @start_tag = start_tag
+      @end_tag = end_tag
+      self
+    end
+
+    def start_tag
+      "<#{@name}#{self.class.html_attrs(@attrs)}" + (@content_blocks.size > 0 ? ">" : " />")
+    end
+
+    def end_tag
+      @content_blocks.size > 0 ? "</#{@name}>" : nil
+    end
 
   end
 end
