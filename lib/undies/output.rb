@@ -16,27 +16,23 @@ module Undies
         raise ArgumentError, "please provide a hash to set options with"
       end
 
-      @pp_level  = 0
       @pp = opts[:pp]
+      self.pp_level = 0
+      opts
     end
 
-    def pp_level(action=nil, amount=1)
-      case action
-      when :up
-        @pp_level += amount
-      when :down
-        @pp_level -= amount
-      when :reset
-        @pp_level = 0
-      else
-        @pp_level
-      end
+    def pp_level
+      @pp_level
+    end
+
+    def pp_level=(value)
+      @pp_level  = value
+      @pp_indent = @pp ? "\n#{' '*@pp_level*@pp}" : ""
+      value
     end
 
     def <<(data)
-      unless data.nil?
-        @io << (@pp ? "#{' '*@pp_level*@pp}#{data}\n" : data.to_s)
-      end
+      @io << "#{@pp_indent}#{data}"
     end
 
   end

@@ -50,38 +50,17 @@ class Undies::Output
       assert_equal 2, subject.pp
     end
 
-    should "level up pretty printing" do
-      subject.pp_level(:up)
-      assert_equal 1, subject.pp_level
-      subject.pp_level(:up, 2)
-      assert_equal 3, subject.pp_level
-    end
-
-    should "level down pretty printing" do
-      subject.pp_level(:down)
-      assert_equal -1, subject.pp_level
-      subject.pp_level(:down, 2)
-      assert_equal -3, subject.pp_level
-    end
-
-    should "level reset pretty printing" do
-      subject.pp_level(:up, 5)
-      assert_equal 5, subject.pp_level
-      subject.pp_level(:reset)
-      assert_equal 0, subject.pp_level
-    end
-
     should "pretty print stream data" do
       subject << "some data"
-      assert_equal "some data\n", @out
+      assert_equal "\nsome data", @out
 
-      subject.pp_level(:up)
+      subject.pp_level +=1
       subject << "indented data"
-      assert_equal "some data\n  indented data\n", @out
+      assert_equal "\nsome data\n  indented data", @out
 
-      subject.pp_level(:down)
+      subject.pp_level -= 1
       subject << "more data"
-      assert_equal "some data\n  indented data\nmore data\n", @out
+      assert_equal "\nsome data\n  indented data\nmore data", @out
     end
 
   end

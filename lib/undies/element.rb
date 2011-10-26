@@ -43,10 +43,12 @@ module Undies
 
     def self.flush(element, node_stack)
       node_stack.output << self.start_tag(element)
-      node_stack.output.pp_level(:up)
-      node_stack.output << self.content(element)
+      node_stack.output.pp_level += 1
+      if (c = self.content(element))
+        node_stack.output << c
+      end
       node_stack.pop
-      node_stack.output.pp_level(:down)
+      node_stack.output.pp_level -= 1
       node_stack.output << self.end_tag(element)
     end
 

@@ -46,7 +46,8 @@ class Undies::Template
       output = Undies::Output.new(@outstream, :pp => 2)
       Undies::Template.new(Undies::Source.new(File.expand_path(file)), {}, output)
       assert_equal(
-        %{<html>
+        %{
+<html>
   <head>
   </head>
   <body>
@@ -54,8 +55,7 @@ class Undies::Template
       Hi
     </div>
   </body>
-</html>
-},
+</html>},
         @out
       )
     end

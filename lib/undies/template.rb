@@ -18,7 +18,7 @@ module Undies
 
       # apply data to template scope
       raise ArgumentError if !data.kind_of?(::Hash)
-      if (data.keys.collect(&:to_s) & self.public_methods.collect(&:to_s)).size > 0
+      if (data.keys.map(&:to_s) & self.public_methods.map(&:to_s)).size > 0
         raise ArgumentError, "data conflicts with template public methods."
       end
       metaclass = class << self; self; end
