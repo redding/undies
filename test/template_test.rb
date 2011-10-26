@@ -25,7 +25,7 @@ class Undies::Template
 
     should "store and retrieve render data objects using a class level accessor" do
       assert_nothing_raised do
-        subject.class.render_data(subject, @r)
+        subject.class.set_render_data(subject, @r)
       end
       assert_same @r, subject.class.render_data(subject)
     end

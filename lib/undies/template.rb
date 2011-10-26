@@ -7,14 +7,22 @@ module Undies
     # polluting the public instance methods, the instance scope, and to
     # maximize the effectiveness of the Template#method_missing logic
 
-    def self.render_data(t, *args)
-      @template_rd ||= {}
-      args.size > 0 ? @template_rd[t] = args.first : @template_rd[t]
+    def self.init_render_data
+      @template_rd = {}
+    end
+
+    def self.set_render_data(t, value)
+      @template_rd[t] = value
+    end
+
+    def self.render_data(t)
+      @template_rd[t]
     end
 
     def initialize(source, data, output)
       # setup the render data
-      self.class.render_data(self, RenderData.new(source, output))
+      self.class.init_render_data
+      self.class.set_render_data(self, RenderData.new(source, output))
 
       # apply data to template scope
       raise ArgumentError if !data.kind_of?(::Hash)
@@ -31,7 +39,7 @@ module Undies
       # - flush any remaining render_data to the stream
       # - dereference the render data object
       self.class.render_data(self).flush
-      self.class.render_data(self, nil)
+      self.class.set_render_data(self, nil)
     end
 
     # call this to render the templates source
