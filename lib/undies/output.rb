@@ -1,19 +1,19 @@
-require 'undies/node_stack'
 require 'undies/node'
 require 'undies/element'
+require 'undies/node_buffer'
 
 module Undies
   class Output
 
-    attr_reader :io, :pp, :node_stack
+    attr_reader :io, :pp, :node_buffer
 
     # the output class wraps an IO stream, gathers pretty printing options,
-    # and handles pretty printing to the stream
+    # and handles buffering nodes and pretty printing to the stream
 
     def initialize(io, opts={})
       @io = io
       self.options = opts
-      @node_stack = NodeStack.new(self)
+      @node_buffer = NodeBuffer.new
     end
 
     def options=(opts)
@@ -39,17 +39,17 @@ module Undies
     end
 
     def node(data="")
-      self.flush
-      self.node_stack.push(Node.new(data))
+      self.node_buffer.pull(self)
+      self.node_buffer.push(Node.new(data))
     end
 
     def element(name, attrs={}, &block)
-      self.flush
-      self.node_stack.push(Element.new(name, attrs, &block))
+      self.node_buffer.pull(self)
+      self.node_buffer.push(Element.new(name, attrs, &block))
     end
 
     def flush
-      self.node_stack.pop
+      self.node_buffer.flush(self)
     end
 
   end

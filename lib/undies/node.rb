@@ -10,8 +10,8 @@ module Undies
       node.instance_variable_get("@content")
     end
 
-    def self.flush(node, node_stack)
-      node_stack.output << self.content(node)
+    def self.flush(output, node)
+      output << self.content(node)
     end
 
     def initialize(content)

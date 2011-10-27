@@ -13,7 +13,7 @@ class Undies::Output
     end
     subject { @output }
 
-    should have_readers :io, :pp, :node_stack
+    should have_readers :io, :pp, :node_buffer
     should have_instance_methods :options=, :<<, :pp_level
     should have_instance_methods :node, :element, :flush
 
@@ -22,9 +22,9 @@ class Undies::Output
     end
 
     # TODO: switch to call it a node buffer
-    should "have an empty node stack" do
-      assert_kind_of Undies::NodeStack, subject.node_stack
-      assert_equal 0, subject.node_stack.size
+    should "have an empty node buffer" do
+      assert_kind_of Undies::NodeBuffer, subject.node_buffer
+      assert_equal 0, subject.node_buffer.size
     end
 
     should "default to no pretty printing" do
@@ -70,6 +70,21 @@ class Undies::Output
       assert_equal "\nsome data\n  indented data\nmore data", @out
     end
 
+    should "pretty print nodes" do
+      subject.node("lala"); subject.flush
+      assert_equal "\nlala", @out
+    end
+
+    should "pretty print elements with no content" do
+      subject.element("span"); subject.flush
+      assert_equal "\n<span />", @out
+    end
+
+    should "pretty print elements with content" do
+      subject.element("div") {}; subject.flush
+      assert_equal "\n<div>\n</div>", @out
+    end
+
   end
 
 
@@ -87,13 +102,13 @@ class Undies::Output
 
     should "create and append nodes" do
       assert_equal @hey, subject.node("hey!")
-      assert_equal 1, subject.node_stack.size
+      assert_equal 1, subject.node_buffer.size
     end
 
     should "create and append elements" do
       elem = Undies::Element.new(:div)
       assert_equal elem, subject.element(:div)
-      assert_equal 1, subject.node_stack.size
+      assert_equal 1, subject.node_buffer.size
     end
 
   end

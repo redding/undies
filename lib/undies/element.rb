@@ -23,15 +23,15 @@ module Undies
       nil
     end
 
-    def self.flush(element, node_stack)
-      node_stack.output << element.instance_variable_get("@start_tag")
+    def self.flush(output, element)
+      output << element.instance_variable_get("@start_tag")
       if (cbs = element.instance_variable_get("@content_blocks")).size > 0
-        node_stack.output.pp_level += 1
+        output.pp_level += 1
         cbs.each{ |content| content.call }
-        node_stack.pop
-        node_stack.output.pp_level -= 1
+        output.flush
+        output.pp_level -= 1
       end
-      node_stack.output << element.instance_variable_get("@end_tag")
+      output << element.instance_variable_get("@end_tag") if element.instance_variable_get("@end_tag")
     end
 
     def initialize(name, attrs={}, &block)
