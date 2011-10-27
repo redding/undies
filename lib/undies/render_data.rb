@@ -7,7 +7,7 @@ require 'undies/output'
 module Undies
   class RenderData
 
-    attr_reader :source_stack, :node_stack
+    attr_reader :source_stack, :node_stack, :output
 
     def initialize(source, output)
       self.source = source
@@ -22,8 +22,9 @@ module Undies
       if !value.kind_of?(Output)
         raise ArgumentError, "please provide an Output object"
       end
+
       @node_stack = NodeStack.new(value)
-      value
+      @output = value
     end
 
     def node(data="")

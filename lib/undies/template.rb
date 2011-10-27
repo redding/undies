@@ -7,22 +7,13 @@ module Undies
     # polluting the public instance methods, the instance scope, and to
     # maximize the effectiveness of the Template#method_missing logic
 
-    def self.init_render_data
-      @template_rd = {}
-    end
-
-    def self.set_render_data(t, value)
-      @template_rd[t] = value
-    end
-
-    def self.render_data(t)
-      @template_rd[t]
+    def self.output(template)
+      template.instance_variable_get("@_undies_render_data").output
     end
 
     def initialize(source, data, output)
       # setup the render data
-      self.class.init_render_data
-      self.class.set_render_data(self, RenderData.new(source, output))
+      @_undies_render_data = RenderData.new(source, output)
 
       # apply data to template scope
       raise ArgumentError if !data.kind_of?(::Hash)
@@ -35,17 +26,14 @@ module Undies
       # yield to recursivley render the source stack
       self.__yield
 
-      # teardown the render data to prevent memory leaks
-      # - flush any remaining render_data to the stream
-      # - dereference the render data object
-      self.class.render_data(self).flush
-      self.class.set_render_data(self, nil)
+      # flush any remaining render data to the stream
+      @_undies_render_data.flush
     end
 
     # call this to render the templates source
     # use this method in layouts to insert a layout's content source
     def __yield
-      return if (rd = self.class.render_data(self)).nil? || (source = rd.source_stack.pop).nil?
+      return if @_undies_render_data.nil? || (source = @_undies_render_data.source_stack.pop).nil?
       if source.file?
         instance_eval(source.data, source.source, 1)
       else
@@ -57,10 +45,10 @@ module Undies
     def _(data=""); self.__ self.escape_html(data.to_s); end
 
     # Add a text node with the data un-escaped
-    def __(data=""); self.class.render_data(self).node(data.to_s); end
+    def __(data=""); @_undies_render_data.node(data.to_s); end
 
     # Add an element to the nodes of the current node
-    def element(*args, &block); self.class.render_data(self).element(*args, &block); end
+    def element(*args, &block); @_undies_render_data.element(*args, &block); end
     alias_method :tag, :element
 
     # Element proxy methods ('_<element>'') ========================

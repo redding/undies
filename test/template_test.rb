@@ -17,17 +17,14 @@ class Undies::Template
     end
     subject { @t }
 
+    should have_class_method :output
     should have_instance_method  :to_s
     should have_instance_methods :element, :tag, :escape_html
     should have_instance_methods :_, :__
     should have_instance_method  :__yield
-    should have_class_method :render_data
 
-    should "store and retrieve render data objects using a class level accessor" do
-      assert_nothing_raised do
-        subject.class.set_render_data(subject, @r)
-      end
-      assert_same @r, subject.class.render_data(subject)
+    should "provide access to its output object via a class method" do
+      assert_same @output, Undies::Template.output(@t)
     end
 
     should "maintain the template's scope throughout content blocks" do
