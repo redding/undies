@@ -3,3 +3,5 @@ pkg/*
 *.gem
 *.log
 .rvmrc
+
+bench/*.txt
