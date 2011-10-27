@@ -1,7 +1,7 @@
 require 'ruby-prof'
 require 'undies'
 
-file = "test/templates/#{ARGV[0]}.html.rb"
+file = "bench/#{ARGV[0] || 'large'}.html.rb"
 out = ""
 outstream = StringIO.new(out)
 output = Undies::Output.new(outstream, :pp => 2)
