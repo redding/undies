@@ -13,11 +13,18 @@ class Undies::Output
     end
     subject { @output }
 
-    should have_readers :io, :pp
+    should have_readers :io, :pp, :node_stack
     should have_instance_methods :options=, :<<, :pp_level
+    should have_instance_methods :node, :element, :flush
 
     should "know its stream" do
       assert_same @io, subject.io
+    end
+
+    # TODO: switch to call it a node buffer
+    should "have an empty node stack" do
+      assert_kind_of Undies::NodeStack, subject.node_stack
+      assert_equal 0, subject.node_stack.size
     end
 
     should "default to no pretty printing" do
@@ -65,5 +72,30 @@ class Undies::Output
 
   end
 
+
+  class NodeHandlingTests < BasicTests
+    before do
+      @hey = Undies::Node.new "hey!"
+
+      src = Undies::Source.new do
+        _div.good.thing!(:type => "something") {
+          __ "action"
+        }
+      end
+      @expected_output = "hey!"
+    end
+
+    should "create and append nodes" do
+      assert_equal @hey, subject.node("hey!")
+      assert_equal 1, subject.node_stack.size
+    end
+
+    should "create and append elements" do
+      elem = Undies::Element.new(:div)
+      assert_equal elem, subject.element(:div)
+      assert_equal 1, subject.node_stack.size
+    end
+
+  end
 
 end
