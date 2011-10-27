@@ -1,4 +1,5 @@
-require 'undies/render_data'
+require 'undies/source_stack'
+require 'undies/output'
 
 module Undies
   class Template
@@ -8,12 +9,15 @@ module Undies
     # maximize the effectiveness of the Template#method_missing logic
 
     def self.output(template)
-      template.instance_variable_get("@_undies_render_data").output
+      template.instance_variable_get("@_undies_output")
     end
 
     def initialize(source, data, output)
-      # setup the render data
-      @_undies_render_data = RenderData.new(source, output)
+      # setup the source stack and output objects
+      raise ArgumentError, "please provide a Source object" if !source.kind_of?(Source)
+      @_undies_source_stack = SourceStack.new(source)
+      raise ArgumentError, "please provide an Output object" if !output.kind_of?(Output)
+      @_undies_output = output
 
       # apply data to template scope
       raise ArgumentError if !data.kind_of?(::Hash)
@@ -26,14 +30,14 @@ module Undies
       # yield to recursivley render the source stack
       self.__yield
 
-      # flush any remaining render data to the stream
-      @_undies_render_data.flush
+      # flush any remaining output to the stream
+      @_undies_output.flush
     end
 
-    # call this to render the templates source
+    # call this to render template source
     # use this method in layouts to insert a layout's content source
     def __yield
-      return if @_undies_render_data.nil? || (source = @_undies_render_data.source_stack.pop).nil?
+      return if @_undies_source_stack.nil? || (source = @_undies_source_stack.pop).nil?
       if source.file?
         instance_eval(source.data, source.source, 1)
       else
@@ -45,10 +49,10 @@ module Undies
     def _(data=""); self.__ self.escape_html(data.to_s); end
 
     # Add a text node with the data un-escaped
-    def __(data=""); @_undies_render_data.node(data.to_s); end
+    def __(data=""); @_undies_output.node(data.to_s); end
 
     # Add an element to the nodes of the current node
-    def element(*args, &block); @_undies_render_data.element(*args, &block); end
+    def element(*args, &block); @_undies_output.element(*args, &block); end
     alias_method :tag, :element
 
     # Element proxy methods ('_<element>'') ========================

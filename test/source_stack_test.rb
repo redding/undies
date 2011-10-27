@@ -26,15 +26,6 @@ class Undies::SourceStack
       assert_kind_of Array, subject
     end
 
-    should "initialize with a source item" do
-      assert_nothing_raised do
-        Undies::SourceStack.new(@content_file_source)
-      end
-      assert_raises ArgumentError do
-        Undies::SourceStack.new(@content_file)
-      end
-    end
-
     should "base itself on the source" do
       assert_equal @hi_proc_content_file_source, subject.first
       assert_equal @hi_proc_source, Undies::SourceStack.new(@hi_proc_source).first

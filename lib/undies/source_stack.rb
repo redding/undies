@@ -11,9 +11,6 @@ module Undies
     # for the content source
 
     def initialize(source)
-      if !source.kind_of?(Source)
-        raise ArgumentError, "you must create a source stack from a source object"
-      end
       super([source, source.layouts].flatten.compact)
     end
 

@@ -12,7 +12,6 @@ class Undies::Template
       @outstream = StringIO.new(@out = "")
       @output = Undies::Output.new(@outstream)
 
-      @r = Undies::RenderData.new(src, @output)
       @t = Undies::Template.new(src, {}, @output)
     end
     subject { @t }

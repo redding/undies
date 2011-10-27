@@ -1,3 +1,7 @@
+require 'undies/node_stack'
+require 'undies/node'
+require 'undies/element'
+
 module Undies
   class Output
 
