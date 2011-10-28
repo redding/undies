@@ -20,7 +20,7 @@ class Undies::Template
     should have_instance_method  :to_s
     should have_instance_methods :element, :tag, :escape_html
     should have_instance_methods :_, :__
-    should have_instance_method  :__yield
+    should have_instance_methods :__yield, :__partial
 
     should "provide access to its output object via a class method" do
       assert_same @output, Undies::Template.output(@t)
@@ -203,6 +203,30 @@ class Undies::Template
     should "generate markup given a content file in a layout file" do
       Undies::Template.new(@cf_lf_source, {}, @output)
       assert_equal @expected_output, @out
+    end
+
+  end
+
+  class PartialTests < BasicTests
+    desc "using partials"
+
+    before do
+      @source = Undies::Source.new(Proc.new do
+        partial_source = Undies::Source.new(Proc.new do
+          _div { _ thing }
+        end)
+
+        _div {
+          _ thing
+          __partial partial_source, {:thing => 1234}
+        }
+      end)
+      @data = {:thing => 'abcd'}
+    end
+
+    should "render the partial source with its own scope/data" do
+      Undies::Template.new(@source, @data, @output)
+      assert_equal "<div>abcd<div>1234</div></div>", @out
     end
 
   end
