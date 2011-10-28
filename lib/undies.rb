@@ -1,5 +1,4 @@
 require 'undies/template'
-require 'undies/partial'
 
 module Undies
 
