@@ -4,11 +4,9 @@ module Undies
 
   class NamedSource
 
-    attr_reader :name
     attr_accessor :file, :opts, :proc
 
-    def initialize(name, *args, &block)
-      raise ArgumentError, "name must be a symbol" unless name.kind_of?(::Symbol)
+    def initialize(*args, &block)
       args << block if block
       self.args = args
     end
@@ -40,11 +38,10 @@ module Undies
   end
 
   def self.named_source(name, *args, &block)
-    raise ArgumentError, "name must be a symbol" unless name.kind_of?(::Symbol)
     if args.empty? && block.nil?
       self.named_sources[name]
     else
-      self.named_sources[name] = Undies::NamedSource.new(name, *args, &block)
+      self.named_sources[name] = Undies::NamedSource.new(*args, &block)
     end
   end
 

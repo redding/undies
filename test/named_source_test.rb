@@ -9,24 +9,18 @@ class Undies::NamedSource
     before do
       @content_file = File.expand_path('test/templates/content.html.rb')
       @content_file_data = File.read(@content_file)
-      @content_file_nsource = Undies::NamedSource.new(:cf, @content_file)
+      @content_file_nsource = Undies::NamedSource.new(@content_file)
       @content_file_source = Undies::Source.new(@content_file)
       @hi_proc = Proc.new do
         _div { _ "Hi!" }
       end
-      @hi_proc_nsource = Undies::NamedSource.new(:hip, &@hi_proc)
+      @hi_proc_nsource = Undies::NamedSource.new(&@hi_proc)
 
-      @s = Undies::NamedSource.new(:s) {}
+      @s = Undies::NamedSource.new() {}
     end
     subject { @s }
 
-    should have_reader :name
     should have_accessors :file, :opts, :proc, :args
-
-    should "complain if you try to build one without a symbol name" do
-      assert_raises(ArgumentError) { Undies::NamedSource.new }
-      assert_raises(ArgumentError) { Undies::NamedSource.new('yo') }
-    end
 
   end
 
@@ -37,7 +31,7 @@ class Undies::NamedSource
       subject.proc = @hi_proc
       @subject_args = [@content_file, {:layout => :another}, @hi_proc]
 
-      @another = Undies::NamedSource.new(:another, @content_file, &@hi_proc)
+      @another = Undies::NamedSource.new(@content_file, &@hi_proc)
       @another_args = [@content_file, {}, @hi_proc]
     end
 
@@ -89,10 +83,7 @@ class Undies::NamedSource
 
     should "not retrieve unknown named sources" do
       assert_nil Undies.named_source(:wtf)
-      assert_raises(ArgumentError) { Undies.named_source('wtf') }
-
       assert_nil Undies.source(:wtf)
-      assert_raises(ArgumentError) { Undies.source('wtf') }
     end
 
   end
