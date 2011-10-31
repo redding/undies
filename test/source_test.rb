@@ -88,8 +88,8 @@ class Undies::Source
       assert_equal @content_file_source, subject.layout
     end
 
-    should "write named source layouts given a named source name" do
-      subject.layout = @named_source_name
+    should "write named source layouts given a named source" do
+      subject.layout = @named_source
       assert_equal @named_source_source, subject.layout
     end
 
@@ -142,7 +142,7 @@ class Undies::Source
     end
 
     should "parse named source layouts" do
-      s = Undies::Source.new({:layout => @named_source_name}, &@hi_proc)
+      s = Undies::Source.new({:layout => @named_source}, &@hi_proc)
       assert_equal @named_source_source, s.layout
     end
 

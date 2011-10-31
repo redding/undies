@@ -62,10 +62,8 @@ module Undies
         value
       when ::Proc
         Source.new(&value)
-      when ::String
+      when ::String, NamedSource
         Source.new(value)
-      when ::Symbol
-        Undies.source(value)
       else
         raise ArgumentError, "invalid layout"
       end
