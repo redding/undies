@@ -13,7 +13,7 @@ class Undies::Output
     end
     subject { @output }
 
-    should have_readers :io, :pp, :node_buffer
+    should have_readers :io, :options, :pp, :node_buffer
     should have_instance_methods :options=, :<<, :pp_level
     should have_instance_methods :node, :element, :flush
 

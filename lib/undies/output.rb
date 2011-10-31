@@ -5,7 +5,7 @@ require 'undies/node_buffer'
 module Undies
   class Output
 
-    attr_reader :io, :pp, :node_buffer
+    attr_reader :io, :options, :pp, :node_buffer
 
     # the output class wraps an IO stream, gathers pretty printing options,
     # and handles buffering nodes and pretty printing to the stream
@@ -21,8 +21,11 @@ module Undies
         raise ArgumentError, "please provide a hash to set options with"
       end
 
+      # setup any pretty printing
       @pp = opts[:pp]
       self.pp_level = 0
+
+      @options = opts
     end
 
     def pp_level

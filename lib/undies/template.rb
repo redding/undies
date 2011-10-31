@@ -45,6 +45,13 @@ module Undies
       end
     end
 
+    # call this to render partial source embedded in a template
+    # partial source is rendered with its own scope/data but shares
+    # its parent template's output object
+    def __partial(source, data)
+      Undies::Template.new(source, data, @_undies_output)
+    end
+
     # Add a text node (data escaped) to the nodes of the current node
     def _(data=""); self.__ self.escape_html(data.to_s); end
 
@@ -54,13 +61,6 @@ module Undies
     # Add an element to the nodes of the current node
     def element(*args, &block); @_undies_output.element(*args, &block); end
     alias_method :tag, :element
-
-    # call this to render partial source embedded in a template
-    # partial source is rendered with its own scope/data but shares
-    # its parent template's output object
-    def __partial(source, data)
-      Undies::Template.new(source, data, @_undies_output)
-    end
 
     # Element proxy methods ('_<element>'') ========================
     ELEM_METH_REGEX = /^_(.+)$/
