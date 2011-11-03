@@ -24,14 +24,17 @@ module Undies
     end
 
     def self.flush(output, element)
+      output.pp_use_indent = true
       output << element.instance_variable_get("@start_tag")
       if (cbs = element.instance_variable_get("@content_blocks")).size > 0
         output.pp_level += 1
+        output.pp_use_indent = false
         cbs.each{ |content| content.call }
         output.flush
         output.pp_level -= 1
       end
       output << element.instance_variable_get("@end_tag") if element.instance_variable_get("@end_tag")
+      output.pp_use_indent = true
     end
 
     def initialize(name, attrs={}, &block)

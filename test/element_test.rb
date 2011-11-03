@@ -195,13 +195,9 @@ class Undies::Element
       templ = Undies::Template.new(src, {}, output)
       assert_equal "
 <div>
-    <span>
-        Content!
-    </span>
+    <span>Content!</span>
     Raw
-    <span>
-        More content
-    </span>
+    <span>More content</span>
 </div>", @out
     end
 

@@ -24,6 +24,7 @@ module Undies
       # setup any pretty printing
       @pp = opts[:pp]
       self.pp_level = 0
+      self.pp_use_indent = true
 
       @options = opts
     end
@@ -37,8 +38,12 @@ module Undies
       @pp_level  = value
     end
 
+    def pp_use_indent=(value)
+      @pp_use_indent = value
+    end
+
     def <<(data)
-      @io << "#{@pp_indent}#{data}"
+      @io << (@pp_use_indent ? "#{@pp_indent}#{data}" : data.to_s)
     end
 
     def node(data="")

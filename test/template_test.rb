@@ -44,12 +44,9 @@ class Undies::Template
       assert_equal(
         %{
 <html>
-  <head>
-  </head>
+  <head></head>
   <body>
-    <div>
-      Hi
-    </div>
+    <div>Hi</div>
   </body>
 </html>},
         @out

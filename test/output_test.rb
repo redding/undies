@@ -82,7 +82,7 @@ class Undies::Output
 
     should "pretty print elements with content" do
       subject.element("div") {}; subject.flush
-      assert_equal "\n<div>\n</div>", @out
+      assert_equal "\n<div></div>", @out
     end
 
   end
