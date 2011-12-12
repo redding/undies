@@ -4,12 +4,16 @@ require 'undies/output'
 module Undies
   class Template
 
-    # have as many methods to the class level as possilbe to keep from
+    # have as many methods on the class level as possible to keep from
     # polluting the public instance methods, the instance scope, and to
     # maximize the effectiveness of the Template#method_missing logic
 
     def self.output(template)
       template.instance_variable_get("@_undies_output")
+    end
+
+    def self.flush(template)
+      template.instance_variable_get("@_undies_output").flush
     end
 
     def initialize(source, data, output)
@@ -31,7 +35,7 @@ module Undies
       self.__yield
 
       # flush any remaining output to the stream
-      @_undies_output.flush
+      self.class.flush(self)
     end
 
     # call this to render template source

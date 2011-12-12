@@ -16,7 +16,7 @@ class Undies::Template
     end
     subject { @t }
 
-    should have_class_method :output
+    should have_class_method :output, :flush
     should have_instance_method  :to_s
     should have_instance_methods :element, :tag, :escape_html
     should have_instance_methods :_, :__
@@ -240,13 +240,28 @@ class Undies::Template
       end
       @expected_output = "<div class=\"good\" id=\"thing\" type=\"something\">action</div>"
 
-      Undies::Template.new(src, {}, Undies::Output.new(outstream))
+      @template = Undies::Template.new(src, {}, Undies::Output.new(outstream))
     end
 
     should "should write to the stream as its being constructed" do
       assert_equal @expected_output, @output
     end
 
+  end
+
+  class FlushTests < StreamTests
+    desc "and adds content post-init"
+    before do
+      @expected_post_output = "<div>Added post-init</div>"
+      @template._div { @template._ "Added post-init" }
+    end
+
+    should "not stream full content until Undies#flush called on the template" do
+      assert_equal @expected_output, @output
+      Undies::Template.flush(@template)
+      assert_equal @expected_output + @expected_post_output, @output
+
+    end
   end
 
 end
