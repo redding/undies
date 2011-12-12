@@ -109,7 +109,7 @@ As said before, Undies streams to a given output stream.  You specify a Template
     source = Undies::Source.new("/path/to/source")
     Undies::Template.new(source, {}, Undies::Output.new(@io, :pp => 4))
 
-=== Builder rendering approach
+=== Builder approach
 
 The above examples use the "source rendering" approach.  This works great when you know your source content before render time and create a source object from it (ie rendering a view template).  However, in some cases, you may not know the source until render time and/or want to use a more declarative style to specify render output.  Undies content can be spefified programmatically by using the "builder rendering" approach.
 
@@ -125,11 +125,11 @@ Now just interact with the Undies API directly.
       template._ something.to_s
     }
 
-*Note:* there is one extra caveat to be aware of using this approach.  You need to be sure and flush the template when content processing is complete.  Just pass the template to the @Undies#flush@ method:
+*Note:* there is one extra caveat to be aware of using this approach.  You need to be sure and flush the template when content processing is complete.  Just pass the template to the Undies::Template#flush method:
 
     # ensures all content is streamed to the template's output stream
     # this is only necessary using the "builder approach"
-    Undies.flush(template)
+    Undies::Template.flush(template)
 
 == License
 
