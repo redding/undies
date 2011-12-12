@@ -8,11 +8,11 @@ class Undies::Template
   class BasicTests < Assert::Context
     desc 'a template'
     before do
-      src = Undies::Source.new(Proc.new {})
+      @src = Undies::Source.new(Proc.new {})
       @outstream = StringIO.new(@out = "")
       @output = Undies::Output.new(@outstream)
 
-      @t = Undies::Template.new(src, {}, @output)
+      @t = Undies::Template.new(@src, {}, @output)
     end
     subject { @t }
 
@@ -51,6 +51,29 @@ class Undies::Template
 </html>},
         @out
       )
+    end
+
+  end
+
+  class TemplateCreationTests < BasicTests
+
+    should "complain if creating a template with no Output obj" do
+      assert_raises ArgumentError do
+        Undies::Template.new(@src, {})
+      end
+    end
+
+    should "default the data to an empty hash if none provided" do
+      assert_nothing_raised do
+        Undies::Template.new(@src, @output)
+      end
+    end
+
+    should "default the source to an empty Proc source if none provided" do
+      assert_nothing_raised do
+        Undies::Template.new(@output)
+      end
+      assert_equal "", @out
     end
 
   end
