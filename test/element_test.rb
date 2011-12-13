@@ -41,6 +41,9 @@ class Undies::Element
       assert_match /^\s{1}/, attrs
       assert attrs.include?('class="test"')
       assert attrs.include?('id="test_1"')
+
+      attrs = Undies::Element.html_attrs('key' => "string")
+      assert attrs.include?('key="string"')
     end
 
     should "convert a nested hash to html attrs" do

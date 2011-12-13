@@ -8,14 +8,16 @@ module Undies
     # of the Element#method_missing logic
 
     def self.html_attrs(attrs="", ns=nil)
-      if attrs.kind_of? ::Hash
-        attrs.empty? ? '' : (attrs.keys.map(&:to_s).sort.map(&:to_sym).inject('') do |html, key|
-          ak = ns ? "#{ns}_#{key}" : key.to_s
-          av = attrs[key]
-          html + (av.kind_of?(::Hash) ? html_attrs(av, ak) : " #{ak}=\"#{av}\"")
-        end)
-      else
-        attrs.to_s
+      return attrs.to_s if !attrs.kind_of?(::Hash)
+
+      {}.tap do |a|
+        attrs.each { |k, v| a[ns ? "#{ns}_#{k}" : k.to_s] = v }
+      end.sort.inject('') do |html, k_v|
+        html + if k_v.last.kind_of?(::Hash)
+          html_attrs(k_v.last, k_v.first)
+        else
+          " #{k_v.first}=\"#{k_v.last}\""
+        end
       end
     end
 
