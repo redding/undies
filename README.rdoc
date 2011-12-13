@@ -135,15 +135,16 @@ As said before, Undies streams to a given output stream.  You specify a Template
 
 === Builder approach
 
-The above examples use the "source rendering" approach.  This works great when you know your source content before render time and create a source object from it (ie rendering a view template).  However, in some cases, you may not know the source until render time and/or want to use a more declarative style to specify render output.  Undies content can be spefified programmatically by using the "builder rendering" approach.
+The above examples use the "source rendering" approach.  This works great when you know your source content before render time and create a source object from it (ie rendering a view template).  However, in some cases, you may not know the source until render time and/or want to use a more declarative style to specify render output.  Undies content can be specified programmatically using the "builder rendering" approach.
 
-To render using this approach, create a Template instance passing it data and output info as above.  However, don't pass in any source info and save off the created template:
+To render using this approach, create a Template instance passing it data and output info as above.  However, don't pass in any source info, only pass in any local data if you like, and save off the created template:
 
-    template = Undies::Template.new({}, Undies::Output.new(@io))
+    # choosing not to use any local data in this example
+    template = Undies::Template.new(Undies::Output.new(@io))
 
 Now just interact with the Undies API directly.
 
-    # notice that it becomes less important to bind data to the Template using this approach
+    # notice that it becomes less important to bind any local data to the Template using this approach
     something = "Some Thing!"
     template._div.something! {
       template._ something.to_s
