@@ -4,7 +4,7 @@ require 'undies/output'
 module Undies
   class Template
 
-    # have as many methods to the class level as possilbe to keep from
+    # have as many methods on the class level as possible to keep from
     # polluting the public instance methods, the instance scope, and to
     # maximize the effectiveness of the Template#method_missing logic
 
@@ -12,26 +12,37 @@ module Undies
       template.instance_variable_get("@_undies_output")
     end
 
-    def initialize(source, data, output)
+    def self.flush(template)
+      template.instance_variable_get("@_undies_output").flush
+    end
+
+    def initialize(*args)
+      output = if args.last.kind_of?(Output)
+        args.pop
+      else
+        raise ArgumentError, "please provide an Output object"
+      end
+      data = args.last.kind_of?(::Hash) ? args.pop : {}
+      source = args.last.kind_of?(Source) ? args.pop : Source.new(Proc.new {})
+
       # setup the source stack and output objects
-      raise ArgumentError, "please provide a Source object" if !source.kind_of?(Source)
       @_undies_source_stack = SourceStack.new(source)
-      raise ArgumentError, "please provide an Output object" if !output.kind_of?(Output)
-      @_undies_output = output
 
       # apply data to template scope
-      raise ArgumentError if !data.kind_of?(::Hash)
       if (data.keys.map(&:to_s) & self.public_methods.map(&:to_s)).size > 0
         raise ArgumentError, "data conflicts with template public methods."
       end
       metaclass = class << self; self; end
       data.each {|key, value| metaclass.class_eval { define_method(key){value} }}
 
+      # save off the output obj for streaming
+      @_undies_output = output
+
       # yield to recursivley render the source stack
       self.__yield
 
       # flush any remaining output to the stream
-      @_undies_output.flush
+      self.class.flush(self)
     end
 
     # call this to render template source
