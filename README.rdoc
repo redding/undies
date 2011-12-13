@@ -24,7 +24,7 @@ Raw (un-escaped) text:
 Empty node:
     _thing # => "<thing />"
 
-Nade with content:
+Node with content:
     _thing {
       _ "Some Content"
       _ "More Content "
