@@ -27,7 +27,12 @@ Empty node:
 Nade with content:
     _thing {
       _ "Some Content"
-    } # => "<thing>Some Content</thing>"
+      _ "More Content "
+    } # => "<thing>Some ContentMore Content</thing>"
+
+Node with attributes:
+    _thing(:one => 1, 'a' => "Aye")
+    # => "<thing one=\"1\" a=\"Aye\" />"
 
 Nested nodes:
     _thing {
@@ -36,30 +41,49 @@ Nested nodes:
       }
     } # => "<thing><Something>Some Content</Something></thing>"
 
-Node with attributes
-    _thing(:one => 1, 'a' => "Aye")
-    # => "<thing one=\"1\" a=\"Aye\" />"
+Namespaces / Doctype stuff:
+    __ "<?xml version="1.0" encoding="UTF-8"?>"
+
+    _thing('xmlns:ss="urn:some-cool-namespace"') {
+        send("_ss:Value", {'ss:some_attr' => "some attr value"}) {
+            _ "Some Content"
+        }
+    } # => "<thing xmlns:ss=\"urn:some-cool-namespace\"><ss:Value ss:some_attr=\"some attr value\">Some Content</ss:Value>"
+
+Comments:
+    __ "<!-- some comment -->"
+    # => "<!-- some comment -->"
 
 === HTML
 
 Same stuff applies:
+    __ "<!DOCTYPE html>"
+
     _div(:style => "border-top: 1px") {
       _h1 { _ "Hello World" }
-    } # => "<div style=\"border-top: 1px\"><h1>Hello World</h1></div>"
+      _p  { _ "blah blah"   }
+    } # => "<div style=\"border-top: 1px\"><h1>Hello World</h1><p>blah blah</p></div>"
 
-id attribute helper
+id attribute helper:
     _h1.header!
     # => "<h1 id=\"header\" />"
 
-class attributes helper
+    _h1.header!.title!
+    # => "<h1 id=\"title\" />"
+
+class attributes helper:
     _h1.header.awesome
     # => "<h1 class=\"header awesome\" />"
 
+use in combo:
+    _h1.header!.awesome
+    # => "<h1 class=\"awesome\" id=\"header\" />
+
 == Streamed Output
 
-Undies works by streaming content defined by using its DSL to a given output stream.  This has a number of advantages:
+Undies works by streaming content defined by using its DSL to a given output stream.  Any call to Template#_, Template#__, or Tempate#_<node> will stream its output (or you can write helpers you mix in that use these base api methods).  This has a number of advantages:
 
-* content is written out as it is defined
+* content is written out immediately
 * maintain a relatively low memory profile while rendering
 * can process large templates with linear performance impact
 
