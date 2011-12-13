@@ -8,15 +8,15 @@ class Undies::Template
   class BasicTests < Assert::Context
     desc 'a template'
     before do
-      src = Undies::Source.new(Proc.new {})
+      @src = Undies::Source.new(Proc.new {})
       @outstream = StringIO.new(@out = "")
       @output = Undies::Output.new(@outstream)
 
-      @t = Undies::Template.new(src, {}, @output)
+      @t = Undies::Template.new(@src, {}, @output)
     end
     subject { @t }
 
-    should have_class_method :output
+    should have_class_method :output, :flush
     should have_instance_method  :to_s
     should have_instance_methods :element, :tag, :escape_html
     should have_instance_methods :_, :__
@@ -51,6 +51,29 @@ class Undies::Template
 </html>},
         @out
       )
+    end
+
+  end
+
+  class TemplateCreationTests < BasicTests
+
+    should "complain if creating a template with no Output obj" do
+      assert_raises ArgumentError do
+        Undies::Template.new(@src, {})
+      end
+    end
+
+    should "default the data to an empty hash if none provided" do
+      assert_nothing_raised do
+        Undies::Template.new(@src, @output)
+      end
+    end
+
+    should "default the source to an empty Proc source if none provided" do
+      assert_nothing_raised do
+        Undies::Template.new(@output)
+      end
+      assert_equal "", @out
     end
 
   end
@@ -240,13 +263,28 @@ class Undies::Template
       end
       @expected_output = "<div class=\"good\" id=\"thing\" type=\"something\">action</div>"
 
-      Undies::Template.new(src, {}, Undies::Output.new(outstream))
+      @template = Undies::Template.new(src, {}, Undies::Output.new(outstream))
     end
 
     should "should write to the stream as its being constructed" do
       assert_equal @expected_output, @output
     end
 
+  end
+
+  class FlushTests < StreamTests
+    desc "and adds content post-init"
+    before do
+      @expected_post_output = "<div>Added post-init</div>"
+      @template._div { @template._ "Added post-init" }
+    end
+
+    should "not stream full content until Undies#flush called on the template" do
+      assert_equal @expected_output, @output
+      Undies::Template.flush(@template)
+      assert_equal @expected_output + @expected_post_output, @output
+
+    end
   end
 
 end

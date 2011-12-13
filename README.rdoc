@@ -1,74 +1,164 @@
 = Undies
-A pure-Ruby DSL for writing HTML or plain text templates.  Named for its gratuitous use of the underscore.
+A pure-Ruby DSL for streaming templated HTML, XML, or plain text.  Named for its gratuitous use of the underscore.
+
 == Installation
     $ gem install undies
-== Usage
-Empty tag:
-    _br # => "<br />"
 
-Tag with content:
-    _h1 {
-      _ "Some Header"
-    } # => "<h1>Some Header</h1>"
-Nested tags:
-    _body {
-      _div {
-        _ "Some Content"
-      }
-    } # => "<body><div>Some Content</div></body>"
-Buffer escaped output:
-    _ "this will be escaped & and added to the buffer"
-    # => "this will be escaped &amp; added to the buffer"
-Buffer un-escaped output:
+== DSL
+
+Undies uses an underscore-based DSL for rendering content.  It can render plain text, html-escaped text, xml, and html.
+
+=== Plain text
+
+Escaped (xml / html) text:
+
+    _ "this will be escaped & streamed"
+    # => "this will be escaped &amp; streamed"
+
+Raw (un-escaped) text:
     __ "this will <em>not</em> be escaped"
     # => "this will <em>not</em> be escaped"
-Tag with attributes
-    _h1(:class => 'title', :title => "A Header")
-    # => "<h1 class=\"title\" title=\"A Header\" />"
-Tag with id attribute
+
+=== XML
+
+Empty node:
+    _thing # => "<thing />"
+
+Node with content:
+    _thing {
+      _ "Some Content"
+      _ "More Content "
+    } # => "<thing>Some ContentMore Content</thing>"
+
+Node with attributes:
+    _thing(:one => 1, 'a' => "Aye")
+    # => "<thing one=\"1\" a=\"Aye\" />"
+
+Nested nodes:
+    _thing {
+      _Something {
+        _ "Some Content"
+      }
+    } # => "<thing><Something>Some Content</Something></thing>"
+
+Namespaces / Doctype stuff:
+    __ "<?xml version="1.0" encoding="UTF-8"?>"
+
+    _thing('xmlns:ss="urn:some-cool-namespace"') {
+        send("_ss:Value", {'ss:some_attr' => "some attr value"}) {
+            _ "Some Content"
+        }
+    } # => "<thing xmlns:ss=\"urn:some-cool-namespace\"><ss:Value ss:some_attr=\"some attr value\">Some Content</ss:Value>"
+
+Comments:
+    __ "<!-- some comment -->"
+    # => "<!-- some comment -->"
+
+=== HTML
+
+Same stuff applies:
+    __ "<!DOCTYPE html>"
+
+    _div(:style => "border-top: 1px") {
+      _h1 { _ "Hello World" }
+      _p  { _ "blah blah"   }
+    } # => "<div style=\"border-top: 1px\"><h1>Hello World</h1><p>blah blah</p></div>"
+
+id attribute helper:
     _h1.header!
     # => "<h1 id=\"header\" />"
-Tag with class attributes
+
+    _h1.header!.title!
+    # => "<h1 id=\"title\" />"
+
+class attributes helper:
     _h1.header.awesome
     # => "<h1 class=\"header awesome\" />"
 
-== Rendering Templates
+use in combo:
+    _h1.header!.awesome
+    # => "<h1 class=\"awesome\" id=\"header\" />
 
-* basic render:
-    
-    # render a block of markup
-    Undies::Template.new do
+== Streamed Output
+
+Undies works by streaming content defined by using its DSL to a given output stream.  Any call to Template#_, Template#__, or Tempate#_<node> will stream its output (or you can write helpers you mix in that use these base api methods).  This has a number of advantages:
+
+* content is written out immediately
+* maintain a relatively low memory profile while rendering
+* can process large templates with linear performance impact
+
+However, because content is streamed then forgotten as it is being rendered, Undies templates cannot be self-referrential.  No one element may refer to other previously rendered elements.
+
+== Rendering
+
+To render using Undies, create a Template instance, providing the template source, data, and output information.
+
+    source = Undies::Source.new("/path/to/sourcefile")
+    data = { :two_plus_two => 4 }
+    output = Undies::Output.new(@some_io_stream)
+
+    Undies::Template.new(source, {}, output)
+
+=== Source
+
+You specify Undies source using the Undies::Source object.  You can create source either form a block or a file.  Source content (either block or file) will be evaluated in context of the template.
+
+=== Data
+
+Undies renders source content in isolated scope (the context of the template).  This means that content has access to only the data it is given or the Undies API itself.  When you define a template for rendering, you provide not only the template source, but any data that source should be rendered with.  Data is given in the form of a Hash.  The string form of the hash keys are exposed as local methods that return their corresponding values.
+
+=== Output
+
+As said before, Undies streams to a given output stream.  You specify a Template's output by creating an Undies::Output object.  These objects take an io stream and a hash of options:
+
+* :pp (pretty-print) : set to a Fixnum to tab-space indent pretty print the output.
+
+=== Examples
+
+    # file source, no local data, no pretty printing
+    source = Undies::Source.new("/path/to/source")
+    Undies::Template.new(source, {}, Undies::Output.new(@io))
+
+
+    # proc source, simple local data, no pretty printing
+    source = Undies::Source.new(Proc.new do
       _div {
-        _ "Some Content"
+        _ content.to_s
       }
-    end.to_s
+    end)
+    Undies::Template.new(source, {:content => "Some Content!!" }, Undies::Output.new(@io))
 
-* streaming render
 
-    # render the template and push it to the output stream as it is being constructed
-    # just pass an IO to the template constructor
-    Undies::Template.new(output_io).new do
-      _div {
-        _ "Some Content"
-      }
-    end
+    # pretty printing (4 space tab indentation)
+    source = Undies::Source.new("/path/to/source")
+    Undies::Template.new(source, {}, Undies::Output.new(@io, :pp => 4))
 
-* render passing local vars in and pretty printing:
+=== Builder approach
 
-    # render a file with markup
-    # make the local vars 'four' and 'name' available the the template markup
-    # pretty print the output with 2-space indentation
-    Undies::Template.new("path/to/file", {
-      :four => 2 + 2,
-      :name => "Awesome"
-    }).to_s(2)
+The above examples use the "source rendering" approach.  This works great when you know your source content before render time and create a source object from it (ie rendering a view template).  However, in some cases, you may not know the source until render time and/or want to use a more declarative style to specify render output.  Undies content can be specified programmatically using the "builder rendering" approach.
 
-=== Pretty Printing
-If you want to pretty print the output, pass an integer specifying the number of spaces to indent to the `to_s` method.
+To render using this approach, create a Template instance passing it data and output info as above.  However, don't pass in any source info, only pass in any local data if you like, and save off the created template:
+
+    # choosing not to use any local data in this example
+    template = Undies::Template.new(Undies::Output.new(@io))
+
+Now just interact with the Undies API directly.
+
+    # notice that it becomes less important to bind any local data to the Template using this approach
+    something = "Some Thing!"
+    template._div.something! {
+      template._ something.to_s
+    }
+
+*Note:* there is one extra caveat to be aware of using this approach.  You need to be sure and flush the template when content processing is complete.  Just pass the template to the Undies::Template#flush method:
+
+    # ensures all content is streamed to the template's output stream
+    # this is only necessary using the "builder approach"
+    Undies::Template.flush(template)
 
 == License
 
-Copyright (c) 2011 Kelly Redding
+Copyright (c) 2011-Present Kelly Redding
 
 Permission is hereby granted, free of charge, to any person
 obtaining a copy of this software and associated documentation
