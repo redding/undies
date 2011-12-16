@@ -23,7 +23,7 @@ module Undies
 
       # setup any pretty printing
       @pp = opts[:pp]
-      self.pp_level = 0
+      self.pp_level = opts[:pp_level] || 0
       self.pp_use_indent = true
 
       @options = opts

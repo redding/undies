@@ -57,6 +57,10 @@ class Undies::Output
       assert_equal 2, subject.pp
     end
 
+    should "start pp at level 0 by default" do
+      assert_equal 0, subject.pp_level
+    end
+
     should "pretty print stream data" do
       subject << "some data"
       assert_equal "\nsome data", @out
@@ -73,6 +77,12 @@ class Undies::Output
     should "pretty print nodes" do
       subject.node("lala"); subject.flush
       assert_equal "\nlala", @out
+    end
+
+    should "pretty print at a given level if directed to" do
+      subject.options = {:pp => 2, :pp_level => 2}
+      subject.node("lala"); subject.flush
+      assert_equal "\n    lala", @out
     end
 
     should "pretty print elements with no content" do
