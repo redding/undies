@@ -80,9 +80,23 @@ class Undies::Output
       assert_equal "\n<span />", @out
     end
 
-    should "pretty print elements with content" do
-      subject.element("div") {}; subject.flush
-      assert_equal "\n<div></div>", @out
+    should "keep node content on the same line" do
+      subject.element("div") {
+        subject.node "hi"
+        subject.node "there"
+      }
+      subject.flush
+      assert_equal "\n<div>hithere</div>", @out
+    end
+
+    should "put node content on the own lines if first node is empty" do
+      subject.element("div") {
+        subject.node
+        subject.node "hi"
+        subject.node "there"
+      }
+      subject.flush
+      assert_equal "\n<div>\n  hi\n  there\n</div>", @out
     end
 
   end
