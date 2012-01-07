@@ -39,11 +39,16 @@ class Undies::Element
     should "convert a basic hash to html attrs" do
       attrs = Undies::Element.html_attrs(:class => "test", :id => "test_1")
       assert_match /^\s{1}/, attrs
-      assert attrs.include?('class="test"')
-      assert attrs.include?('id="test_1"')
+      assert_includes 'class="test"', attrs
+      assert_includes 'id="test_1"', attrs
 
       attrs = Undies::Element.html_attrs('key' => "string")
-      assert attrs.include?('key="string"')
+      assert_includes 'key="string"', attrs
+    end
+
+    should "escape double-quotes in attr values" do
+      attrs = Undies::Element.html_attrs('escaped' => '"this" is double-quoted')
+      assert_includes 'escaped="&quot;this&quot; is double-quoted"', attrs
     end
 
     should "convert a nested hash to html attrs" do
@@ -152,6 +157,14 @@ class Undies::Element
       end
       templ = Undies::Template.new(src, {}, @output)
       assert_equal '<br class="big" />', @out
+    end
+
+    should "serialize with attrs that have double-quotes" do
+      src = Undies::Source.new do
+        element(:br, :class => '"this" is double-quoted')
+      end
+      templ = Undies::Template.new(src, {}, @output)
+      assert_equal '<br class="&quot;this&quot; is double-quoted" />', @out
     end
 
     should "serialize with attrs and content" do

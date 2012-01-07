@@ -16,7 +16,7 @@ module Undies
         html + if k_v.last.kind_of?(::Hash)
           html_attrs(k_v.last, k_v.first)
         else
-          " #{k_v.first}=\"#{k_v.last}\""
+          " #{k_v.first}=\"#{k_v.last.gsub('"', '&quot;')}\""
         end
       end
     end
