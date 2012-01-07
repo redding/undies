@@ -7,14 +7,14 @@ module Undies
     # polluting the public instance methods and to maximize the effectiveness
     # of the Element#method_missing logic
 
-    def self.html_attrs(attrs="", ns=nil)
+    def self.hash_attrs(attrs="", ns=nil)
       return attrs.to_s if !attrs.kind_of?(::Hash)
 
       {}.tap do |a|
         attrs.each { |k, v| a[ns ? "#{ns}_#{k}" : k.to_s] = v }
       end.sort.inject('') do |html, k_v|
         html + if k_v.last.kind_of?(::Hash)
-          html_attrs(k_v.last, k_v.first)
+          hash_attrs(k_v.last, k_v.first)
         else
           " #{k_v.first}=\"#{k_v.last.gsub('"', '&quot;')}\""
         end
@@ -105,7 +105,7 @@ module Undies
     end
 
     def start_tag
-      "<#{@name}#{self.class.html_attrs(@attrs)}" + (@content_blocks.size > 0 ? ">" : " />")
+      "<#{@name}#{self.class.hash_attrs(@attrs)}" + (@content_blocks.size > 0 ? ">" : " />")
     end
 
     def end_tag

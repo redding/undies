@@ -12,7 +12,7 @@ class Undies::Element
     end
     subject { @e }
 
-    should have_class_methods :html_attrs, :content, :flush
+    should have_class_methods :hash_attrs, :content, :flush
     should have_instance_method :to_str
 
     should "be a Node" do
@@ -29,30 +29,30 @@ class Undies::Element
 
   end
 
-  class HtmlAttrsTest < BasicTests
-    desc "the element class html_attrs util"
+  class HashAttrsTest < BasicTests
+    desc "the element class hash_attrs util"
 
-    should "convert an empty hash to html attrs" do
-      assert_equal '', Undies::Element.html_attrs({})
+    should "convert an empty hash to element attrs" do
+      assert_equal '', Undies::Element.hash_attrs({})
     end
 
-    should "convert a basic hash to html attrs" do
-      attrs = Undies::Element.html_attrs(:class => "test", :id => "test_1")
+    should "convert a basic hash to element attrs" do
+      attrs = Undies::Element.hash_attrs(:class => "test", :id => "test_1")
       assert_match /^\s{1}/, attrs
       assert_includes 'class="test"', attrs
       assert_includes 'id="test_1"', attrs
 
-      attrs = Undies::Element.html_attrs('key' => "string")
+      attrs = Undies::Element.hash_attrs('key' => "string")
       assert_includes 'key="string"', attrs
     end
 
     should "escape double-quotes in attr values" do
-      attrs = Undies::Element.html_attrs('escaped' => '"this" is double-quoted')
+      attrs = Undies::Element.hash_attrs('escaped' => '"this" is double-quoted')
       assert_includes 'escaped="&quot;this&quot; is double-quoted"', attrs
     end
 
-    should "convert a nested hash to html attrs" do
-      attrs = Undies::Element.html_attrs({
+    should "convert a nested hash to element attrs" do
+      attrs = Undies::Element.hash_attrs({
         :class => "testing", :id => "test_2",
         :nested => {:something => 'is_awesome'}
       })
