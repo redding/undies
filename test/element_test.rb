@@ -51,6 +51,11 @@ class Undies::Element
       assert_includes 'escaped="&quot;this&quot; is double-quoted"', attrs
     end
 
+    should "escape '<' in attr values" do
+      attrs = Undies::Element.hash_attrs('escaped' => 'not < escaped')
+      assert_includes 'escaped="not &lt; escaped"', attrs
+    end
+
     should "convert a nested hash to element attrs" do
       attrs = Undies::Element.hash_attrs({
         :class => "testing", :id => "test_2",
