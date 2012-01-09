@@ -84,18 +84,18 @@ class Undies::Template
       @data = "stuff & <em>more stuff</em>"
     end
 
-    should "add the text un-escaped using the '__' method" do
-      Undies::Template.new(Undies::Source.new do
-        __ data
-      end, {:data => @data}, @output)
-      assert_equal @data, @out
-    end
-
     should "add the text escaped using the '_' method" do
       Undies::Template.new(Undies::Source.new do
         _ data
       end, {:data => @data}, @output)
       assert_equal subject.send(:escape_html, @data), @out
+    end
+
+    should "add the text un-escaped using the '__' method" do
+      Undies::Template.new(Undies::Source.new do
+        __ data
+      end, {:data => @data}, @output)
+      assert_equal @data, @out
     end
 
     should "add empty string nodes using '__' and '_' methods with no args" do

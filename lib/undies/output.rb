@@ -1,5 +1,3 @@
-require 'undies/node'
-require 'undies/element'
 require 'undies/node_buffer'
 
 module Undies
@@ -46,14 +44,9 @@ module Undies
       @io << (@pp_use_indent ? "#{@pp_indent}#{data}" : data.to_s)
     end
 
-    def node(data="")
+    def node(obj)
       self.node_buffer.pull(self)
-      self.node_buffer.push(Node.new(data))
-    end
-
-    def element(name, attrs={}, &block)
-      self.node_buffer.pull(self)
-      self.node_buffer.push(Element.new(name, attrs, &block))
+      self.node_buffer.push(obj)
     end
 
     def flush

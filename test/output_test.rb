@@ -1,6 +1,9 @@
 require "assert"
 
 require 'stringio'
+require 'undies/node'
+require 'undies/element'
+
 require "undies/output"
 
 class Undies::Output
@@ -15,7 +18,7 @@ class Undies::Output
 
     should have_readers :io, :options, :pp, :node_buffer
     should have_instance_methods :options=, :<<, :pp_level
-    should have_instance_methods :node, :element, :flush
+    should have_instance_methods :node, :flush
 
     should "know its stream" do
       assert_same @io, subject.io
@@ -75,31 +78,31 @@ class Undies::Output
     end
 
     should "pretty print nodes" do
-      subject.node("lala"); subject.flush
+      subject.node(Undies::Node.new("lala")); subject.flush
       assert_equal "\nlala", @out
     end
 
     should "pretty print at a given level if directed to" do
       subject.options = {:pp => 2, :pp_level => 2}
-      subject.node("lala"); subject.flush
+      subject.node(Undies::Node.new("lala")); subject.flush
       assert_equal "\n    lala", @out
     end
 
     should "pretty print elements with no content" do
-      subject.element("span"); subject.flush
+      subject.node(Undies::Element.new("span")); subject.flush
       assert_equal "\n<span />", @out
     end
 
     should "keep node content on the same line" do
-      subject.element("div") {
-        subject.node "hi"
-        subject.node "there"
-      }
-      subject.element("div") {
-        subject.node
-        subject.node "hi"
-        subject.node "again"
-      }
+      subject.node(Undies::Element.new("div") {
+        subject.node Undies::Node.new("hi")
+        subject.node Undies::Node.new("there")
+      })
+      subject.node(Undies::Element.new("div") {
+        subject.node Undies::Node.new("")
+        subject.node Undies::Node.new("hi")
+        subject.node Undies::Node.new("again")
+      })
       subject.flush
 
       assert_equal "\n<div>hithere</div>\n<div>hiagain</div>", @out
@@ -109,25 +112,14 @@ class Undies::Output
 
 
   class NodeHandlingTests < BasicTests
-    before do
-      @hey = Undies::Node.new "hey!"
-
-      src = Undies::Source.new do
-        _div.good.thing!(:type => "something") {
-          __ "action"
-        }
-      end
-      @expected_output = "hey!"
-    end
 
     should "create and append nodes" do
-      assert_equal @hey, subject.node("hey!")
+      subject.node Undies::Node.new "hey!"
       assert_equal 1, subject.node_buffer.size
     end
 
     should "create and append elements" do
-      elem = Undies::Element.new(:div)
-      assert_equal elem, subject.element(:div)
+      subject.node Undies::Element.new(:div)
       assert_equal 1, subject.node_buffer.size
     end
 

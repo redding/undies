@@ -1,5 +1,8 @@
 require 'undies/source_stack'
 require 'undies/output'
+require 'undies/node'
+require 'undies/element'
+
 
 module Undies
   class Template
@@ -67,10 +70,10 @@ module Undies
     def _(data=""); self.__ self.escape_html(data.to_s); end
 
     # Add a text node with the data un-escaped
-    def __(data=""); @_undies_output.node(data.to_s); end
+    def __(data=""); @_undies_output.node(Node.new(data.to_s)); end
 
     # Add an element to the nodes of the current node
-    def element(*args, &block); @_undies_output.element(*args, &block); end
+    def element(*args, &block); @_undies_output.node(Element.new(*args, &block)); end
     alias_method :tag, :element
 
     # Element proxy methods ('_<element>'') ========================
