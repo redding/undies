@@ -19,7 +19,7 @@ class Undies::Template
     should have_class_method :output, :flush
     should have_instance_method  :to_s
     should have_instance_methods :element, :tag, :escape_html
-    should have_instance_methods :_, :__
+    should have_instance_methods :_, :__, :___
     should have_instance_methods :__yield, :__partial
 
     should "provide access to its output object via a class method" do
@@ -84,6 +84,13 @@ class Undies::Template
       @data = "stuff & <em>more stuff</em>"
     end
 
+    should "add the text escaped using the '_' method" do
+      Undies::Template.new(Undies::Source.new do
+        _ data
+      end, {:data => @data}, @output)
+      assert_equal subject.send(:escape_html, @data), @out
+    end
+
     should "add the text un-escaped using the '__' method" do
       Undies::Template.new(Undies::Source.new do
         __ data
@@ -91,11 +98,17 @@ class Undies::Template
       assert_equal @data, @out
     end
 
-    should "add the text escaped using the '_' method" do
+    should "add the text un-escaped with force pretty printing using the '___' method" do
+      output = Undies::Output.new(@outstream, :pp => 2)
       Undies::Template.new(Undies::Source.new do
-        _ data
-      end, {:data => @data}, @output)
-      assert_equal subject.send(:escape_html, @data), @out
+        _div {
+          __ "not-pp"
+          ___ "pp"
+          __ "not-pp-but-anyway"
+        }
+      end, {}, output)
+
+      assert_equal "\n<div>not-pp\n  pp\n  not-pp-but-anyway\n</div>", @out
     end
 
     should "add empty string nodes using '__' and '_' methods with no args" do

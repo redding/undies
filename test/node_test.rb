@@ -28,6 +28,14 @@ class Undies::Node
       assert_equal "a text node here", out
     end
 
+    should "force pp when flushed if directed" do
+      output = Undies::Output.new(StringIO.new(out = ""), :pp => 2, :pp_level => 1)
+      output.pp_use_indent = false
+      Undies::Node.flush(output, Undies::Node.new("should be pp", {:force_pp => true}))
+
+      assert_equal "\n  should be pp", out
+    end
+
   end
 
 end

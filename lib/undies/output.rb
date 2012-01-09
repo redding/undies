@@ -1,11 +1,10 @@
-require 'undies/node'
-require 'undies/element'
 require 'undies/node_buffer'
 
 module Undies
   class Output
 
     attr_reader :io, :options, :pp, :node_buffer
+    attr_accessor :pp_use_indent
 
     # the output class wraps an IO stream, gathers pretty printing options,
     # and handles buffering nodes and pretty printing to the stream
@@ -38,22 +37,13 @@ module Undies
       @pp_level  = value
     end
 
-    def pp_use_indent=(value)
-      @pp_use_indent = value
-    end
-
     def <<(data)
       @io << (@pp_use_indent ? "#{@pp_indent}#{data}" : data.to_s)
     end
 
-    def node(data="")
+    def node(obj)
       self.node_buffer.pull(self)
-      self.node_buffer.push(Node.new(data))
-    end
-
-    def element(name, attrs={}, &block)
-      self.node_buffer.pull(self)
-      self.node_buffer.push(Element.new(name, attrs, &block))
+      self.node_buffer.push(obj)
     end
 
     def flush
