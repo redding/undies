@@ -72,6 +72,11 @@ module Undies
     # Add a text node with the data un-escaped
     def __(data=""); @_undies_output.node(Node.new(data.to_s)); end
 
+    # Add a text node with the data un-escaped, forcing pp output
+    def ___(data="")
+      @_undies_output.node(Node.new(data.to_s, :force_pp => true))
+    end
+
     # Add an element to the nodes of the current node
     def element(*args, &block); @_undies_output.node(Element.new(*args, &block)); end
     alias_method :tag, :element

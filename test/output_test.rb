@@ -17,6 +17,7 @@ class Undies::Output
     subject { @output }
 
     should have_readers :io, :options, :pp, :node_buffer
+    should have_accessor :pp_use_indent
     should have_instance_methods :options=, :<<, :pp_level
     should have_instance_methods :node, :flush
 

@@ -4,6 +4,7 @@ module Undies
   class Output
 
     attr_reader :io, :options, :pp, :node_buffer
+    attr_accessor :pp_use_indent
 
     # the output class wraps an IO stream, gathers pretty printing options,
     # and handles buffering nodes and pretty printing to the stream
@@ -34,10 +35,6 @@ module Undies
     def pp_level=(value)
       @pp_indent = @pp ? "\n#{' '*value*@pp}" : ""
       @pp_level  = value
-    end
-
-    def pp_use_indent=(value)
-      @pp_use_indent = value
     end
 
     def <<(data)

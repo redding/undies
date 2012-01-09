@@ -11,10 +11,8 @@ module Undies
     end
 
     def self.flush(output, node)
-      self.content(node).tap do |c|
-        output.pp_use_indent = true if node.force_pp?
-        output << c
-      end
+      output.pp_use_indent = true if node.force_pp?
+      output << self.content(node)
     end
 
     def initialize(content, opts={})
