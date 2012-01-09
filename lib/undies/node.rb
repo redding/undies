@@ -11,13 +11,21 @@ module Undies
     end
 
     def self.flush(output, node)
-      output << self.content(node)
+      self.content(node).tap do |c|
+        output.pp_use_indent = true if node.force_pp?
+        output << c
+      end
     end
 
-    def initialize(content)
+    def initialize(content, opts={})
       @start_tag = nil
       @end_tag = nil
+      @force_pp = opts[:force_pp]
       @content = content
+    end
+
+    def force_pp?
+      !!@force_pp
     end
 
     def ==(other_node)
