@@ -11,11 +11,7 @@ module Undies
     end
 
     def self.flush(output, node)
-      if (c = self.content(node)).empty?
-        output.pp_use_indent = true
-      else
-        output << c
-      end
+      output << self.content(node)
     end
 
     def initialize(content)

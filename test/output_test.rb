@@ -95,18 +95,14 @@ class Undies::Output
         subject.node "hi"
         subject.node "there"
       }
-      subject.flush
-      assert_equal "\n<div>hithere</div>", @out
-    end
-
-    should "put node content on the own lines if first node is empty" do
       subject.element("div") {
         subject.node
         subject.node "hi"
-        subject.node "there"
+        subject.node "again"
       }
       subject.flush
-      assert_equal "\n<div>\n  hi\n  there\n</div>", @out
+
+      assert_equal "\n<div>hithere</div>\n<div>hiagain</div>", @out
     end
 
   end
