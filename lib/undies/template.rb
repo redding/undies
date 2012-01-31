@@ -70,7 +70,16 @@ module Undies
       Undies::Template.new(source, data, self.class.node_stack(self))
     end
 
-    # TODO: __attrs method for modifying node attrs during a build
+    # call this to modify element attrs inside a build block.  Once content
+    # or child elements have been added, any '__attr' directives will
+    # be ignored b/c the elements start_tag has already been flushed
+    # to the output
+    def __attrs(attrs_hash={})
+      self.class.node_stack(self).current.tap do |node|
+        node.class.set_attrs(node, attrs_hash)
+        node.class.set_start_tag(node)
+      end
+    end
 
     # Add a text node (data escaped) to the nodes of the current node
     def _(data="")
@@ -83,11 +92,6 @@ module Undies
         self.class.node_stack(self).node(node)
       end
     end
-
-    # # Add a text node with the data un-escaped, forcing pp output
-    # def ___(data="")
-    #   @_undies_output.node(Node.new(data.to_s, :force_pp => true))
-    # end
 
     # Add an element to the node stack
     def element(*args, &build)

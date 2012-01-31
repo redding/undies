@@ -19,7 +19,7 @@ class Undies::Template
     should have_instance_method  :to_s
     should have_instance_methods :element, :tag, :escape_html
     should have_instance_methods :_, :__
-    should have_instance_methods :__yield, :__partial
+    should have_instance_methods :__yield, :__partial, :__attrs
 
     should "know it's node stack" do
       assert_kind_of Undies::NodeStack, subject.class.node_stack(subject)
@@ -273,6 +273,7 @@ class Undies::Template
 
   end
 
+
   class FlushTests < StreamTests
     desc "and adds content post-init"
     before do
@@ -287,6 +288,62 @@ class Undies::Template
 
     end
   end
+
+
+  class BuildAttrsTests < BasicTests
+
+    should "modify attributes during a build using the __attrs method" do
+      Undies::Template.new(Undies::Source.new do
+        element(:div) { __attrs :class => 'test' }
+      end, {}, @output)
+
+      assert_equal "<div class=\"test\"></div>", @out
+    end
+
+    should "should merge __attrs values with existing attrs" do
+      Undies::Template.new(Undies::Source.new do
+        element(:div).test { __attrs :id => 'this' }
+      end, {}, @output)
+
+      assert_equal "<div class=\"test\" id=\"this\"></div>", @out
+    end
+
+    should "should merge __attrs class values by appending to the existing" do
+      Undies::Template.new(Undies::Source.new do
+        element(:div).test { __attrs :class => 'this' }
+      end, {}, @output)
+
+      assert_equal "<div class=\"this\"></div>", @out
+    end
+
+    should "ignore __attrs values once content has been added" do
+      Undies::Template.new(Undies::Source.new do
+        element(:div) {
+          __attrs :class => 'this'
+          _ "hi there"
+          _ "friend"
+          __attrs :title => 'missedtheboat'
+        }
+      end, {}, @output)
+
+      assert_equal "<div class=\"this\">hi therefriend</div>", @out
+    end
+
+    should "ignore __attrs values once child elements have been added" do
+      Undies::Template.new(Undies::Source.new do
+        element(:div) {
+          __attrs :class => 'this'
+          _p { _ "hi there" }
+          _p { _ "friend" }
+          __attrs :title => 'missedtheboat'
+        }
+      end, {}, @output)
+
+      assert_equal "<div class=\"this\"><p>hi there</p><p>friend</p></div>", @out
+    end
+
+  end
+
 
 end
 
