@@ -1,7 +1,11 @@
 require "assert"
 
-require "undies/element"
+require 'undies/node'
+require "undies/output"
 require "undies/template"
+
+require "undies/element"
+
 
 class Undies::Element
 
@@ -12,7 +16,7 @@ class Undies::Element
     end
     subject { @e }
 
-    should have_class_methods :hash_attrs, :content, :flush
+    should have_class_methods :hash_attrs, :set_children, :children, :prefix
     should have_instance_method :to_str
 
     should "be a Node" do
@@ -23,8 +27,22 @@ class Undies::Element
       assert_equal "div", subject.instance_variable_get("@name")
     end
 
+    should "know it's start/end tags" do
+      assert_equal "<div />", subject.class.start_tag(subject)
+      assert_empty subject.class.end_tag(subject)
+    end
+
     should "have no content itself" do
-      assert_nil subject.class.content(subject)
+      assert_empty subject.class.content(subject)
+    end
+
+    should "have no builds by default" do
+      assert_empty subject.class.builds(subject)
+      assert_empty subject.class.builds(nil)
+    end
+
+    should "have no children by default" do
+      assert_equal false, subject.class.children(subject)
     end
 
   end
@@ -149,58 +167,58 @@ class Undies::Element
     end
 
     should "serialize with no child elements" do
-      src = Undies::Source.new do
+      Undies::Template.new(Undies::Source.new do
         element(:br)
-      end
-      templ = Undies::Template.new(src, {}, @output)
+      end, {}, @output)
+
       assert_equal "<br />", @out
     end
 
     should "serialize with attrs" do
-      src = Undies::Source.new do
+      Undies::Template.new(Undies::Source.new do
         element(:br, :class => 'big')
-      end
-      templ = Undies::Template.new(src, {}, @output)
+      end, {}, @output)
+
       assert_equal '<br class="big" />', @out
     end
 
     should "serialize with attrs that have double-quotes" do
-      src = Undies::Source.new do
+      Undies::Template.new(Undies::Source.new do
         element(:br, :class => '"this" is double-quoted')
-      end
-      templ = Undies::Template.new(src, {}, @output)
+      end, {}, @output)
+
       assert_equal '<br class="&quot;this&quot; is double-quoted" />', @out
     end
 
     should "serialize with attrs and content" do
-      src = Undies::Source.new do
+      Undies::Template.new(Undies::Source.new do
         element(:strong, {:class => 'big'}) { __ "Loud Noises!" }
-      end
-      templ = Undies::Template.new(src, {}, @output)
+      end, {}, @output)
+
       assert_equal '<strong class="big">Loud Noises!</strong>', @out
     end
 
     should "serialize element proxy id call" do
-      src = Undies::Source.new do
+      Undies::Template.new(Undies::Source.new do
         element(:div).thing1! { _ "stuff" }
-      end
-      templ = Undies::Template.new(src, {}, @output)
+      end, {}, @output)
+
       assert_equal "<div id=\"thing1\">stuff</div>", @out
     end
 
     should "serialize element proxy class call" do
-      src = Undies::Source.new do
+      Undies::Template.new(Undies::Source.new do
         element(:div).thing { _ "stuff" }
-      end
-      templ = Undies::Template.new(src, {}, @output)
+      end, {}, @output)
+
       assert_equal "<div class=\"thing\">stuff</div>", @out
     end
 
     should "serialize content from separate content blocks" do
-      src = Undies::Source.new do
+      Undies::Template.new(Undies::Source.new do
         element(:div){ _ "stuff" }.thing1!{ _ " and more stuff" }
-      end
-      templ = Undies::Template.new(src, {}, @output)
+      end, {}, @output)
+
       assert_equal "<div id=\"thing1\">stuff and more stuff</div>", @out
     end
 
@@ -211,16 +229,22 @@ class Undies::Element
           element(:span) { _ "Content!" }
           __ "Raw"
           element(:span) { _ "More content" }
+          element(:div).hi {
+            _ "first build"
+          }.there.you! {
+            _ "second build"
+          }
         }
       end
       templ = Undies::Template.new(src, {}, output)
-      assert_equal "
-<div>
-    <span>Content!</span>
-    Raw
+      assert_equal "<div>
+    <span>Content!</span>Raw
     <span>More content</span>
+    <div class=\"hi there\" id=\"you\">first buildsecond build</div>
 </div>", @out
     end
+
+    # TODO: build attribute tests
 
   end
 

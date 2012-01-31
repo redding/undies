@@ -21,33 +21,41 @@ module Undies
       end
     end
 
-    def self.content(element)
-      nil
+    def self.set_children(element)
+      element.instance_variable_set("@children", true)
     end
 
-    def self.flush(output, element)
-      output.pp_use_indent = true
-      output << element.instance_variable_get("@start_tag")
-      if (cbs = element.instance_variable_get("@content_blocks")).size > 0
-        output.pp_level += 1
-        output.pp_use_indent = false
-        cbs.each{ |content| content.call }
-        output.flush
-        output.pp_level -= 1
+    def self.children(element)
+      element.instance_variable_get("@children")
+    end
+
+    def self.prefix(element, meth, level, indent)
+      "".tap do |value|
+        if indent > 0
+          if meth == 'start_tag'
+            value << "#{level > 0 ? "\n": ''}#{' '*level*indent}"
+          elsif meth == 'end_tag'
+            value << "\n#{' '*level*indent}" if children(element)
+          end
+        end
       end
-      output << element.instance_variable_get("@end_tag") if element.instance_variable_get("@end_tag")
-      output.pp_use_indent = true
     end
 
-    def initialize(name, attrs={}, &block)
+    def initialize(name, attrs={}, &build)
+      super(nil)
+      @content = nil
+      @builds = []
+      @children = false
+
       if !attrs.kind_of?(::Hash)
         raise ArgumentError, "#{name.inspect} attrs must be provided as a Hash."
       end
 
       @name  = name.to_s
       @attrs = attrs
-      @content_blocks = []
-      @content_blocks << block if block
+      @builds << build if build
+
+      # cache in an instance variable for fast access with flush and pop
       @start_tag = start_tag
       @end_tag = end_tag
     end
@@ -81,35 +89,38 @@ module Undies
 
     def ==(other)
       other.instance_variable_get("@name")  == @name  &&
-      other.instance_variable_get("@attrs") == @attrs &&
-      other.instance_variable_get("@nodes") == @nodes
+      other.instance_variable_get("@attrs") == @attrs
     end
 
     # overriding this because the base Node class defines a 'to_s' method that
     # needs to be honored
     def to_str(*args)
       "Undies::Element:#{self.object_id} " +
-      "@name=#{@name.inspect}, @attrs=#{@attrs.inspect}, @nodes=#{@nodes.inspect}"
+      "@name=#{@name.inspect}, @attrs=#{@attrs.inspect}"
     end
     alias_method :inspect, :to_str
 
     private
 
-    def proxy(value, attrs, content_block)
+    def proxy(value, attrs, build)
       yield value if block_given?
       @attrs.merge!(attrs)
-      @content_blocks << content_block if content_block
+      @builds << build if build
+
+      # cache in an instance variable for fast access with flush and pop
       @start_tag = start_tag
       @end_tag = end_tag
+
+      # return self so you can chain proxy method calls
       self
     end
 
     def start_tag
-      "<#{@name}#{self.class.hash_attrs(@attrs)}" + (@content_blocks.size > 0 ? ">" : " />")
+      "<#{@name}#{self.class.hash_attrs(@attrs)}" + (@builds.size > 0 ? ">" : " />")
     end
 
     def end_tag
-      @content_blocks.size > 0 ? "</#{@name}>" : nil
+      @builds.size > 0 ? "</#{@name}>" : nil
     end
 
   end

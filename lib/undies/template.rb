@@ -1,8 +1,9 @@
 require 'undies/source_stack'
+require 'undies/node_stack'
 require 'undies/output'
+
 require 'undies/node'
 require 'undies/element'
-
 
 module Undies
   class Template
@@ -11,47 +12,50 @@ module Undies
     # polluting the public instance methods, the instance scope, and to
     # maximize the effectiveness of the Template#method_missing logic
 
-    def self.output(template)
-      template.instance_variable_get("@_undies_output")
+    def self.source_stack(template)
+      template.instance_variable_get("@_undies_source_stack")
+    end
+
+    def self.node_stack(template)
+      template.instance_variable_get("@_undies_node_stack")
     end
 
     def self.flush(template)
-      template.instance_variable_get("@_undies_output").flush
+      node_stack(template).flush
     end
 
     def initialize(*args)
-      output = if args.last.kind_of?(Output)
+      # setup a node stack with the given output obj
+      output = if args.last.kind_of?(NodeStack) || args.last.kind_of?(Output)
         args.pop
       else
         raise ArgumentError, "please provide an Output object"
       end
+      @_undies_node_stack = NodeStack.create(output)
+
+      # apply any given data to template scope
       data = args.last.kind_of?(::Hash) ? args.pop : {}
-      source = args.last.kind_of?(Source) ? args.pop : Source.new(Proc.new {})
-
-      # setup the source stack and output objects
-      @_undies_source_stack = SourceStack.new(source)
-
-      # apply data to template scope
       if (data.keys.map(&:to_s) & self.public_methods.map(&:to_s)).size > 0
         raise ArgumentError, "data conflicts with template public methods."
       end
       metaclass = class << self; self; end
       data.each {|key, value| metaclass.class_eval { define_method(key){value} }}
 
-      # save off the output obj for streaming
-      @_undies_output = output
+      # setup a source stack with the given source
+      source = args.last.kind_of?(Source) ? args.pop : Source.new(Proc.new {})
+      @_undies_source_stack = SourceStack.new(source)
 
       # yield to recursivley render the source stack
       self.__yield
 
-      # flush any remaining output to the stream
+      # flush any elements that need to be built
       self.class.flush(self)
     end
 
     # call this to render template source
     # use this method in layouts to insert a layout's content source
     def __yield
-      return if @_undies_source_stack.nil? || (source = @_undies_source_stack.pop).nil?
+      return if self.class.node_stack(self).nil? || (source = self.class.source_stack(self).pop).nil?
       if source.file?
         instance_eval(source.data, source.source, 1)
       else
@@ -63,22 +67,34 @@ module Undies
     # partial source is rendered with its own scope/data but shares
     # its parent template's output object
     def __partial(source, data)
-      Undies::Template.new(source, data, @_undies_output)
+      Undies::Template.new(source, data, self.class.node_stack(self))
     end
+
+    # TODO: __attrs method for modifying node attrs during a build
 
     # Add a text node (data escaped) to the nodes of the current node
-    def _(data=""); self.__ self.escape_html(data.to_s); end
-
-    # Add a text node with the data un-escaped
-    def __(data=""); @_undies_output.node(Node.new(data.to_s)); end
-
-    # Add a text node with the data un-escaped, forcing pp output
-    def ___(data="")
-      @_undies_output.node(Node.new(data.to_s, :force_pp => true))
+    def _(data="")
+      self.__ self.escape_html(data.to_s)
     end
 
-    # Add an element to the nodes of the current node
-    def element(*args, &block); @_undies_output.node(Element.new(*args, &block)); end
+    # Add a text node with the data un-escaped
+    def __(data="")
+      Node.new(data.to_s).tap do |node|
+        self.class.node_stack(self).node(node)
+      end
+    end
+
+    # # Add a text node with the data un-escaped, forcing pp output
+    # def ___(data="")
+    #   @_undies_output.node(Node.new(data.to_s, :force_pp => true))
+    # end
+
+    # Add an element to the node stack
+    def element(*args, &build)
+      Element.new(*args, &build).tap do |element|
+        self.class.node_stack(self).node(element)
+      end
+    end
     alias_method :tag, :element
 
     # Element proxy methods ('_<element>'') ========================
