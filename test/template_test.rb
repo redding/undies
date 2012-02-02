@@ -16,9 +16,8 @@ class Undies::Template
     end
     subject { @t }
 
-    should have_class_method :output, :flush
-    should have_instance_method  :to_s
-    should have_instance_methods :element, :tag, :escape_html
+    should have_class_method :output, :flush, :escape_html
+    should have_instance_methods :to_s, :element, :tag
     should have_instance_methods :_, :__, :___
     should have_instance_methods :__yield, :__partial
 
@@ -88,7 +87,7 @@ class Undies::Template
       Undies::Template.new(Undies::Source.new do
         _ data
       end, {:data => @data}, @output)
-      assert_equal subject.send(:escape_html, @data), @out
+      assert_equal subject.class.escape_html(@data), @out
     end
 
     should "add the text un-escaped using the '__' method" do
