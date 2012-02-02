@@ -16,9 +16,17 @@ module Undies
         html + if k_v.last.kind_of?(::Hash)
           hash_attrs(k_v.last, k_v.first)
         else
-          " #{k_v.first}=\"#{k_v.last.gsub('"', '&quot;').gsub('<', '&lt;')}\""
+          " #{k_v.first}=\"#{escape_attr_value(k_v.last)}\""
         end
       end
+    end
+
+    def self.escape_attr_value(value)
+      value.
+        to_s.
+        gsub('&', '&amp;').
+        gsub('<', '&lt;').
+        gsub('"', '&quot;')
     end
 
     def self.set_children(element)

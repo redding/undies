@@ -24,6 +24,23 @@ module Undies
       node_stack(template).flush
     end
 
+    # Ripped from Rack v1.3.0 ======================================
+    # => ripped b/c I don't want a dependency on Rack for just this
+    ESCAPE_HTML = {
+      "&" => "&amp;",
+      "<" => "&lt;",
+      ">" => "&gt;",
+      "'" => "&#x27;",
+      '"' => "&quot;",
+      "/" => "&#x2F;"
+    }
+    ESCAPE_HTML_PATTERN = Regexp.union(*ESCAPE_HTML.keys)
+    # Escape ampersands, brackets and quotes to their HTML/XML entities.
+    def self.escape_html(string)
+      string.to_s.gsub(ESCAPE_HTML_PATTERN){|c| ESCAPE_HTML[c] }
+    end
+    # end Rip from Rack v1.3.0 =====================================
+
     def initialize(*args)
       # setup a node stack with the given output obj
       output = if args.last.kind_of?(NodeStack) || args.last.kind_of?(Output)
@@ -74,7 +91,7 @@ module Undies
 
     # Add a text node (data escaped) to the nodes of the current node
     def _(data="")
-      self.__ self.escape_html(data.to_s)
+      self.__ self.class.escape_html(data.to_s)
     end
 
     # Add a text node with the data un-escaped
@@ -114,23 +131,6 @@ module Undies
       end
     end
     # ==============================================================
-
-    # Ripped from Rack v1.3.0 ======================================
-    # => ripped b/c I don't want a dependency on Rack for just this
-    ESCAPE_HTML = {
-      "&" => "&amp;",
-      "<" => "&lt;",
-      ">" => "&gt;",
-      "'" => "&#x27;",
-      '"' => "&quot;",
-      "/" => "&#x2F;"
-    }
-    ESCAPE_HTML_PATTERN = Regexp.union(*ESCAPE_HTML.keys)
-    # Escape ampersands, brackets and quotes to their HTML/XML entities.
-    def escape_html(string)
-      string.to_s.gsub(ESCAPE_HTML_PATTERN){|c| ESCAPE_HTML[c] }
-    end
-    # end Rip from Rack v1.3.0 =====================================
 
   end
 end
