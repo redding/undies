@@ -2,28 +2,35 @@ module Undies
 
   class Node
 
-    # have as many methods to the class level as possilbe to keep from
+    # have as many methods to the class level as possible to keep from
     # polluting the public instance methods and to maximize the effectiveness
     # of the Element#method_missing logic
 
+    def self.start_tag(node)
+      node.instance_variable_get("@start_tag") || ""
+    end
+
+    def self.end_tag(node)
+      node.instance_variable_get("@end_tag") || ""
+    end
+
     def self.content(node)
-      node.instance_variable_get("@content")
+      node.instance_variable_get("@content") || ""
     end
 
-    def self.flush(output, node)
-      output.pp_use_indent = true if node.force_pp?
-      output << self.content(node)
+    def self.builds(node)
+      node.instance_variable_get("@builds") || []
     end
 
-    def initialize(content, opts={})
+    def self.prefix(node, *args)
+      ""
+    end
+
+    def initialize(content)
       @start_tag = nil
       @end_tag = nil
-      @force_pp = opts[:force_pp]
       @content = content
-    end
-
-    def force_pp?
-      !!@force_pp
+      @builds = []
     end
 
     def ==(other_node)
