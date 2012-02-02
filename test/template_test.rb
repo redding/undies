@@ -1,6 +1,7 @@
 require "assert"
 
 require "stringio"
+require 'undies/node_stack'
 require "undies/template"
 
 class Undies::Template
@@ -9,20 +10,18 @@ class Undies::Template
     desc 'a template'
     before do
       @src = Undies::Source.new(Proc.new {})
-      @outstream = StringIO.new(@out = "")
-      @output = Undies::Output.new(@outstream)
-
+      @output = Undies::Output.new(@outstream = StringIO.new(@out = ""))
       @t = Undies::Template.new(@src, {}, @output)
     end
     subject { @t }
 
-    should have_class_method :output, :flush, :escape_html
+    should have_class_method :source_stack, :node_stack, :flush, :escape_html
     should have_instance_methods :to_s, :element, :tag
-    should have_instance_methods :_, :__, :___
+    should have_instance_methods :_, :__
     should have_instance_methods :__yield, :__partial
 
-    should "provide access to its output object via a class method" do
-      assert_same @output, Undies::Template.output(@t)
+    should "know it's node stack" do
+      assert_kind_of Undies::NodeStack, subject.class.node_stack(subject)
     end
 
     should "maintain the template's scope throughout content blocks" do
@@ -41,8 +40,7 @@ class Undies::Template
       output = Undies::Output.new(@outstream, :pp => 2)
       Undies::Template.new(Undies::Source.new(File.expand_path(file)), {}, output)
       assert_equal(
-        %{
-<html>
+        %{<html>
   <head></head>
   <body>
     <div>Hi</div>
@@ -87,6 +85,7 @@ class Undies::Template
       Undies::Template.new(Undies::Source.new do
         _ data
       end, {:data => @data}, @output)
+
       assert_equal subject.class.escape_html(@data), @out
     end
 
@@ -94,20 +93,8 @@ class Undies::Template
       Undies::Template.new(Undies::Source.new do
         __ data
       end, {:data => @data}, @output)
+
       assert_equal @data, @out
-    end
-
-    should "add the text un-escaped with force pretty printing using the '___' method" do
-      output = Undies::Output.new(@outstream, :pp => 2)
-      Undies::Template.new(Undies::Source.new do
-        _div {
-          __ "not-pp"
-          ___ "pp"
-          __ "not-pp-but-anyway"
-        }
-      end, {}, output)
-
-      assert_equal "\n<div>not-pp\n  pp\n  not-pp-but-anyway\n</div>", @out
     end
 
     should "add empty string nodes using '__' and '_' methods with no args" do
@@ -127,6 +114,7 @@ class Undies::Template
       Undies::Template.new(Undies::Source.new do
         element(:br)
       end, {}, @output)
+
       assert_equal "<br />", @out
     end
 
@@ -134,6 +122,7 @@ class Undies::Template
       Undies::Template.new(Undies::Source.new do
         tag(:br)
       end, {}, @output)
+
       assert_equal "<br />", @out
     end
 
@@ -145,6 +134,7 @@ class Undies::Template
       Undies::Template.new(Undies::Source.new do
         _br
       end, {}, @output)
+
       assert_equal "<br />", @out
     end
 
@@ -160,9 +150,6 @@ class Undies::Template
   class LocalDataTests < BasicTests
 
     should "only accept the data if it is a Hash" do
-      assert_raises ArgumentError do
-        Undies::Template.new(Undies::Source.new(Proc.new {}), "some data")
-      end
       assert_respond_to(
         :some,
         Undies::Template.new(Undies::Source.new(Proc.new {}), {:some => 'data'}, @output)
@@ -243,6 +230,7 @@ class Undies::Template
     desc "using partials"
 
     before do
+      @output = Undies::Output.new(@outstream, :pp => 2)
       @source = Undies::Source.new(Proc.new do
         partial_source = Undies::Source.new(Proc.new do
           _div { _ thing }
@@ -258,7 +246,7 @@ class Undies::Template
 
     should "render the partial source with its own scope/data" do
       Undies::Template.new(@source, @data, @output)
-      assert_equal "<div>abcd<div>1234</div></div>", @out
+      assert_equal "<div>abcd\n  <div>1234</div>\n</div>", @out
     end
 
   end

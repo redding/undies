@@ -1,39 +1,35 @@
 require "assert"
 
+require "undies/output"
 require "undies/node"
-require "undies/node_buffer"
 
 class Undies::Node
 
   class BasicTests < Assert::Context
     desc 'a node'
-    before { @n = Undies::Node.new("a text node here") }
+    before do
+      @output = Undies::Output.new(StringIO.new(@out = ""))
+      @n = Undies::Node.new("a text node here")
+    end
     subject { @n }
 
-    should have_class_methods :content, :flush
+    should have_class_methods :start_tag, :end_tag, :content, :builds, :prefix
 
-    should "know it's content" do
+    should "have no start/end tags" do
+      assert_empty subject.class.start_tag(subject)
+      assert_empty subject.class.end_tag(subject)
+    end
+
+    should "have content" do
       assert_equal "a text node here", subject.class.content(subject)
     end
 
-    should "know it's start/end tags" do
-      assert_nil subject.instance_variable_get("@start_tag")
-      assert_nil subject.instance_variable_get("@end_tag")
+    should "have no builds" do
+      assert_empty subject.class.builds(subject)
     end
 
-    should "output its content when flushed" do
-      output = Undies::Output.new(StringIO.new(out = ""))
-      subject.class.flush(output, subject)
-
-      assert_equal "a text node here", out
-    end
-
-    should "force pp when flushed if directed" do
-      output = Undies::Output.new(StringIO.new(out = ""), :pp => 2, :pp_level => 1)
-      output.pp_use_indent = false
-      Undies::Node.flush(output, Undies::Node.new("should be pp", {:force_pp => true}))
-
-      assert_equal "\n  should be pp", out
+    should "have no prefix, ever" do
+      assert_empty subject.class.prefix(subject)
     end
 
   end
