@@ -239,6 +239,10 @@ class Undies::Template
         _div {
           _ thing
           __partial partial_source, {:thing => 1234}
+
+          _div {
+            __partial "some markup string here"
+          }
         }
       end)
       @data = {:thing => 'abcd'}
@@ -246,7 +250,7 @@ class Undies::Template
 
     should "render the partial source with its own scope/data" do
       Undies::Template.new(@source, @data, @output)
-      assert_equal "<div>abcd\n  <div>1234</div>\n</div>", @out
+      assert_equal "<div>abcd\n  <div>1234</div>\n  <div>\n    some markup string here\n  </div>\n</div>", @out
     end
 
   end

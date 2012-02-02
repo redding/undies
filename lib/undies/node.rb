@@ -39,25 +39,38 @@ module Undies
       node.instance_variable_get("@builds") || []
     end
 
-    def self.children(element)
-      element.instance_variable_get("@children")
+    def self.children(node)
+      node.instance_variable_get("@children")
     end
 
-    def self.set_children(element, value)
-      element.instance_variable_set("@children", value)
+    def self.set_children(node, value)
+      node.instance_variable_set("@children", value)
     end
 
-    def self.prefix(node, *args)
-      ""
+    def self.mode(node)
+      node.instance_variable_get("@mode") || :inline
     end
 
-    def initialize(content)
+    def self.prefix(node, meth, level, indent)
+      "".tap do |value|
+        if mode(node) != :inline && indent > 0
+          if meth == 'start_tag'
+            value << "#{level > 0 ? "\n": ''}#{' '*level*indent}"
+          elsif meth == 'end_tag'
+            value << "\n#{' '*(level > 0 ? level-1 : level)*indent}"
+          end
+        end
+      end
+    end
+
+    def initialize(content, mode=:inline)
       @start_tag = nil
       @end_tag = nil
       @content = content
       @builds = []
       @attrs = {}
       @children = false
+      @mode = mode
     end
 
     def ==(other_node)

@@ -83,8 +83,12 @@ module Undies
     # call this to render partial source embedded in a template
     # partial source is rendered with its own scope/data but shares
     # its parent template's output object
-    def __partial(source, data)
-      Undies::Template.new(source, data, self.class.node_stack(self))
+    def __partial(source, data={})
+      if source.kind_of?(Source)
+        Undies::Template.new(source, data, self.class.node_stack(self))
+      else
+        self.__ source.to_s, :partial
+      end
     end
 
     # call this to modify element attrs inside a build block.  Once content
@@ -99,13 +103,13 @@ module Undies
     end
 
     # Add a text node (data escaped) to the nodes of the current node
-    def _(data="")
-      self.__ self.class.escape_html(data.to_s)
+    def _(data="", mode=:inline)
+      self.__ self.class.escape_html(data.to_s), mode
     end
 
     # Add a text node with the data un-escaped
-    def __(data="")
-      Node.new(data.to_s).tap do |node|
+    def __(data="", mode=:inline)
+      Node.new(data.to_s, mode).tap do |node|
         self.class.node_stack(self).node(node)
       end
     end

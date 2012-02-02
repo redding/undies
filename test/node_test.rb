@@ -14,7 +14,7 @@ class Undies::Node
     subject { @n }
 
     should have_class_methods :start_tag, :end_tag, :set_start_tag, :set_end_tag
-    should have_class_methods :node_name, :content, :builds, :prefix
+    should have_class_methods :node_name, :content, :builds, :mode, :prefix
     should have_class_methods :attrs, :set_attrs
     should have_class_methods :children, :set_children
 
@@ -31,8 +31,23 @@ class Undies::Node
       assert_empty subject.class.builds(subject)
     end
 
-    should "have no prefix, ever" do
-      assert_empty subject.class.prefix(subject)
+    should "be :inline mode by default" do
+      assert_equal :inline, subject.class.mode(subject)
+    end
+
+    should "have no prefix if :inline mode" do
+      assert_empty subject.class.prefix(subject, 'start_tag', 2, 2)
+      assert_empty subject.class.prefix(subject, 'end_tag', 1, 2)
+    end
+
+    should "have a pp prefix if not :inline mode" do
+      node = Undies::Node.new("a non inline node", :partial)
+      assert_equal "\n    ", node.class.prefix(node, 'start_tag', 2, 2)
+      assert_equal "\n  ",   node.class.prefix(node, 'end_tag', 2, 2)
+      assert_equal "\n  ",   node.class.prefix(node, 'start_tag', 1, 2)
+      assert_equal "\n",     node.class.prefix(node, 'end_tag', 1, 2)
+      assert_equal "",       node.class.prefix(node, 'start_tag', 0, 2)
+      assert_equal "\n",     node.class.prefix(node, 'end_tag', 0, 2)
     end
 
     should "have no children by default" do
