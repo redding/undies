@@ -18,7 +18,7 @@ class Undies::Template
     should have_class_method :source_stack, :node_stack, :flush, :escape_html
     should have_instance_methods :to_s, :element, :tag
     should have_instance_methods :_, :__
-    should have_instance_methods :__yield, :__partial
+    should have_instance_methods :__yield, :__partial, :__attrs
 
     should "know it's node stack" do
       assert_kind_of Undies::NodeStack, subject.class.node_stack(subject)
@@ -239,6 +239,10 @@ class Undies::Template
         _div {
           _ thing
           __partial partial_source, {:thing => 1234}
+
+          _div {
+            __partial "some markup string here"
+          }
         }
       end)
       @data = {:thing => 'abcd'}
@@ -246,7 +250,7 @@ class Undies::Template
 
     should "render the partial source with its own scope/data" do
       Undies::Template.new(@source, @data, @output)
-      assert_equal "<div>abcd\n  <div>1234</div>\n</div>", @out
+      assert_equal "<div>abcd\n  <div>1234</div>\n  <div>\n    some markup string here\n  </div>\n</div>", @out
     end
 
   end
@@ -272,6 +276,7 @@ class Undies::Template
 
   end
 
+
   class FlushTests < StreamTests
     desc "and adds content post-init"
     before do
@@ -286,6 +291,62 @@ class Undies::Template
 
     end
   end
+
+
+  class BuildAttrsTests < BasicTests
+
+    should "modify attributes during a build using the __attrs method" do
+      Undies::Template.new(Undies::Source.new do
+        element(:div) { __attrs :class => 'test' }
+      end, {}, @output)
+
+      assert_equal "<div class=\"test\"></div>", @out
+    end
+
+    should "should merge __attrs values with existing attrs" do
+      Undies::Template.new(Undies::Source.new do
+        element(:div).test { __attrs :id => 'this' }
+      end, {}, @output)
+
+      assert_equal "<div class=\"test\" id=\"this\"></div>", @out
+    end
+
+    should "should merge __attrs class values by appending to the existing" do
+      Undies::Template.new(Undies::Source.new do
+        element(:div).test { __attrs :class => 'this' }
+      end, {}, @output)
+
+      assert_equal "<div class=\"this\"></div>", @out
+    end
+
+    should "ignore __attrs values once content has been added" do
+      Undies::Template.new(Undies::Source.new do
+        element(:div) {
+          __attrs :class => 'this'
+          _ "hi there"
+          _ "friend"
+          __attrs :title => 'missedtheboat'
+        }
+      end, {}, @output)
+
+      assert_equal "<div class=\"this\">hi therefriend</div>", @out
+    end
+
+    should "ignore __attrs values once child elements have been added" do
+      Undies::Template.new(Undies::Source.new do
+        element(:div) {
+          __attrs :class => 'this'
+          _p { _ "hi there" }
+          _p { _ "friend" }
+          __attrs :title => 'missedtheboat'
+        }
+      end, {}, @output)
+
+      assert_equal "<div class=\"this\"><p>hi there</p><p>friend</p></div>", @out
+    end
+
+  end
+
 
 end
 

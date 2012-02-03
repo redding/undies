@@ -29,8 +29,8 @@ module Undies
         gsub('"', '&quot;')
     end
 
-    def self.set_children(element)
-      element.instance_variable_set("@children", true)
+    def self.set_children(element, value)
+      element.instance_variable_set("@children", value)
     end
 
     def self.children(element)
@@ -49,8 +49,24 @@ module Undies
       end
     end
 
+    def self.set_start_tag(element)
+      element.instance_variable_set(
+        "@start_tag",
+        "<#{node_name(element)}#{hash_attrs(attrs(element))}" + (builds(element).size > 0 ? ">" : " />")
+      )
+    end
+
+    def self.set_end_tag(element)
+      element.instance_variable_set(
+        "@end_tag",
+        builds(element).size > 0 ? "</#{node_name(element)}>" : nil
+      )
+    end
+
     def initialize(name, attrs={}, &build)
       super(nil)
+      @start_tag = ""
+      @end_tag = ""
       @content = nil
       @builds = []
       @children = false
@@ -64,8 +80,8 @@ module Undies
       @builds << build if build
 
       # cache in an instance variable for fast access with flush and pop
-      @start_tag = start_tag
-      @end_tag = end_tag
+      self.class.set_start_tag(self)
+      self.class.set_end_tag(self)
     end
 
     # CSS proxy methods ============================================
@@ -116,19 +132,11 @@ module Undies
       @builds << build if build
 
       # cache in an instance variable for fast access with flush and pop
-      @start_tag = start_tag
-      @end_tag = end_tag
+      self.class.set_start_tag(self)
+      self.class.set_end_tag(self)
 
       # return self so you can chain proxy method calls
       self
-    end
-
-    def start_tag
-      "<#{@name}#{self.class.hash_attrs(@attrs)}" + (@builds.size > 0 ? ">" : " />")
-    end
-
-    def end_tag
-      @builds.size > 0 ? "</#{@name}>" : nil
     end
 
   end
