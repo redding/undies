@@ -23,9 +23,7 @@ module Undies
     end
 
     def write(item)
-      if !(value = item.to_s).empty?
-        "#{item.prefix(@pp, @pp_level)}#{value}".tap { |data| @io << data }
-      end
+      "#{item.prefix(@pp, @pp_level)}#{item.to_s}".tap { |data| @io << data }
     end
 
   end

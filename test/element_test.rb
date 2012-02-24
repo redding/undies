@@ -16,18 +16,22 @@ class Undies::Element
     end
     subject { @e }
 
-    should have_class_methods :hash_attrs, :set_children, :children, :prefix
-    should have_instance_method :to_str
+    should have_class_methods :hash_attrs
+    should have_instance_method :prefix, :to_str
 
     should "be a Node" do
       assert_kind_of Undies::Node, subject
     end
 
-    should "store it's name as a string" do
+    should "store its name as a string" do
       assert_equal "div", subject.instance_variable_get("@name")
     end
 
-    should "know it's start/end tags" do
+    should "know its name" do
+      assert_equal "div", subject.class.node_name(subject)
+    end
+
+    should "know its start/end tags" do
       assert_equal "<div />", subject.class.start_tag(subject)
       assert_empty subject.class.end_tag(subject)
     end
@@ -91,6 +95,7 @@ class Undies::Element
     end
   end
 
+
   class CSSProxyTests < BasicTests
 
     should "respond to any method ending in '!' as an id proxy" do
@@ -100,68 +105,62 @@ class Undies::Element
     should "proxy id attr with methods ending in '!'" do
       assert_equal({
         :id => 'thing1'
-      }, subject.thing1!.instance_variable_get("@attrs"))
+      }, subject.class.attrs(subject.thing1!))
     end
 
     should "proxy id attr with last method call ending in '!'" do
       assert_equal({
         :id => 'thing2'
-      }, subject.thing1!.thing2!.instance_variable_get("@attrs"))
+      }, subject.class.attrs(subject.thing1!.thing2!))
     end
 
     should "set id attr to explicit if called last " do
       assert_equal({
         :id => 'thing3'
-      }, subject.thing1!.thing2!(:id => 'thing3').instance_variable_get("@attrs"))
+      }, subject.class.attrs(subject.thing1!.thing2!(:id => 'thing3')))
     end
 
     should "set id attr to proxy if called last" do
       assert_equal({
         :id => 'thing1'
-      }, subject.thing2!(:id => 'thing3').thing1!.instance_variable_get("@attrs"))
+      }, subject.class.attrs(subject.thing2!(:id => 'thing3').thing1!))
     end
 
     should "respond to any other method as a class proxy" do
-      assert subject.respond_to?(:asdgasdg)
+      assert_respond_to :asdgasdg, subject
     end
 
     should "proxy single html class attr" do
       assert_equal({
         :class => 'thing'
-      }, subject.thing.instance_variable_get("@attrs"))
+      }, subject.class.attrs(subject.thing))
     end
 
     should "proxy multi html class attrs" do
       assert_equal({
         :class => 'list thing awesome'
-      }, subject.list.thing.awesome.instance_variable_get("@attrs"))
+      }, subject.class.attrs(subject.list.thing.awesome))
     end
 
     should "set class attr with explicit if called last " do
       assert_equal({
         :class => 'list'
-      }, subject.thing.awesome(:class => "list").instance_variable_get("@attrs"))
+      }, subject.class.attrs(subject.thing.awesome(:class => "list")))
     end
 
     should "update class attr with proxy if called last" do
       assert_equal({
         :class => 'list is good'
-      }, subject.thing.awesome(:class => "list is").good.instance_variable_get("@attrs"))
+      }, subject.class.attrs(subject.thing.awesome(:class => "list is").good))
     end
 
     should "proxy mixed class and id selector attrs" do
+      subject.thing1!.awesome({:class => "list is", :id => "thing2"}).good.thing3!
+
       assert_equal({
         :class => 'list is good',
         :id => "thing3"
-      }, subject.thing1!.awesome({
-        :class => "list is",
-        :id => "thing2"
-      }).good.thing3!.instance_variable_get("@attrs"))
-    end
-
-    should "not proxy if private methods are called" do
-      assert_equal "<div />", subject.send(:start_tag)
-      assert_equal nil, subject.send(:end_tag)
+      }, subject.class.attrs(subject))
     end
 
   end
@@ -248,8 +247,6 @@ class Undies::Element
     <div class=\"hi there\" id=\"you\">first buildsecond build</div>
 </div>", @out
     end
-
-    # TODO: build attribute tests
 
   end
 

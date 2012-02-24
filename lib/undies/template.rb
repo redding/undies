@@ -83,28 +83,36 @@ module Undies
     # call this to render partial source embedded in a template
     # partial source is rendered with its own scope/data but shares
     # its parent template's output object
-    def __partial(source, data)
-      Undies::Template.new(source, data, self.class.node_stack(self))
-    end
-
-    # TODO: __attrs method for modifying node attrs during a build
-
-    # Add a text node (data escaped) to the nodes of the current node
-    def _(data="")
-      self.__ self.class.escape_html(data.to_s)
-    end
-
-    # Add a text node with the data un-escaped
-    def __(data="")
-      Node.new(data.to_s).tap do |node|
-        self.class.node_stack(self).node(node)
+    def __partial(source, data={})
+      if source.kind_of?(Source)
+        Undies::Template.new(source, data, self.class.node_stack(self))
+      else
+        self.__ source.to_s, :partial
       end
     end
 
-    # # Add a text node with the data un-escaped, forcing pp output
-    # def ___(data="")
-    #   @_undies_output.node(Node.new(data.to_s, :force_pp => true))
-    # end
+    # call this to modify element attrs inside a build block.  Once content
+    # or child elements have been added, any '__attr' directives will
+    # be ignored b/c the elements start_tag has already been flushed
+    # to the output
+    def __attrs(attrs_hash={})
+      self.class.node_stack(self).current.tap do |node|
+        node.class.set_attrs(node, attrs_hash)
+        node.class.set_start_tag(node)
+      end
+    end
+
+    # Add a text node (data escaped) to the nodes of the current node
+    def _(data="", mode=:inline)
+      self.__ self.class.escape_html(data.to_s), mode
+    end
+
+    # Add a text node with the data un-escaped
+    def __(data="", mode=:inline)
+      Node.new(data.to_s, mode).tap do |node|
+        self.class.node_stack(self).node(node)
+      end
+    end
 
     # Add an element to the node stack
     def element(*args, &build)

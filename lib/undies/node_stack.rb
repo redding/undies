@@ -39,7 +39,7 @@ module Undies
 
     def push(node)
       @buffer.push(NodeStack::BufferItem.new(node, :start_tag, level))
-      current.class.set_children(current) if current && node.kind_of?(Element)
+      current.class.set_children(current, node.kind_of?(Element)) if current
       @stack.push(node)
     end
 
