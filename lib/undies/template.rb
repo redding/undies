@@ -69,6 +69,49 @@ module Undies
       self.class.flush(self)
     end
 
+    # call this to modify element attrs inside a build block.  Once content
+    # or child elements have been added, any '__attr' directives will
+    # be ignored b/c the elements start_tag has already been flushed
+    # to the output
+    def __attrs(attrs_hash={})
+      self.class.node_stack(self).current.tap do |node|
+        if node
+          node.class.merge_attrs(node, attrs_hash)
+          node.class.set_start_tag(node)
+        end
+      end
+    end
+
+    # call this method to manually push the currently cached node onto the
+    # node stack
+    # - implicitly flushes the cache
+    # - changes the context of template method calls to operate on that node
+    def __push
+      ns = self.class.node_stack(self)
+      if node = ns.cached_node
+        # add an empty build block to generate a non-closing start tag
+        # and a closing end tag
+        node.class.add_build(node, Proc.new {})
+        node.class.set_start_tag(node)
+        node.class.set_end_tag(node)
+
+        ns.push(node)
+      end
+    end
+
+    # call this method to manually pop the current scoped node from the node stack
+    # - flushes the cache
+    # - changes the context of template method calls to operate on the parent node
+    def __pop
+      ns = self.class.node_stack(self)
+      ns.pop if !ns.empty?
+    end
+
+    # call this to manually flush a template
+    def __flush
+      self.class.flush(self)
+    end
+
     # call this to render template source
     # use this method in layouts to insert a layout's content source
     def __yield
@@ -88,17 +131,6 @@ module Undies
         Undies::Template.new(source, data, self.class.node_stack(self))
       else
         self.__ source.to_s, :partial
-      end
-    end
-
-    # call this to modify element attrs inside a build block.  Once content
-    # or child elements have been added, any '__attr' directives will
-    # be ignored b/c the elements start_tag has already been flushed
-    # to the output
-    def __attrs(attrs_hash={})
-      self.class.node_stack(self).current.tap do |node|
-        node.class.set_attrs(node, attrs_hash)
-        node.class.set_start_tag(node)
       end
     end
 
