@@ -26,7 +26,8 @@ module Undies
     should have_class_method :create
     should have_readers :stack, :cache, :buffer
     should have_instance_methods :current, :size, :level, :empty?, :first, :last
-    should have_instance_methods :push, :pop, :using, :node, :flush
+    should have_instance_methods :push, :pop, :node, :flush
+    should have_instance_methods :flush_cache, :cached_node
 
     should "be empty by default" do
       assert_empty subject
@@ -65,16 +66,6 @@ module Undies
       subject.push(@something)
 
       assert_same @something, subject.current
-    end
-
-    should "push nodes onto the stack for the duration of a block" do
-      subject.push(@hello)
-
-      assert_same @hello, subject.current
-      subject.using(@something) do
-        assert_same @something, subject.current
-      end
-      assert_same @hello, subject.current
     end
 
     should "remove the last item in the array with the pop method" do
@@ -233,7 +224,7 @@ module Undies
       assert_equal 'end_tag', subject.buffer.first.write_method
     end
 
-    should "should buffer at the stack level" do
+    should "buffer at the stack level" do
       subject.push(@hello)
       subject.push(@hi)
 

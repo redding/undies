@@ -21,11 +21,7 @@ module Undies
 
     def initialize(output)
       @stack = []
-      @cache = NodeStack::Cache.new(Proc.new do |item|
-        self.using(item) do
-          item.class.builds(item).each { |build| build.call }
-        end
-      end)
+      @cache = NodeStack::Cache.new
       @buffer = NodeStack::Buffer.new(output)
     end
 
@@ -38,32 +34,42 @@ module Undies
     alias_method :level, :size
 
     def push(node)
+      if current
+        current.class.set_children(current, node.kind_of?(Element))
+      end
       @buffer.push(NodeStack::BufferItem.new(node, :start_tag, level))
-      current.class.set_children(current, node.kind_of?(Element)) if current
       @stack.push(node)
+      node.class.builds(node).each { |build| build.call }
     end
 
     def pop(*args)
-      @cache.flush
-      @buffer.push(NodeStack::BufferItem.new(current, :content, level))
-      @stack.pop(*args).tap do |node|
-        @buffer.push(NodeStack::BufferItem.new(node, :end_tag, level))
+      flush_cache
+      if current
+        @buffer.push(NodeStack::BufferItem.new(current, :content, level))
+        @stack.pop(*args).tap do |node|
+          @buffer.push(NodeStack::BufferItem.new(node, :end_tag, level))
+        end
       end
     end
 
-    def using(obj, &block)
-      self.push(obj)
-      (block || Proc.new {}).call
-      self.pop
-    end
-
     def node(node)
+      flush_cache
       @cache.push(node)
     end
 
     def flush
-      @cache.flush
+      flush_cache
       @buffer.flush
+    end
+
+    def flush_cache
+      if !@cache.empty?
+        push(cached_node); pop
+      end
+    end
+
+    def cached_node
+      @cache.flush
     end
 
   end
@@ -71,8 +77,7 @@ module Undies
 
   class NodeStack::Cache
 
-    def initialize(callback_block)
-      @flush_callback = callback_block || Proc.new {}
+    def initialize
       @cache = []
     end
 
@@ -82,12 +87,11 @@ module Undies
     def last;   @cache.last;   end
 
     def push(*args)
-      flush
       @cache.push(*args)
     end
 
     def flush
-      1.upto(@cache.size) { @flush_callback.call(@cache.shift) }
+      @cache.shift
     end
 
   end
