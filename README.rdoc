@@ -153,8 +153,29 @@ Now just interact with the Undies API directly.
 *Note:* there is one extra caveat to be aware of using this approach.  You need to be sure and flush the template when content processing is complete.  Just pass the template to the Undies::Template#flush method:
 
     # ensures all content is streamed to the template's output stream
-    # this is only necessary using the "builder approach"
+    # this is necessary when not using the source approach above
     Undies::Template.flush(template)
+
+=== Manual approach
+
+There is another method you can use to render output: the Manual approach.  Like the Builder approach, this method is ideal when you don't know the source until render time.  The key difference is that blocks are not used to imply nesting relationships.  Using this approach, you manually 'push' and 'pop' to move up and down nesting relationship contexts.  So a push on an element would move the template context to the element pushed.  A pop would move back to the current context's parent element.  As you would expect, pop'ing on the root of a template has no effect on the context and pushing a non-element node has no effect on the context.
+
+To render using this approach, create a Template as you would with the Builder approach.  Interact with the Undies API directly.  Use the Template#push and Template#pop class methods to change the template scope.
+
+    # this is the equivalent to the Builder approach example above
+
+    template = Undies::Template.new(Undies::Output.new(@io))
+    something = "Some Thing!"
+    current = template._div.something!
+
+    template.__push(current)
+    template._ something.to_s
+    template.__pop
+
+    # alternate method for flushing a template
+    template.__flush
+
+*Note:* as with the Builder approach, you must flush the template when content processing is complete.
 
 == License
 

@@ -17,26 +17,12 @@ module Undies
     def self.set_start_tag(node); end
     def self.set_end_tag(node); end
 
-    def self.node_name(node)
-      node.instance_variable_get("@name") || ""
-    end
-
-    def self.attrs(element)
-      element.instance_variable_get("@attrs")
-    end
-
-    def self.set_attrs(element, value={})
-      attrs(element).merge(value).tap do |a|
-        element.instance_variable_set("@attrs", a)
-      end
-    end
-
-    def self.content(node)
-      node.instance_variable_get("@content") || ""
-    end
-
     def self.builds(node)
       node.instance_variable_get("@builds") || []
+    end
+
+    def self.add_build(node, build_block)
+      node.instance_variable_set("@builds", builds(node) + [build_block])
     end
 
     def self.children(node)
@@ -45,6 +31,24 @@ module Undies
 
     def self.set_children(node, value)
       node.instance_variable_set("@children", value)
+    end
+
+    def self.attrs(element)
+      element.instance_variable_get("@attrs")
+    end
+
+    def self.merge_attrs(element, value={})
+      attrs(element).merge(value).tap do |a|
+        element.instance_variable_set("@attrs", a)
+      end
+    end
+
+    def self.node_name(node)
+      node.instance_variable_get("@name") || ""
+    end
+
+    def self.content(node)
+      node.instance_variable_get("@content") || ""
     end
 
     def self.mode(node)
