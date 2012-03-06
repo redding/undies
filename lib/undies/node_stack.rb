@@ -17,12 +17,14 @@ module Undies
       output.kind_of?(NodeStack) ? output : NodeStack.new(output)
     end
 
-    attr_reader :stack, :cache, :buffer
+    attr_reader :stack, :buffer
+    attr_accessor :cached_node
 
     def initialize(output)
       @stack = []
-      @cache = NodeStack::Cache.new
+      @cached_node = nil
       @buffer = NodeStack::Buffer.new(output)
+      @written_level = 0
     end
 
     def empty?; @stack.empty?; end
@@ -37,61 +39,62 @@ module Undies
       if current
         current.class.set_children(current, node.kind_of?(Element))
       end
-      @buffer.push(NodeStack::BufferItem.new(node, :start_tag, level))
+      if @written_level < level
+        open(current)
+      end
       @stack.push(node)
-      node.class.builds(node).each { |build| build.call }
     end
 
     def pop(*args)
-      flush_cache
-      if current
-        @buffer.push(NodeStack::BufferItem.new(current, :content, level))
-        @stack.pop(*args).tap do |node|
-          @buffer.push(NodeStack::BufferItem.new(node, :end_tag, level))
+      if !empty?
+        node = if @written_level < level
+          @stack.pop.tap { |node| write(node) }
+        else
+          @stack.pop.tap { |node| close(node) }
         end
       end
     end
 
     def node(node)
-      flush_cache
-      @cache.push(node)
+      clear_cached
+      self.cached_node = node
     end
 
     def flush
-      flush_cache
+      clear_cached
       @buffer.flush
     end
 
-    def flush_cache
-      if !@cache.empty?
-        push(cached_node); pop
+    def clear_cached
+      node_to_push, self.cached_node = self.cached_node, nil
+      if node_to_push
+        push(node_to_push)
+        node_to_push.class.builds(node_to_push).each { |build| build.call }
+        clear_cached
+        pop
       end
     end
 
-    def cached_node
-      @cache.flush
+    private
+
+    def open(node)
+      # puts "open node: #{node.inspect}";
+      @buffer.push(BufferItem.new(node, :start_tag, @written_level))
+      @written_level += 1
+      @buffer.push(BufferItem.new(node, :content, @written_level))
     end
 
-  end
-
-
-  class NodeStack::Cache
-
-    def initialize
-      @cache = []
+    def write(node)
+      # puts "write node: #{node.inspect}";
+      @buffer.push(BufferItem.new(node, :start_tag, @written_level))
+      @buffer.push(BufferItem.new(node, :content, @written_level+1))
+      @buffer.push(BufferItem.new(node, :end_tag, @written_level))
     end
 
-    def empty?; @cache.empty?; end
-    def size;   @cache.size;   end
-    def first;  @cache.first;  end
-    def last;   @cache.last;   end
-
-    def push(*args)
-      @cache.push(*args)
-    end
-
-    def flush
-      @cache.shift
+    def close(node)
+      # puts "close node: #{node.inspect}";
+      @written_level -= 1
+      @buffer.push(BufferItem.new(node, :end_tag, @written_level))
     end
 
   end

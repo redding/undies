@@ -88,7 +88,8 @@ module Undies
     # - changes the context of template method calls to operate on that node
     def __push
       ns = self.class.node_stack(self)
-      if node = ns.cached_node
+      node, ns.cached_node = ns.cached_node, nil
+      if node
         # add an empty build block to generate a non-closing start tag
         # and a closing end tag
         node.class.add_build(node, Proc.new {})
@@ -104,7 +105,8 @@ module Undies
     # - changes the context of template method calls to operate on the parent node
     def __pop
       ns = self.class.node_stack(self)
-      ns.pop if !ns.empty?
+      ns.clear_cached
+      ns.pop
     end
 
     # call this to manually flush a template
