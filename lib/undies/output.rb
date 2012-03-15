@@ -19,11 +19,12 @@ module Undies
 
       # setup any pretty printing
       @pp = opts[:pp] || 0
-      @pp_level  = opts[:pp_level] || 0
+      @pp_level = opts[:pp_level] || 0
     end
 
-    def write(item)
-      "#{item.prefix(@pp, @pp_level)}#{item.to_s}".tap { |data| @io << data }
+    def write(node, meth, level)
+      @io << node.class.prefix(node, meth, level+@pp_level, @pp)
+      @io << node.class.send(meth, node)
     end
 
   end

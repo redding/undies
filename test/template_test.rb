@@ -171,7 +171,10 @@ class Undies::Template
       subject.element(:div)
       subject.__push
       subject.__attrs :class => 'this'
-      subject._p { subject._ "hi there" }
+      subject._p
+      subject.__push
+      subject._ "hi there"
+      subject.__pop
       subject._p { subject._ "friend" }
       subject.__attrs :title => 'missedtheboat'
       subject.__pop
@@ -228,16 +231,17 @@ class Undies::Template
     should "should write to the stream as its being constructed" do
       @template._div.good.thing!(:type => "something")
       @template.__push
+      @template._p { @template._ 'hi' }
       @template.__flush
 
-      @expected_output = "<div class=\"good\" id=\"thing\" type=\"something\">"
+      @expected_output = "<div class=\"good\" id=\"thing\" type=\"something\"><p>hi</p>"
       assert_equal @expected_output, @output
 
-      @template.__ "action"
+      @template._p { @template._ "action" }
       @template.__pop
       @template.__flush
 
-      @expected_output = "<div class=\"good\" id=\"thing\" type=\"something\">action</div>"
+      @expected_output = "<div class=\"good\" id=\"thing\" type=\"something\"><p>hi</p><p>action</p></div>"
       assert_equal @expected_output, @output
     end
 
@@ -256,10 +260,10 @@ class Undies::Template
       templ._head {}
       templ._body
       templ.__push
-      templ._div
-      templ.__push
-      templ._ "Hi"
-      templ.__pop
+      templ._div { templ._ "Hi" }
+      # templ.__push
+      # templ._ "Hi"
+      # templ.__pop
       templ.__pop
       templ.__pop
       templ.__flush
