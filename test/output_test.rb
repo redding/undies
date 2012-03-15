@@ -52,15 +52,15 @@ class Undies::Output
     end
 
     should "pretty print stream data" do
-      subject.write(Undies::NodeStack::BufferItem.new(WriteThing.new, :hi))
+      subject.write(WriteThing.new, :hi, 0)
       assert_equal "hi", @out
 
       subject.pp_level +=1
-      subject.write(Undies::NodeStack::BufferItem.new(WriteThing.new, :hello))
+      subject.write(WriteThing.new, :hello, 0)
       assert_equal "hi\n  hello", @out
 
       subject.pp_level -= 1
-      subject.write(Undies::NodeStack::BufferItem.new(WriteThing.new, :hithere))
+      subject.write(WriteThing.new, :hithere, 0)
       assert_equal "hi\n  hellohithere", @out
     end
 
