@@ -3,10 +3,10 @@ _html {
   _body {
     100.times do
       5.times do
-        _ "Yo"
+        _span { _ "Yo" }
       end
       5.times do
-        __ "YoYo"
+        _span { __ "YoYo" }
       end
       5.times do
         _br

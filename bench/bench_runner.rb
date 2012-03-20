@@ -3,6 +3,7 @@ require 'stringio'
 
 require 'erb'
 require 'erubis'
+require 'haml'
 require 'undies'
 
 class UndiesBenchResults
@@ -49,6 +50,17 @@ class UndiesResults < UndiesBenchResults
 
 end
 
+class HamlResults < UndiesBenchResults
+
+  def initialize(size='large')
+    @out = ""
+    super(:haml, '.haml', size, Proc.new do
+      @out = ::Haml::Engine.new(File.read(self.file)).to_html
+    end)
+  end
+
+end
+
 class ErbResults < UndiesBenchResults
 
   def initialize(size='large')
@@ -76,8 +88,8 @@ end
 class UndiesBenchRunner
 
   SIZES = {
-    # :small     => "~20 nodes",
-    # :large     => "~2000 nodes",
+    :small     => "~20 nodes",
+    :large     => "~2000 nodes",
     :verylarge => "~20000 nodes"
   }
 
@@ -89,6 +101,8 @@ class UndiesBenchRunner
       ErbResults.new(size).run
       puts
       ErubisResults.new(size).run
+      puts
+      HamlResults.new(size).run
       puts
       UndiesResults.new(size).run
       puts

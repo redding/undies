@@ -11,7 +11,7 @@ class UndiesProfilerRunner
     file = "bench/#{size || 'large'}.html.rb"
     @source = Undies::Source.new(File.expand_path(file))
     @data = {}
-    @output = Undies::Output.new(StringIO.new(@out = ""))
+    @output = Undies::Output.new(@out = "")
 
     @result = RubyProf.profile do
       10.times do
