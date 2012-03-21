@@ -34,7 +34,7 @@ module Undies
 
     def push(node)
       if current
-        current.class.set_children(current, node.kind_of?(Element))
+        current.__set_children(node.kind_of?(Element))
       end
       if @written_level < level
         open(current)
@@ -65,7 +65,7 @@ module Undies
       node_to_push, self.cached_node = self.cached_node, nil
       if node_to_push
         push(node_to_push)
-        node_to_push.class.builds(node_to_push).each { |build| build.call }
+        node_to_push.__builds.each { |build| build.call }
         clear_cached
         pop
       end

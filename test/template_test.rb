@@ -17,7 +17,8 @@ class Undies::Template
     end
     subject { @t }
 
-    should have_class_method :source_stack, :node_stack, :flush, :escape_html
+    should have_class_methods    :flush, :escape_html
+    should have_instance_methods :__source_stack, :__node_stack
     should have_instance_methods :to_s, :element, :tag
     should have_instance_methods :_, :__
     should have_instance_methods :__yield, :__partial
@@ -25,7 +26,7 @@ class Undies::Template
     should have_instance_methods :__attrs
 
     should "know it's node stack" do
-      assert_kind_of Undies::NodeStack, subject.class.node_stack(subject)
+      assert_kind_of Undies::NodeStack, subject.__node_stack
     end
 
     should "complain if creating a template with no Output obj" do
@@ -261,9 +262,6 @@ class Undies::Template
       templ._body
       templ.__push
       templ._div { templ._ "Hi" }
-      # templ.__push
-      # templ._ "Hi"
-      # templ.__pop
       templ.__pop
       templ.__pop
       templ.__flush

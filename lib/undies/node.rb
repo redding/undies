@@ -6,58 +6,28 @@ module Undies
     # polluting the public instance methods and to maximize the effectiveness
     # of the Element#method_missing logic
 
-    def self.start_tag(node)
-      node.instance_variable_get("@start_tag") || ""
-    end
+    def __start_tag; @start_tag || ""; end
+    def __end_tag; @end_tag || ""; end
 
-    def self.end_tag(node)
-      node.instance_variable_get("@end_tag") || ""
-    end
+    def __set_start_tag; end
+    def __set_end_tag; end
 
-    def self.set_start_tag(node); end
-    def self.set_end_tag(node); end
+    def __builds; @builds || []; end
+    def __add_build(build_block); @builds << build_block; end
 
-    def self.builds(node)
-      node.instance_variable_get("@builds") || []
-    end
+    def __children; @children; end
+    def __set_children(value); @children = value; end
 
-    def self.add_build(node, build_block)
-      node.instance_variable_set("@builds", builds(node) + [build_block])
-    end
+    def __attrs; @attrs; end
+    def __merge_attrs(value={}); __attrs.merge!(value); end
 
-    def self.children(node)
-      node.instance_variable_get("@children")
-    end
+    def __node_name; @name || ""; end
+    def __content; @content || ""; end
 
-    def self.set_children(node, value)
-      node.instance_variable_set("@children", value)
-    end
-
-    def self.attrs(element)
-      element.instance_variable_get("@attrs")
-    end
-
-    def self.merge_attrs(element, value={})
-      attrs(element).merge(value).tap do |a|
-        element.instance_variable_set("@attrs", a)
-      end
-    end
-
-    def self.node_name(node)
-      node.instance_variable_get("@name") || ""
-    end
-
-    def self.content(node)
-      node.instance_variable_get("@content") || ""
-    end
-
-    def self.mode(node)
-      node.instance_variable_get("@mode") || :inline
-    end
-
-    def self.prefix(node, meth, level, indent)
+    def __mode; @mode || :inline; end
+    def __prefix(meth, level, indent)
       "".tap do |value|
-        if mode(node) != :inline && indent > 0
+        if __mode != :inline && indent > 0
           if meth == 'start_tag'
             value << "#{level > 0 ? "\n": ''}#{' '*level*indent}"
           elsif meth == 'end_tag'
@@ -78,9 +48,9 @@ module Undies
     end
 
     def ==(other_node)
-      self.class.content(self) == other_node.class.content(other_node) &&
-      self.instance_variable_get("@start_tag") == other_node.instance_variable_get("@start_tag") &&
-      self.instance_variable_get("@end_tag") == other_node.instance_variable_get("@end_tag")
+      __content   == other_node.__content   &&
+      __start_tag == other_node.__start_tag &&
+      __end_tag   == other_node.__end_tag
     end
 
   end

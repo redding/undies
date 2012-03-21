@@ -16,37 +16,32 @@ class Undies::Element
     end
     subject { @e }
 
-    should have_class_methods :hash_attrs
-    should have_instance_method :prefix, :to_str
+    should have_class_methods :hash_attrs, :escape_attr_value
+    should have_instance_method :to_str, :__prefix
 
     should "be a Node" do
       assert_kind_of Undies::Node, subject
     end
 
-    should "store its name as a string" do
-      assert_equal "div", subject.instance_variable_get("@name")
-    end
-
-    should "know its name" do
-      assert_equal "div", subject.class.node_name(subject)
+    should "know its name and store it as a string" do
+      assert_equal "div", subject.__node_name
     end
 
     should "know its start/end tags" do
-      assert_equal "<div />", subject.class.start_tag(subject)
-      assert_empty subject.class.end_tag(subject)
+      assert_equal "<div />", subject.__start_tag
+      assert_empty subject.__end_tag
     end
 
     should "have no content itself" do
-      assert_empty subject.class.content(subject)
+      assert_empty subject.__content
     end
 
     should "have no builds by default" do
-      assert_empty subject.class.builds(subject)
-      assert_empty subject.class.builds(nil)
+      assert_empty subject.__builds
     end
 
     should "have no children by default" do
-      assert_equal false, subject.class.children(subject)
+      assert_equal false, subject.__children
     end
 
   end
@@ -105,25 +100,25 @@ class Undies::Element
     should "proxy id attr with methods ending in '!'" do
       assert_equal({
         :id => 'thing1'
-      }, subject.class.attrs(subject.thing1!))
+      }, subject.thing1!.__attrs)
     end
 
     should "proxy id attr with last method call ending in '!'" do
       assert_equal({
         :id => 'thing2'
-      }, subject.class.attrs(subject.thing1!.thing2!))
+      }, subject.thing1!.thing2!.__attrs)
     end
 
     should "set id attr to explicit if called last " do
       assert_equal({
         :id => 'thing3'
-      }, subject.class.attrs(subject.thing1!.thing2!(:id => 'thing3')))
+      }, subject.thing1!.thing2!(:id => 'thing3').__attrs)
     end
 
     should "set id attr to proxy if called last" do
       assert_equal({
         :id => 'thing1'
-      }, subject.class.attrs(subject.thing2!(:id => 'thing3').thing1!))
+      }, subject.thing2!(:id => 'thing3').thing1!.__attrs)
     end
 
     should "respond to any other method as a class proxy" do
@@ -133,25 +128,25 @@ class Undies::Element
     should "proxy single html class attr" do
       assert_equal({
         :class => 'thing'
-      }, subject.class.attrs(subject.thing))
+      }, subject.thing.__attrs)
     end
 
     should "proxy multi html class attrs" do
       assert_equal({
         :class => 'list thing awesome'
-      }, subject.class.attrs(subject.list.thing.awesome))
+      }, subject.list.thing.awesome.__attrs)
     end
 
     should "set class attr with explicit if called last " do
       assert_equal({
         :class => 'list'
-      }, subject.class.attrs(subject.thing.awesome(:class => "list")))
+      }, subject.thing.awesome(:class => "list").__attrs)
     end
 
     should "update class attr with proxy if called last" do
       assert_equal({
         :class => 'list is good'
-      }, subject.class.attrs(subject.thing.awesome(:class => "list is").good))
+      }, subject.thing.awesome(:class => "list is").good.__attrs)
     end
 
     should "proxy mixed class and id selector attrs" do
@@ -160,7 +155,7 @@ class Undies::Element
       assert_equal({
         :class => 'list is good',
         :id => "thing3"
-      }, subject.class.attrs(subject))
+      }, subject.__attrs)
     end
 
   end

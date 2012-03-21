@@ -12,16 +12,16 @@ module Undies
     # polluting the public instance methods, the instance scope, and to
     # maximize the effectiveness of the Template#method_missing logic
 
-    def self.source_stack(template)
-      template.instance_variable_get("@_undies_source_stack")
+    def __source_stack
+      @_undies_source_stack
     end
 
-    def self.node_stack(template)
-      template.instance_variable_get("@_undies_node_stack")
+    def __node_stack
+      @_undies_node_stack
     end
 
     def self.flush(template)
-      node_stack(template).flush
+      template.__flush
     end
 
     # Ripped from Rack v1.3.0 ======================================
@@ -66,7 +66,7 @@ module Undies
       self.__yield
 
       # flush any elements that need to be built
-      self.class.flush(self)
+      self.__flush
     end
 
     # call this to modify element attrs inside a build block.  Once content
@@ -74,10 +74,10 @@ module Undies
     # be ignored b/c the elements start_tag has already been flushed
     # to the output
     def __attrs(attrs_hash={})
-      self.class.node_stack(self).current.tap do |node|
+      self.__node_stack.current.tap do |node|
         if node
-          node.class.merge_attrs(node, attrs_hash)
-          node.class.set_start_tag(node)
+          node.__merge_attrs(attrs_hash)
+          node.__set_start_tag
         end
       end
     end
@@ -87,14 +87,14 @@ module Undies
     # - implicitly flushes the cache
     # - changes the context of template method calls to operate on that node
     def __push
-      ns = self.class.node_stack(self)
+      ns = self.__node_stack
       node, ns.cached_node = ns.cached_node, nil
       if node
         # add an empty build block to generate a non-closing start tag
         # and a closing end tag
-        node.class.add_build(node, Proc.new {})
-        node.class.set_start_tag(node)
-        node.class.set_end_tag(node)
+        node.__add_build(Proc.new {})
+        node.__set_start_tag
+        node.__set_end_tag
 
         ns.push(node)
       end
@@ -104,20 +104,20 @@ module Undies
     # - flushes the cache
     # - changes the context of template method calls to operate on the parent node
     def __pop
-      ns = self.class.node_stack(self)
+      ns = self.__node_stack
       ns.clear_cached
       ns.pop
     end
 
     # call this to manually flush a template
     def __flush
-      self.class.flush(self)
+      self.__node_stack.flush
     end
 
     # call this to render template source
     # use this method in layouts to insert a layout's content source
     def __yield
-      return if self.class.node_stack(self).nil? || (source = self.class.source_stack(self).pop).nil?
+      return if self.__node_stack.nil? || (source = self.__source_stack.pop).nil?
       if source.file?
         instance_eval(source.data, source.source, 1)
       else
@@ -130,7 +130,7 @@ module Undies
     # its parent template's output object
     def __partial(source, data={})
       if source.kind_of?(Source)
-        Undies::Template.new(source, data, self.class.node_stack(self))
+        Undies::Template.new(source, data, self.__node_stack)
       else
         self.__ source.to_s, :partial
       end
@@ -144,14 +144,14 @@ module Undies
     # Add a text node with the data un-escaped
     def __(data="", mode=:inline)
       Node.new(data.to_s, mode).tap do |node|
-        self.class.node_stack(self).node(node)
+        self.__node_stack.node(node)
       end
     end
 
     # Add an element to the node stack
     def element(*args, &build)
       Element.new(*args, &build).tap do |element|
-        self.class.node_stack(self).node(element)
+        self.__node_stack.node(element)
       end
     end
     alias_method :tag, :element

@@ -23,8 +23,8 @@ module Undies
     end
 
     def write(node, meth, level)
-      @io << node.class.prefix(node, meth, level+@pp_level, @pp)
-      @io << node.class.send(meth, node)
+      @io << node.__prefix(meth, level+@pp_level, @pp)
+      @io << node.send("__#{meth}")
     end
 
   end

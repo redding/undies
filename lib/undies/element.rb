@@ -29,38 +29,16 @@ module Undies
         gsub('"', '&quot;')
     end
 
-    def self.set_children(element, value)
-      element.instance_variable_set("@children", value)
-    end
-
-    def self.children(element)
-      element.instance_variable_get("@children")
-    end
-
-    def self.prefix(element, meth, level, indent)
+    def __prefix(meth, level, indent)
       "".tap do |value|
         if indent > 0
           if meth == 'start_tag'
             value << "#{level > 0 ? "\n": ''}#{' '*level*indent}"
           elsif meth == 'end_tag'
-            value << "\n#{' '*level*indent}" if children(element)
+            value << "\n#{' '*level*indent}" if __children
           end
         end
       end
-    end
-
-    def self.set_start_tag(element)
-      element.instance_variable_set(
-        "@start_tag",
-        "<#{node_name(element)}#{hash_attrs(attrs(element))}" + (builds(element).size > 0 ? ">" : " />")
-      )
-    end
-
-    def self.set_end_tag(element)
-      element.instance_variable_set(
-        "@end_tag",
-        builds(element).size > 0 ? "</#{node_name(element)}>" : nil
-      )
     end
 
     def initialize(name, attrs={}, &build)
@@ -80,8 +58,8 @@ module Undies
       @builds << build if build
 
       # cache in an instance variable for fast access with flush and pop
-      self.class.set_start_tag(self)
-      self.class.set_end_tag(self)
+      self.__set_start_tag
+      self.__set_end_tag
     end
 
     # CSS proxy methods ============================================
@@ -124,6 +102,15 @@ module Undies
     end
     alias_method :inspect, :to_str
 
+    def __set_start_tag
+      @start_tag = "<#{__node_name}#{self.class.hash_attrs(__attrs)}" +
+        (__builds.size > 0 ? ">" : " />")
+    end
+
+    def __set_end_tag
+      @end_tag = __builds.size > 0 ? "</#{__node_name}>" : nil
+    end
+
     private
 
     def proxy(value, attrs, build)
@@ -132,8 +119,8 @@ module Undies
       @builds << build if build
 
       # cache in an instance variable for fast access with flush and pop
-      self.class.set_start_tag(self)
-      self.class.set_end_tag(self)
+      self.__set_start_tag
+      self.__set_end_tag
 
       # return self so you can chain proxy method calls
       self
