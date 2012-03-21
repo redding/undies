@@ -4,6 +4,7 @@ require 'stringio'
 require 'erb'
 require 'erubis'
 require 'haml'
+require 'markaby'
 require 'undies'
 
 class UndiesBenchResults
@@ -50,6 +51,81 @@ class UndiesResults < UndiesBenchResults
 
 end
 
+class MarkabyResults < UndiesBenchResults
+
+  BUILDS = {}
+
+  BUILDS['small'] = Proc.new do
+    head {}
+    body do
+      1.times do
+        5.times do
+          span { "Yo" }
+        end
+        5.times do
+          span { "YoYo" }
+        end
+        5.times do
+          br
+        end
+        5.times do
+          div { "Hi" }
+        end
+      end
+    end
+  end
+
+  BUILDS['large'] = Proc.new do
+    head {}
+    body do
+      100.times do
+        5.times do
+          span { "Yo" }
+        end
+        5.times do
+          span { "YoYo" }
+        end
+        5.times do
+          br
+        end
+        5.times do
+          div { "Hi" }
+        end
+      end
+    end
+  end
+
+  BUILDS['verylarge'] = Proc.new do
+    head {}
+    body do
+      1000.times do
+        5.times do
+          span { "Yo" }
+        end
+        5.times do
+          span { "YoYo" }
+        end
+        5.times do
+          br
+        end
+        5.times do
+          div { "Hi" }
+        end
+      end
+    end
+  end
+
+  def initialize(size='large')
+    @out = ""
+    super(:markaby, '.mab', size, Proc.new do
+      mab = Markaby::Builder.new
+      mab.html &BUILDS[size.to_s]
+      @out = mab.to_s
+    end)
+  end
+
+end
+
 class HamlResults < UndiesBenchResults
 
   def initialize(size='large')
@@ -87,24 +163,26 @@ end
 
 class UndiesBenchRunner
 
-  SIZES = {
-    :small     => "~20 nodes",
-    :large     => "~2000 nodes",
-    :verylarge => "~20000 nodes"
-  }
+  SIZES = [
+    [:small    , "~20 nodes"],
+    [:large    , "~2000 nodes"],
+    [:verylarge, "~20000 nodes"]
+  ]
 
 
   def initialize
     puts "Benchmark Results:"
     puts
-    SIZES.each do |size, desc|
-      ErbResults.new(size).run
+    SIZES.each do |size_desc|
+      ErbResults.new(size_desc.first).run
       puts
-      ErubisResults.new(size).run
+      ErubisResults.new(size_desc.first).run
       puts
-      HamlResults.new(size).run
+      HamlResults.new(size_desc.first).run
       puts
-      UndiesResults.new(size).run
+      MarkabyResults.new(size_desc.first).run
+      puts
+      UndiesResults.new(size_desc.first).run
       puts
     end
     puts
