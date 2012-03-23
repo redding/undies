@@ -1,6 +1,5 @@
 require "assert"
 require "stringio"
-require 'undies/node_stack'
 
 require "undies/template"
 
@@ -11,10 +10,9 @@ class Undies::Template
   class SourceRenderTests < Assert::Context
     desc 'a template rendered using a source object'
     before do
-      skip
       @src = Undies::Source.new(Proc.new {})
-      @output = Undies::Output.new(@outstream = StringIO.new(@out = ""))
-      @t = Undies::Template.new(@src, {}, @output)
+      @io = Undies::IO.new(@out = "")
+      @t = Undies::Template.new(@src, {}, @io)
     end
     subject { @t }
 
@@ -25,7 +23,7 @@ class Undies::Template
             __ self.object_id
           }
         }
-      end, {}, @output)
+      end, {}, @io)
       assert_equal "<div><div>#{templ.object_id}</div></div>", @out
     end
 
@@ -59,22 +57,22 @@ class Undies::Template
     end
 
     should "generate markup given proc content in a proc layout" do
-      Undies::Template.new(@cp_lp_source, {}, @output)
+      Undies::Template.new(@cp_lp_source, {}, @io)
       assert_equal @expected_output, @out
     end
 
     should "generate markup given proc content in a layout file" do
-      Undies::Template.new(@cp_lf_source, {}, @output)
+      Undies::Template.new(@cp_lf_source, {}, @io)
       assert_equal @expected_output, @out
     end
 
     should "generate markup given a content file in a proc layout" do
-      Undies::Template.new(@cf_lp_source, {}, @output)
+      Undies::Template.new(@cf_lp_source, {}, @io)
       assert_equal @expected_output, @out
     end
 
     should "generate markup given a content file in a layout file" do
-      Undies::Template.new(@cf_lf_source, {}, @output)
+      Undies::Template.new(@cf_lf_source, {}, @io)
       assert_equal @expected_output, @out
     end
 
@@ -86,27 +84,28 @@ class Undies::Template
     desc "using partials"
 
     before do
-      @output = Undies::Output.new(@outstream, :pp => 2)
+      @io = Undies::IO.new(@out = "", :pp => 2)
       @source = Undies::Source.new(Proc.new do
         partial_source = Undies::Source.new(Proc.new do
-          _div { _ thing }
+          _p { _ thing }
         end)
 
         _div {
-          _ thing
+          _span { _ thing }
           __partial partial_source, {:thing => 1234}
 
           _div {
-            __partial "some markup string here"
+            __partial "    <p>some markup string here</p>\n"
           }
+
         }
       end)
       @data = {:thing => 'abcd'}
     end
 
     should "render the partial source with its own scope/data" do
-      Undies::Template.new(@source, @data, @output)
-      assert_equal "<div>abcd\n  <div>1234</div>\n  <div>\n    some markup string here\n  </div>\n</div>", @out
+      Undies::Template.new(@source, @data, @io)
+      assert_equal "<div>\n  <span>abcd</span>\n  <p>1234</p>\n  <div>\n    <p>some markup string here</p>\n  </div>\n</div>\n", @out
     end
 
   end

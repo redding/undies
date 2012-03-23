@@ -1,9 +1,5 @@
 require "assert"
-
-require 'undies/node'
-require "undies/output"
-require "undies/template"
-
+require 'undies/io'
 require "undies/element"
 
 
@@ -12,40 +8,33 @@ class Undies::Element
   class BasicTests < Assert::Context
     desc 'an element'
     before do
-      skip
-      @e = Undies::Element.new(:div)
+      # io test with :pp 1 so we can test newline insertion
+      # io test with level 1 so we can test element start tag writing
+      @io = Undies::IO.new(@out = "", :pp => 1, :level => 1)
+      @e = Undies::Element.new(@io, :div)
     end
     subject { @e }
 
     should have_class_methods :hash_attrs, :escape_attr_value
-    should have_instance_method :to_str, :__prefix
-
-    should "be a Node" do
-      assert_kind_of Undies::Node, subject
-    end
+    should have_instance_methods :__attrs, :__flush, :__push, :__pop
+    should have_instance_methods :__markup, :__element, :__partial
+    should have_instance_methods :__cached, :__builds
 
     should "know its name and store it as a string" do
-      assert_equal "div", subject.__node_name
-    end
-
-    should "know its start/end tags" do
-      assert_equal "<div />", subject.__start_tag
-      assert_empty subject.__end_tag
-    end
-
-    should "have no content itself" do
-      assert_empty subject.__content
+      assert_equal "div", subject.instance_variable_get("@name")
     end
 
     should "have no builds by default" do
       assert_empty subject.__builds
     end
 
-    should "have no children by default" do
-      assert_equal false, subject.__children
+    should "have nothing cached by default" do
+      assert_nil subject.__cached
     end
 
   end
+
+
 
   class HashAttrsTest < BasicTests
     desc "the element class hash_attrs util"
@@ -90,6 +79,7 @@ class Undies::Element
       assert_included 'nested_something="is_awesome"', attrs
     end
   end
+
 
 
   class CSSProxyTests < BasicTests
@@ -161,87 +151,340 @@ class Undies::Element
 
   end
 
-  class SerializeTests < BasicTests
+
+
+  class AddContentTests < BasicTests
+    desc "adding content"
     before do
-      @output = Undies::Output.new(StringIO.new(@out = ""))
+      @raw1  = "some raw markup"
+      @raw2  = "more raw markup"
+      @elem1 = Undies::Element.new(@io, :strong) {}
+      @elem2 = Undies::Element.new(@io, :br)
+
+      # make the subject element have a build since we are simulating build
+      # markup operations
+      @e = Undies::Element.new(@io, :div) {}
     end
 
-    should "serialize with no child elements" do
-      Undies::Template.new(Undies::Source.new do
-        element(:br)
-      end, {}, @output)
+  end
 
-      assert_equal "<br />", @out
+  class AddContentStartTagWrittenTests < AddContentTests
+    desc "(the start tag has already been written)"
+    before do
+      subject.instance_variable_set("@start_tag_written", true)
+    end
+
+  end
+
+  class AddContentStartTagNotWrittenTests < AddContentTests
+    desc "(the start tag has not been written)"
+    before do
+      subject.instance_variable_set("@start_tag_written", false)
+    end
+
+  end
+
+  class MarkupStartTagWrittenTests < AddContentStartTagWrittenTests
+    desc "using the __markup meth"
+
+    should "cache any raw markup given with line indent and newline" do
+      subject.__markup @raw1
+      assert_equal "#{@io.line_indent}#{@raw1}#{@io.newline}", subject.__cached
+    end
+
+    should "write out any cached value when new markup is given" do
+      subject.__markup @raw1
+      assert_empty @out
+
+      subject.__markup @raw2
+      assert_equal "#{@io.line_indent}#{@raw1}#{@io.newline}", @out
+    end
+
+    should "write out any cached value when flushed" do
+      subject.__flush
+      assert_empty @out
+
+      subject.__markup @raw1
+      subject.__flush
+      assert_equal "#{@io.line_indent}#{@raw1}#{@io.newline}", @out
+    end
+
+  end
+
+  class MarkupStartTagNotWrittenTests < AddContentStartTagNotWrittenTests
+    desc "using the __markup meth"
+
+    should "cache any raw markup given without line indent or newline" do
+      subject.__markup @raw1
+      assert_equal @raw1.to_s, subject.__cached
+    end
+
+    should "write out the start tag with no IO#newline when markup is given" do
+      subject.__markup @raw1
+      assert_equal "<div>", @out
+    end
+
+    should "write out any cached content and cache new markup when given" do
+      subject.__markup @raw1
+      subject.__markup @raw2
+      assert_equal "<div>#{@raw1}", @out
+      assert_equal "#{@io.line_indent}#{@raw2}#{@io.newline}", subject.__cached
+    end
+
+  end
+
+  class ElementStartTagWrittenTests < AddContentStartTagWrittenTests
+    desc "using the __element meth"
+
+    should "cache any element given" do
+      subject.__element(@elem1)
+      assert_equal @elem1, subject.__cached
+    end
+
+    should "write out any cached value when a new element is given" do
+      subject.__element(@elem1)
+      assert_empty @out
+
+      subject.__element(@elem2)
+      assert_equal "#{@io.line_indent}<strong></strong>#{@io.newline}", @out
+    end
+
+    should "write out any cached value when flushed" do
+      subject.__flush
+      assert_empty @out
+
+      subject.__element(@elem1)
+      subject.__flush
+      assert_equal "#{@io.line_indent}<strong></strong>#{@io.newline}", @out
+    end
+
+  end
+
+  class ElementStartTagNotWrittenTests < AddContentStartTagNotWrittenTests
+    desc "using the __element meth"
+
+    should "cache any element given" do
+      subject.__element(@elem1)
+      assert_equal @elem1, subject.__cached
+    end
+
+    should "write out the start tag with IO#newline when an element is given" do
+      subject.__element(@elem1)
+      assert_equal "<div>#{@io.newline}", @out
+    end
+
+    should "write out any cached content and cache new markup when given" do
+      subject.__element @elem1
+      subject.__element @elem2
+      assert_equal "<div>#{@io.newline}#{@io.line_indent}<strong></strong>#{@io.newline}", @out
+      assert_equal @elem2, subject.__cached
+    end
+
+    should "write out the end tag with IO#newline indented when a partial is given" do
+      subject.__element(@elem1)
+      subject.__pop
+      assert_equal "<div>#{@io.newline} <strong></strong>#{@io.newline}</div>#{@io.newline}", @out
+    end
+
+  end
+
+  class PartialStartTagWrittenTests < AddContentStartTagWrittenTests
+    desc "using the __partial meth"
+
+    should "cache any partial markup given" do
+      subject.__partial("partial markup")
+      assert_equal "partial markup", subject.__cached
+    end
+
+    should "write out any cached partial values" do
+      subject.__partial("partial markup")
+      assert_empty @out
+
+      subject.__element(@elem2)
+      assert_equal "partial markup", @out
+    end
+
+    should "write out any cached value when flushed" do
+      subject.__flush
+      assert_empty @out
+
+      subject.__partial("partial markup")
+      subject.__flush
+      assert_equal "partial markup", @out
+    end
+
+  end
+
+  class PartialStartTagNotWrittenTests < AddContentStartTagNotWrittenTests
+    desc "using the __partial meth"
+
+    should "cache any element given" do
+      subject.__partial("partial markup")
+      assert_equal "partial markup", subject.__cached
+    end
+
+    should "write out the start tag with IO#newline when a partial is given" do
+      subject.__partial("partial markup")
+      assert_equal "<div>#{@io.newline}", @out
+    end
+
+    should "write out the end tag with IO#newline indented when a partial is given" do
+      subject.__partial("  partial markup\n")
+      subject.__pop
+      assert_equal "<div>#{@io.newline}  partial markup\n</div>#{@io.newline}", @out
+    end
+
+  end
+
+  class AttrsTests < AddContentStartTagNotWrittenTests
+    desc "using the __attrs meth"
+
+    should "modify the parent element's tag attributes" do
+      subject.__attrs(:test => 'value')
+      subject.__markup "blah"
+
+      assert_equal "<div test=\"value\">", @out
+    end
+
+    should "not effect the start tag once markup has been written" do
+      subject.__attrs(:test => 'value')
+      subject.__markup "blah"
+      subject.__attrs(:another => 'val')
+
+      assert_equal "<div test=\"value\">", @out
+    end
+
+    should "not effect the start tag once chile elements have been written" do
+      subject.__attrs(:test => 'value')
+      subject.__element(@elem1)
+      subject.__attrs(:another => 'val')
+
+      assert_equal "<div test=\"value\">#{@io.newline}", @out
+    end
+
+  end
+
+
+
+  class SerializeTests < BasicTests
+
+    should "serialize with no child elements" do
+      Undies::Element.new(@io, :br).to_s
+      assert_equal "#{@io.line_indent}<br />#{@io.newline}", @out
     end
 
     should "serialize with attrs" do
-      Undies::Template.new(Undies::Source.new do
-        element(:br, :class => 'big')
-      end, {}, @output)
-
-      assert_equal '<br class="big" />', @out
+      Undies::Element.new(@io, :br, :class => 'big').to_s
+      assert_equal "#{@io.line_indent}<br class=\"big\" />#{@io.newline}", @out
     end
 
     should "serialize with attrs that have double-quotes" do
-      Undies::Template.new(Undies::Source.new do
-        element(:br, :class => '"this" is double-quoted')
-      end, {}, @output)
+      Undies::Element.new(@io, :br, :class => '"this" is double-quoted').to_s
+      assert_equal "#{@io.line_indent}<br class=\"&quot;this&quot; is double-quoted\" />#{@io.newline}", @out
+    end
 
-      assert_equal '<br class="&quot;this&quot; is double-quoted" />', @out
+    should "serialize with empty content" do
+      (Undies::Element.new(@io, :strong) {}).to_s
+      assert_equal "#{@io.line_indent}<strong></strong>#{@io.newline}", @out
     end
 
     should "serialize with attrs and content" do
-      Undies::Template.new(Undies::Source.new do
-        element(:strong, {:class => 'big'}) { __ "Loud Noises!" }
-      end, {}, @output)
+      # content added using manual build
+      elem = Undies::Element.new(@io, :strong, {:class => 'big'})
+      elem.__push
+      elem.__markup "Loud Noises!"
+      elem.__pop
 
-      assert_equal '<strong class="big">Loud Noises!</strong>', @out
+      assert_equal "#{@io.line_indent}<strong class=\"big\">Loud Noises!</strong>#{@io.newline}", @out
     end
 
     should "serialize element proxy id call" do
-      Undies::Template.new(Undies::Source.new do
-        element(:div).thing1! { _ "stuff" }
-      end, {}, @output)
+      # content added using build block
+      elem = Undies::Element.new(@io, :div).thing1!
+      elem.send("add_build", Proc.new do
+        elem.__markup "stuff"
+      end)
+      elem.to_s
 
-      assert_equal "<div id=\"thing1\">stuff</div>", @out
+      assert_equal "#{@io.line_indent}<div id=\"thing1\">stuff</div>#{@io.newline}", @out
     end
 
     should "serialize element proxy class call" do
-      Undies::Template.new(Undies::Source.new do
-        element(:div).thing { _ "stuff" }
-      end, {}, @output)
+      # calling a private method as public to test private methods not
+      # polluting public method_missing scope
+      elem = Undies::Element.new(@io, :div).end_tag
+      elem.send("add_build", Proc.new do
+        elem.__markup "stuff"
+      end)
+      elem.to_s
 
-      assert_equal "<div class=\"thing\">stuff</div>", @out
+      assert_equal "#{@io.line_indent}<div class=\"end_tag\">stuff</div>#{@io.newline}", @out
     end
 
     should "serialize content from separate content blocks" do
-      Undies::Template.new(Undies::Source.new do
-        element(:div){ _ "stuff" }.thing1!{ _ " and more stuff" }
-      end, {}, @output)
+      elem = Undies::Element.new(@io, :div)
+      elem.send("add_build", Proc.new do
+        elem.__markup "stuff"
+      end)
+      elem.thing1!
+      # will be serialized with a newline b/c its not the first markup content
+      elem.send("add_build", Proc.new do
+        elem.__markup "and more stuff"
+        elem.__markup "and even more stuff"
+      end)
+      elem.to_s
 
-      assert_equal "<div id=\"thing1\">stuff and more stuff</div>", @out
+      assert_equal "#{@io.line_indent}<div id=\"thing1\">stuff  and more stuff
+  and even more stuff
+ </div>
+", @out
     end
 
     should "serialize nested elements with pp" do
-      output = Undies::Output.new(StringIO.new(@out = ""), :pp => 4)
-      src = Undies::Source.new do
-        element(:div) {
-          element(:span) { _ "Content!" }
-          __ "Raw"
-          element(:span) { _ "More content" }
-          element(:div).hi {
-            _ "first build"
-          }.there.you! {
-            _ "second build"
-          }
-        }
-      end
-      templ = Undies::Template.new(src, {}, output)
+      io = Undies::IO.new(@out = "", :pp => 1, :level => 0)
+
+      elem_1a = Undies::Element.new(io, :span)
+      elem_1a.send("add_build", Proc.new do
+        elem_1a.__markup "Content!"
+      end)
+
+      elem_1b = Undies::Element.new(io, :span)
+      elem_1b.send("add_build", Proc.new do
+        elem_1b.__markup "More content"
+      end)
+
+      # test you can chain proxy calls and 'add_build' sends
+      elem_1c = Undies::Element.new(io, :div)
+      elem_1c.
+        proxy.
+        send("add_build", Proc.new do
+          elem_1c.__markup "first build"
+        end).
+        start_tag.
+        you!.
+        send("add_build", Proc.new do
+          elem_1c.__markup "second build"
+          elem_1c.__markup "third build"
+        end)
+
+
+      elem_root = Undies::Element.new(io, :div)
+      elem_root.send("add_build", Proc.new do
+        elem_root.__element(elem_1a)
+        elem_root.__markup "Raw"
+        elem_root.__element(elem_1b)
+        elem_root.__element(elem_1c)
+      end).to_s
+
       assert_equal "<div>
-    <span>Content!</span>Raw
-    <span>More content</span>
-    <div class=\"hi there\" id=\"you\">first buildsecond build</div>
-</div>", @out
+ <span>Content!</span>
+ Raw
+ <span>More content</span>
+ <div class=\"proxy start_tag\" id=\"you\">first build  second build
+  third build
+ </div>
+</div>
+", @out
     end
 
   end

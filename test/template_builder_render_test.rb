@@ -1,6 +1,5 @@
 require "assert"
 require "stringio"
-require 'undies/node_stack'
 
 require "undies/template"
 
@@ -9,15 +8,14 @@ class Undies::Template
   class BuilderRenderTests < Assert::Context
     desc 'a template rendered using the builder approach'
     before do
-      skip
       @src = Undies::Source.new(Proc.new {})
-      @output = Undies::Output.new(@outstream = StringIO.new(@out = ""))
-      @t = Undies::Template.new(@src, {}, @output)
+      @io = Undies::IO.new(@out = "")
+      @t = Undies::Template.new(@src, {}, @io)
     end
     subject { @t }
 
     should "maintain scope throughout the build blocks" do
-      templ = Undies::Template.new(@output)
+      templ = Undies::Template.new(@io)
       templ._div {
         templ._div {
           templ.__ self.object_id
