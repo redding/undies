@@ -12,6 +12,7 @@ class Undies::Element
   class BasicTests < Assert::Context
     desc 'an element'
     before do
+      skip
       @e = Undies::Element.new(:div)
     end
     subject { @e }

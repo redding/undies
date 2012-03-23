@@ -69,19 +69,6 @@ module Undies
       self.__flush
     end
 
-    # call this to modify element attrs inside a build block.  Once content
-    # or child elements have been added, any '__attr' directives will
-    # be ignored b/c the elements start_tag has already been flushed
-    # to the output
-    def __attrs(attrs_hash={})
-      self.__node_stack.current.tap do |node|
-        if node
-          node.__merge_attrs(attrs_hash)
-          node.__set_start_tag
-        end
-      end
-    end
-
     # call this method to manually push the currently cached node onto the
     # node stack
     # - implicitly flushes the cache
@@ -133,6 +120,19 @@ module Undies
         Undies::Template.new(source, data, self.__node_stack)
       else
         self.__ source.to_s, :partial
+      end
+    end
+
+    # call this to modify element attrs inside a build block.  Once content
+    # or child elements have been added, any '__attr' directives will
+    # be ignored b/c the elements start_tag has already been flushed
+    # to the output
+    def __attrs(attrs_hash={})
+      self.__node_stack.current.tap do |node|
+        if node
+          node.__merge_attrs(attrs_hash)
+          node.__set_start_tag
+        end
       end
     end
 

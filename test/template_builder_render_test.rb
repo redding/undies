@@ -9,6 +9,7 @@ class Undies::Template
   class BuilderRenderTests < Assert::Context
     desc 'a template rendered using the builder approach'
     before do
+      skip
       @src = Undies::Source.new(Proc.new {})
       @output = Undies::Output.new(@outstream = StringIO.new(@out = ""))
       @t = Undies::Template.new(@src, {}, @output)

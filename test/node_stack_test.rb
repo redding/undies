@@ -11,6 +11,7 @@ module Undies
   class NodeStackTests < Assert::Context
     desc "a NodeStack"
     before do
+      skip
       @hello = Node.new "hello"
       @something = Node.new "something else"
       @hi  = Node.new("hi")

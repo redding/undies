@@ -8,6 +8,7 @@ class Undies::Node
   class BasicTests < Assert::Context
     desc 'a node'
     before do
+      skip
       @output = Undies::Output.new(StringIO.new(@out = ""))
       @n = Undies::Node.new("a text node here")
     end

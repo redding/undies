@@ -11,6 +11,7 @@ class Undies::Template
   class SourceRenderTests < Assert::Context
     desc 'a template rendered using a source object'
     before do
+      skip
       @src = Undies::Source.new(Proc.new {})
       @output = Undies::Output.new(@outstream = StringIO.new(@out = ""))
       @t = Undies::Template.new(@src, {}, @output)
