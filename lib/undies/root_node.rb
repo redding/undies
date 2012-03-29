@@ -53,7 +53,7 @@ module Undies
     private
 
     def write_cached
-      @io << @cached.to_s if @cached
+      @io << @cached.to_s
     end
 
   end

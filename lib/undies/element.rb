@@ -44,7 +44,7 @@ module Undies
 
     def to_s
       @io.push(self)
-      @builds.each(&:call)
+      @builds.each{ |build| build.call }
       __flush
       @io.pop
       write_end_tag
@@ -157,7 +157,7 @@ module Undies
     end
 
     def write_cached
-      @io << @cached.to_s if @cached
+      @io << @cached.to_s
     end
 
     def write_start_tag(newline='', level_offset=0)

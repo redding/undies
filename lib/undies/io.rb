@@ -28,6 +28,7 @@ module Undies
       "#{' '*(@level+relative_level)*@indent}"
     end
 
+    # TODO: threaded/forked writing for performance improvement
     def <<(markup)
       @stream << markup
     end

@@ -126,6 +126,9 @@ module Undies
     end
     alias_method :tag, :element
 
+    # TODO: mixin and elements API that explicitly defines the
+    # element helper methods (see markaby/erector for reference)
+    # hopefully yields performance improvement
     # Element proxy methods ('_<element>'') ========================
     ELEM_METH_REGEX = /^_(.+)$/
     def method_missing(meth, *args, &block)
