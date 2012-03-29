@@ -1,6 +1,4 @@
 require "assert"
-require "stringio"
-
 require "undies/template"
 
 class Undies::Template

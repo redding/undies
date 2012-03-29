@@ -1,5 +1,4 @@
 require "assert"
-require 'stringio'
 require "undies/io"
 
 class Undies::IO

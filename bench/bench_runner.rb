@@ -1,5 +1,4 @@
 require 'whysoslow'
-require 'stringio'
 
 require 'erb'
 require 'erubis'
@@ -39,12 +38,11 @@ end
 class UndiesResults < UndiesBenchResults
 
   def initialize(size='large')
-    @outstream = StringIO.new(@out = "")
     super(:undies, '.rb', size, Proc.new do
       Undies::Template.new(
         Undies::Source.new(self.file),
         {},
-        Undies::Output.new(@outstream, :pp => 2)
+        Undies::IO.new(@out = "", :pp => 2)
       )
     end)
   end
