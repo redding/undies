@@ -14,9 +14,7 @@ class UndiesProfilerRunner
     @output = Undies::Output.new(@out = "")
 
     @result = RubyProf.profile do
-      10.times do
-        Undies::Template.new(@source, @data, @output)
-      end
+      Undies::Template.new(@source, @data, @output)
     end
 
   end
