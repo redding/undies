@@ -1,8 +1,6 @@
 require 'undies/source_stack'
-require 'undies/node_stack'
-require 'undies/output'
 
-require 'undies/node'
+require 'undies/root_node'
 require 'undies/element'
 
 module Undies
@@ -11,14 +9,6 @@ module Undies
     # have as many methods on the class level as possible to keep from
     # polluting the public instance methods, the instance scope, and to
     # maximize the effectiveness of the Template#method_missing logic
-
-    def __source_stack
-      @_undies_source_stack
-    end
-
-    def __node_stack
-      @_undies_node_stack
-    end
 
     def self.flush(template)
       template.__flush
@@ -43,12 +33,11 @@ module Undies
 
     def initialize(*args)
       # setup a node stack with the given output obj
-      output = if args.last.kind_of?(NodeStack) || args.last.kind_of?(Output)
+      @_undies_io = if args.last.kind_of?(Undies::IO)
         args.pop
       else
-        raise ArgumentError, "please provide an Output object"
+        raise ArgumentError, "please provide an IO object"
       end
-      @_undies_node_stack = NodeStack.create(output)
 
       # apply any given data to template scope
       data = args.last.kind_of?(::Hash) ? args.pop : {}
@@ -62,62 +51,39 @@ module Undies
       source = args.last.kind_of?(Source) ? args.pop : Source.new(Proc.new {})
       @_undies_source_stack = SourceStack.new(source)
 
+      # push a root node onto the IO
+      @_undies_io.push!(RootNode.new(@_undies_io)) if @_undies_io.empty?
+
       # yield to recursivley render the source stack
-      self.__yield
+      __yield
 
       # flush any elements that need to be built
-      self.__flush
+      __flush
     end
 
-    # call this to modify element attrs inside a build block.  Once content
-    # or child elements have been added, any '__attr' directives will
-    # be ignored b/c the elements start_tag has already been flushed
-    # to the output
-    def __attrs(attrs_hash={})
-      self.__node_stack.current.tap do |node|
-        if node
-          node.__merge_attrs(attrs_hash)
-          node.__set_start_tag
-        end
-      end
-    end
-
-    # call this method to manually push the currently cached node onto the
-    # node stack
-    # - implicitly flushes the cache
-    # - changes the context of template method calls to operate on that node
+    # call this method to manually push the current scope to the previously
+    # cached element (if any)
+    # - changes the context of template method calls to operate on that element
     def __push
-      ns = self.__node_stack
-      node, ns.cached_node = ns.cached_node, nil
-      if node
-        # add an empty build block to generate a non-closing start tag
-        # and a closing end tag
-        node.__add_build(Proc.new {})
-        node.__set_start_tag
-        node.__set_end_tag
-
-        ns.push(node)
-      end
+      @_undies_io.current.__push
     end
 
-    # call this method to manually pop the current scoped node from the node stack
-    # - flushes the cache
-    # - changes the context of template method calls to operate on the parent node
+    # call this method to manually pop the current scope to the previous scope
+    # - changes the context of template method calls to operate on the parent
+    #   element or root node
     def __pop
-      ns = self.__node_stack
-      ns.clear_cached
-      ns.pop
+      @_undies_io.current.__pop
     end
 
     # call this to manually flush a template
     def __flush
-      self.__node_stack.flush
+      @_undies_io.current.__flush
     end
 
     # call this to render template source
     # use this method in layouts to insert a layout's content source
     def __yield
-      return if self.__node_stack.nil? || (source = self.__source_stack.pop).nil?
+      return if (source = @_undies_source_stack.pop).nil?
       if source.file?
         instance_eval(source.data, source.source, 1)
       else
@@ -130,29 +96,33 @@ module Undies
     # its parent template's output object
     def __partial(source, data={})
       if source.kind_of?(Source)
-        Undies::Template.new(source, data, self.__node_stack)
+        Undies::Template.new(source, data, @_undies_io)
       else
-        self.__ source.to_s, :partial
+        @_undies_io.current.__partial(source.to_s)
       end
+    end
+
+    # call this to modify element attrs inside a build block.  Once content
+    # or child elements have been added, any '__attr' directives will
+    # be ignored b/c the elements start_tag has already been flushed
+    # to the output
+    def __attrs(attrs_hash={})
+      @_undies_io.current.__attrs(attrs_hash)
     end
 
     # Add a text node (data escaped) to the nodes of the current node
-    def _(data="", mode=:inline)
-      self.__ self.class.escape_html(data.to_s), mode
+    def _(data="")
+      self.__ self.class.escape_html(data.to_s)
     end
 
     # Add a text node with the data un-escaped
-    def __(data="", mode=:inline)
-      Node.new(data.to_s, mode).tap do |node|
-        self.__node_stack.node(node)
-      end
+    def __(data="")
+      @_undies_io.current.__markup(data)
     end
 
     # Add an element to the node stack
     def element(*args, &build)
-      Element.new(*args, &build).tap do |element|
-        self.__node_stack.node(element)
-      end
+      @_undies_io.current.__element(Element.new(@_undies_io, *args, &build))
     end
     alias_method :tag, :element
 

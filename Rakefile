@@ -9,7 +9,7 @@ task :default => :run_all
 desc "Run the profiler on the large bench template."
 task :run_profiler do
   require 'bench/profiler_runner'
-  UndiesProfilerRunner.new('verylarge').print_flat(STDOUT, :min_percent => 3)
+  UndiesProfilerRunner.new('verylarge').print_flat(STDOUT, :min_percent => 1)
 end
 
 desc "Run the benchmark script."

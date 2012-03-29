@@ -1,11 +1,5 @@
-require 'undies/node'
-
 module Undies
-  class Element < Node
-
-    # have as many methods to the class level as possilbe to keep from
-    # polluting the public instance methods and to maximize the effectiveness
-    # of the Element#method_missing logic
+  class Element
 
     def self.hash_attrs(attrs="", ns=nil)
       return attrs.to_s if !attrs.kind_of?(::Hash)
@@ -29,37 +23,85 @@ module Undies
         gsub('"', '&quot;')
     end
 
-    def __prefix(meth, level, indent)
-      "".tap do |value|
-        if indent > 0
-          if meth == 'start_tag'
-            value << "#{level > 0 ? "\n": ''}#{' '*level*indent}"
-          elsif meth == 'end_tag'
-            value << "\n#{' '*level*indent}" if __children
-          end
-        end
+    def initialize(io, name, attrs={}, &build)
+      @start_tag_written = false
+      @end_tag_line_indent = false
+      @has_content = false
+      @io = io
+      @cached = nil
+      @name  = name.to_s
+      @attrs = attrs
+      @builds = []
+      add_build(build)
+    end
+
+    def __cached; @cached; end
+    def __builds; @builds; end
+    def __attrs(attrs_hash=nil)
+      return @attrs if attrs_hash.nil?
+      @attrs.merge!(attrs_hash)
+    end
+
+    def to_s
+      @io.push(self)
+      @builds.each(&:call)
+      __flush
+      @io.pop
+      write_end_tag
+
+      # needed so the `write_cached` calls on Element and Node won't add
+      # anything else to the IO
+      return ""
+    end
+
+    def __push
+      @has_content ||= true
+      @io.push(@cached)
+      @cached = nil
+    end
+
+    def __pop
+      @has_content ||= true
+      __flush
+      @io.pop
+      write_end_tag
+    end
+
+    def __flush
+      write_cached
+      @cached = nil
+      self
+    end
+
+    def __markup(raw)
+      @has_content ||= true
+      if !@start_tag_written
+        # no newline
+        # -1 level offset b/c we are operating on the element build one deep
+        write_start_tag('', -1)
+        # write_cached
+        @cached = raw.to_s
+      else
+        write_cached
+        @cached = "#{@io.line_indent}#{raw}#{@io.newline}"
+        @end_tag_line_indent ||= true
       end
     end
 
-    def initialize(name, attrs={}, &build)
-      super(nil)
-      @start_tag = ""
-      @end_tag = ""
-      @content = nil
-      @builds = []
-      @children = false
-
-      if !attrs.kind_of?(::Hash)
-        raise ArgumentError, "#{name.inspect} attrs must be provided as a Hash."
+    def __element(element)
+      @has_content ||= true
+      if !@start_tag_written
+        # with newline
+        # -1 level offset b/c we are operating on the element build one deep
+        write_start_tag(@io.newline, -1)
       end
+      write_cached
+      @cached = element
+      @end_tag_line_indent ||= true
+    end
 
-      @name  = name.to_s
-      @attrs = attrs
-      @builds << build if build
-
-      # cache in an instance variable for fast access with flush and pop
-      self.__set_start_tag
-      self.__set_end_tag
+    def __partial(partial)
+      __element(partial)
     end
 
     # CSS proxy methods ============================================
@@ -102,27 +144,49 @@ module Undies
     end
     alias_method :inspect, :to_str
 
-    def __set_start_tag
-      @start_tag = "<#{__node_name}#{self.class.hash_attrs(__attrs)}" +
-        (__builds.size > 0 ? ">" : " />")
-    end
-
-    def __set_end_tag
-      @end_tag = __builds.size > 0 ? "</#{__node_name}>" : nil
-    end
-
     private
+
+    # private methods are needed so as not to pollute the
+    # method_missing public scope
 
     def proxy(value, attrs, build)
       yield value if block_given?
       @attrs.merge!(attrs)
+      # 'add_build' returns self so you can chain proxy method calls
+      add_build(build)
+    end
+
+    def write_cached
+      @io << @cached.to_s if @cached
+    end
+
+    def write_start_tag(newline='', level_offset=0)
+      @io << "#{@io.line_indent(level_offset)}#{start_tag}#{newline}"
+      @start_tag_written = true
+    end
+
+    def write_end_tag(level_offset=0)
+      if !@start_tag_written
+        write_start_tag('', level_offset)
+      elsif @end_tag_line_indent
+        @io << @io.line_indent(level_offset)
+      end
+      @io << end_tag
+    end
+
+    def start_tag
+      "<#{@name}#{self.class.hash_attrs(@attrs)}#{@has_content ? '>' : ' />'}"
+    end
+
+    def end_tag
+      @has_content ? "</#{@name}>#{@io.newline}" : @io.newline
+    end
+
+    def add_build(build)
       @builds << build if build
+      @has_content ||= !@builds.empty?
 
-      # cache in an instance variable for fast access with flush and pop
-      self.__set_start_tag
-      self.__set_end_tag
-
-      # return self so you can chain proxy method calls
+      # return self so you can chain add_build calls
       self
     end
 

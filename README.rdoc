@@ -81,7 +81,7 @@ use in combo:
 
 == Streamed Output
 
-Undies works by streaming content defined by using its DSL to a given output stream.  Any call to Template#_, Template#__, or Tempate#_<node> will stream its output (or you can write helpers you mix in that use these base api methods).  This has a number of advantages:
+Undies works by streaming content defined by using its DSL to a given io stream.  Any call to Template#_, Template#__, or Tempate#_<element> will stream its output (or you can write helpers you mix in that use these base api methods).  This has a number of advantages:
 
 * content is written out immediately
 * maintain a relatively low memory profile while rendering
@@ -91,13 +91,13 @@ However, because content is streamed then forgotten as it is being rendered, Und
 
 == Rendering
 
-To render using Undies, create a Template instance, providing the template source, data, and output information.
+To render using Undies, create a Template instance, providing the template source, data, and io information.
 
     source = Undies::Source.new("/path/to/sourcefile")
-    data = { :two_plus_two => 4 }
-    output = Undies::Output.new(@some_io_stream)
+    data   = { :two_plus_two => 4 }
+    io     = Undies::IO.new(@some_io_stream)
 
-    Undies::Template.new(source, {}, output)
+    Undies::Template.new(source, {}, io)
 
 === Source
 
@@ -107,17 +107,18 @@ You specify Undies source using the Undies::Source object.  You can create sourc
 
 Undies renders source content in isolated scope (the context of the template).  This means that content has access to only the data it is given or the Undies API itself.  When you define a template for rendering, you provide not only the template source, but any data that source should be rendered with.  Data is given in the form of a Hash.  The string form of the hash keys are exposed as local methods that return their corresponding values.
 
-=== Output
+=== IO
 
-As said before, Undies streams to a given output stream.  You specify a Template's output by creating an Undies::Output object.  These objects take an io stream and a hash of options:
+As said before, Undies streams to a given io stream.  You specify a Template's io by creating an Undies::IO object.  These objects take an io stream and a hash of options:
 
 * :pp (pretty-print) : set to a Fixnum to tab-space indent pretty print the output.
+* :level : the starting level to render pretty printed output at, default is zero
 
 === Examples
 
     # file source, no local data, no pretty printing
     source = Undies::Source.new("/path/to/source")
-    Undies::Template.new(source, {}, Undies::Output.new(@io))
+    Undies::Template.new(source, {}, Undies::IO.new(@io))
 
 
     # proc source, simple local data, no pretty printing
@@ -126,21 +127,21 @@ As said before, Undies streams to a given output stream.  You specify a Template
         _ content.to_s
       }
     end)
-    Undies::Template.new(source, {:content => "Some Content!!" }, Undies::Output.new(@io))
+    Undies::Template.new(source, {:content => "Some Content!!" }, Undies::IO.new(@io))
 
 
     # pretty printing (4 space tab indentation)
     source = Undies::Source.new("/path/to/source")
-    Undies::Template.new(source, {}, Undies::Output.new(@io, :pp => 4))
+    Undies::Template.new(source, {}, Undies::IO.new(@io, :pp => 4))
 
 === Builder approach
 
 The above examples use the "source rendering" approach.  This works great when you know your source content before render time and create a source object from it (ie rendering a view template).  However, in some cases, you may not know the source until render time and/or want to use a more declarative style to specify render output.  Undies content can be specified programmatically using the "builder rendering" approach.
 
-To render using this approach, create a Template instance passing it data and output info as above.  However, don't pass in any source info, only pass in any local data if you like, and save off the created template:
+To render using this approach, create a Template instance passing it data and io info as above.  However, don't pass in any source info, only pass in any local data if you like, and save off the created template:
 
     # choosing not to use any local data in this example
-    template = Undies::Template.new(Undies::Output.new(@io))
+    template = Undies::Template.new(Undies::IO.new(@io))
 
 Now just interact with the Undies API directly.
 
@@ -152,7 +153,7 @@ Now just interact with the Undies API directly.
 
 *Note:* there is one extra caveat to be aware of using this approach.  You need to be sure and flush the template when content processing is complete.  Just pass the template to the Undies::Template#flush method:
 
-    # ensures all content is streamed to the template's output stream
+    # ensures all content is streamed to the template's io stream
     # this is necessary when not using the source approach above
     Undies::Template.flush(template)
 
@@ -164,7 +165,7 @@ To render using this approach, create a Template as you would with the Builder a
 
     # this is the equivalent to the Builder approach example above
 
-    template = Undies::Template.new(Undies::Output.new(@io))
+    template = Undies::Template.new(Undies::IO.new(@io))
     something = "Some Thing!"
     current = template._div.something!
 

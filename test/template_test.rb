@@ -1,7 +1,4 @@
 require "assert"
-require "stringio"
-require 'undies/node_stack'
-
 require "undies/template"
 
 class Undies::Template
@@ -12,24 +9,19 @@ class Undies::Template
     desc 'a template'
     before do
       @src = Undies::Source.new(Proc.new {})
-      @output = Undies::Output.new(@outstream = StringIO.new(@out = ""))
-      @t = Undies::Template.new(@src, {}, @output)
+      @io = Undies::IO.new(@out = "")
+      @t = Undies::Template.new(@src, {}, @io)
     end
     subject { @t }
 
     should have_class_methods    :flush, :escape_html
-    should have_instance_methods :__source_stack, :__node_stack
     should have_instance_methods :to_s, :element, :tag
     should have_instance_methods :_, :__
     should have_instance_methods :__yield, :__partial
     should have_instance_methods :__push, :__pop, :__flush
     should have_instance_methods :__attrs
 
-    should "know it's node stack" do
-      assert_kind_of Undies::NodeStack, subject.__node_stack
-    end
-
-    should "complain if creating a template with no Output obj" do
+    should "complain if creating a template with no IO obj" do
       assert_raises ArgumentError do
         Undies::Template.new(@src, {})
       end
@@ -37,15 +29,19 @@ class Undies::Template
 
     should "default the data to an empty hash if none provided" do
       assert_nothing_raised do
-        Undies::Template.new(@src, @output)
+        Undies::Template.new(@src, @io)
       end
     end
 
     should "default the source to an empty Proc source if none provided" do
       assert_nothing_raised do
-        Undies::Template.new(@output)
+        Undies::Template.new(@io)
       end
       assert_equal "", @out
+    end
+
+    should "push a root node onto its IO" do
+      assert_kind_of Undies::RootNode, @io.current
     end
 
   end
@@ -189,22 +185,21 @@ class Undies::Template
 
 
   class LocalDataTests < BasicTests
-
     should "only accept the data if it is a Hash" do
       assert_respond_to(
         :some,
-        Undies::Template.new(Undies::Source.new(Proc.new {}), {:some => 'data'}, @output)
+        Undies::Template.new(Undies::Source.new(Proc.new {}), {:some => 'data'}, @io)
       )
     end
 
     should "complain if trying to set locals that conflict with public methods" do
       assert_raises ArgumentError do
-        Undies::Template.new(Undies::Source.new(Proc.new {}), {:_ => "yay!"})
+        Undies::Template.new(Undies::Source.new(Proc.new {}), {:_ => "yay!"}, @io)
       end
     end
 
     should "respond to each locals key with its value" do
-      templ = Undies::Template.new(Undies::Source.new(Proc.new {}), {:some => 'data'}, @output)
+      templ = Undies::Template.new(Undies::Source.new(Proc.new {}), {:some => 'data'}, @io)
       assert_equal "data", templ.some
     end
 
@@ -216,8 +211,7 @@ class Undies::Template
     desc "that is streaming"
 
     before do
-      outstream = StringIO.new(@output = "")
-      @template = Undies::Template.new(Undies::Output.new(outstream))
+      @template = Undies::Template.new(Undies::IO.new(@output = ""))
     end
 
     should "not stream full content until Undies#flush called on the template" do
@@ -253,7 +247,7 @@ class Undies::Template
   class PrettyPrintTests < BasicTests
 
     should "generate pretty printed markup" do
-      output = Undies::Output.new(@outstream, :pp => 2)
+      output = Undies::IO.new(@out = "", :pp => 2)
       templ = Undies::Template.new(output)
 
       templ._html
@@ -272,7 +266,8 @@ class Undies::Template
   <body>
     <div>Hi</div>
   </body>
-</html>}, @out )
+</html>
+}, @out )
     end
 
   end
