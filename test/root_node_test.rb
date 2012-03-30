@@ -43,6 +43,11 @@ class Undies::RootNode
       assert_equal elem, subject.__cached
     end
 
+    should "return the element when given" do
+      elem = Undies::Element.new(@io, :br)
+      assert_equal elem, subject.__element(elem)
+    end
+
     should "write out any cached value when a new element is given" do
       subject.__element(elem = Undies::Element.new(@io, :br))
       assert_empty @out

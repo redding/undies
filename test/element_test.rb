@@ -241,6 +241,10 @@ class Undies::Element
       assert_equal @elem1, subject.__cached
     end
 
+    should "return the element" do
+      assert_equal @elem1, subject.__element(@elem1)
+    end
+
     should "write out any cached value when a new element is given" do
       subject.__element(@elem1)
       assert_empty @out
@@ -266,6 +270,10 @@ class Undies::Element
     should "cache any element given" do
       subject.__element(@elem1)
       assert_equal @elem1, subject.__cached
+    end
+
+    should "return the element" do
+      assert_equal @elem1, subject.__element(@elem1)
     end
 
     should "write out the start tag with IO#newline when an element is given" do

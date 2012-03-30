@@ -95,9 +95,9 @@ module Undies
         # -1 level offset b/c we are operating on the element build one deep
         write_start_tag(@io.newline, -1)
       end
+      @end_tag_line_indent ||= true
       write_cached
       @cached = element
-      @end_tag_line_indent ||= true
     end
 
     def __partial(partial)
