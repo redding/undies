@@ -187,9 +187,9 @@ class Undies::Element
   class MarkupStartTagWrittenTests < AddContentStartTagWrittenTests
     desc "using the __markup meth"
 
-    should "cache any raw markup given with line indent and newline" do
+    should "cache any raw markup given" do
       subject.__markup @raw1
-      assert_equal "#{@io.line_indent}#{@raw1}#{@io.newline}", subject.__cached
+      assert_equal @raw1.to_s, subject.__cached
     end
 
     should "write out any cached value when new markup is given" do
@@ -197,7 +197,7 @@ class Undies::Element
       assert_empty @out
 
       subject.__markup @raw2
-      assert_equal "#{@io.line_indent}#{@raw1}#{@io.newline}", @out
+      assert_equal @raw1.to_s, @out
     end
 
     should "write out any cached value when flushed" do
@@ -206,7 +206,7 @@ class Undies::Element
 
       subject.__markup @raw1
       subject.__flush
-      assert_equal "#{@io.line_indent}#{@raw1}#{@io.newline}", @out
+      assert_equal @raw1.to_s, @out
     end
 
   end
@@ -228,7 +228,7 @@ class Undies::Element
       subject.__markup @raw1
       subject.__markup @raw2
       assert_equal "<div>#{@raw1}", @out
-      assert_equal "#{@io.line_indent}#{@raw2}#{@io.newline}", subject.__cached
+      assert_equal @raw2.to_s, subject.__cached
     end
 
   end
@@ -288,7 +288,7 @@ class Undies::Element
       assert_equal @elem2, subject.__cached
     end
 
-    should "write out the end tag with IO#newline indented when a partial is given" do
+    should "write out the end tag with IO#newline indented when popped" do
       subject.__element(@elem1)
       subject.__pop
       assert_equal "<div>#{@io.newline} <strong></strong>#{@io.newline}</div>#{@io.newline}", @out

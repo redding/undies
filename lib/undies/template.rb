@@ -26,6 +26,7 @@ module Undies
     }
     ESCAPE_HTML_PATTERN = Regexp.union(*ESCAPE_HTML.keys)
     # Escape ampersands, brackets and quotes to their HTML/XML entities.
+    # TODO: can optimize this any?
     def self.escape_html(string)
       string.to_s.gsub(ESCAPE_HTML_PATTERN){|c| ESCAPE_HTML[c] }
     end

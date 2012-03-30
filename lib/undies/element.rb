@@ -15,6 +15,7 @@ module Undies
       end
     end
 
+    # TODO: can optimize this any?
     def self.escape_attr_value(value)
       value.
         to_s.
