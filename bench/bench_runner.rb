@@ -4,6 +4,7 @@ require 'erb'
 require 'erubis'
 require 'haml'
 require 'markaby'
+require 'erector'
 require 'undies'
 
 class UndiesBenchResults
@@ -58,16 +59,16 @@ class MarkabyResults < UndiesBenchResults
     body do
       1.times do
         5.times do
-          span { "Yo" }
+          span.awesome { "Yo" }
         end
         5.times do
-          span { "YoYo" }
+          span.cool { "YoYo" }
         end
         5.times do
           br
         end
         5.times do
-          div { "Hi" }
+          div.last { "Hi" }
         end
       end
     end
@@ -78,16 +79,16 @@ class MarkabyResults < UndiesBenchResults
     body do
       100.times do
         5.times do
-          span { "Yo" }
+          span.awesome { "Yo" }
         end
         5.times do
-          span { "YoYo" }
+          span.cool { "YoYo" }
         end
         5.times do
           br
         end
         5.times do
-          div { "Hi" }
+          div.last { "Hi" }
         end
       end
     end
@@ -98,16 +99,16 @@ class MarkabyResults < UndiesBenchResults
     body do
       1000.times do
         5.times do
-          span { "Yo" }
+          span.awesome { "Yo" }
         end
         5.times do
-          span { "YoYo" }
+          span.cool { "YoYo" }
         end
         5.times do
           br
         end
         5.times do
-          div { "Hi" }
+          div.last { "Hi" }
         end
       end
     end
@@ -119,6 +120,45 @@ class MarkabyResults < UndiesBenchResults
       mab = Markaby::Builder.new
       mab.html &BUILDS[size.to_s]
       @out = mab.to_s
+    end)
+  end
+
+end
+
+class ErectorResults < UndiesBenchResults
+
+  class Build < Erector::Widget
+    def content
+      head {}
+      body do
+        @num.times do
+          5.times do
+            span(:class => 'awesome') { "Yo" }
+          end
+          5.times do
+            span(:class => 'cool') { "YoYo" }
+          end
+          5.times do
+            br
+          end
+          5.times do
+            div(:class => 'last') { "Hi" }
+          end
+        end
+      end
+    end
+  end
+
+  BUILDS = {}
+
+  BUILDS['small'] = Build.new(:num => 1)
+  BUILDS['large'] = Build.new(:num => 100)
+  BUILDS['verylarge'] = Build.new(:num => 1000)
+
+  def initialize(size='large')
+    @out = ""
+    super(:erector, '.erc', size, Proc.new do
+      @out = BUILDS[size.to_s].to_html(:prettyprint => true)
     end)
   end
 
@@ -162,8 +202,8 @@ end
 class UndiesBenchRunner
 
   SIZES = [
-    [:small    , "~20 nodes"],
-    [:large    , "~2000 nodes"],
+    # [:small    , "~20 nodes"],
+    # [:large    , "~2000 nodes"],
     [:verylarge, "~20000 nodes"]
   ]
 
@@ -172,16 +212,18 @@ class UndiesBenchRunner
     puts "Benchmark Results:"
     puts
     SIZES.each do |size_desc|
-      ErbResults.new(size_desc.first).run
-      puts
-      ErubisResults.new(size_desc.first).run
-      puts
-      HamlResults.new(size_desc.first).run
-      puts
-      MarkabyResults.new(size_desc.first).run
-      puts
       UndiesResults.new(size_desc.first).run
       puts
+      ErectorResults.new(size_desc.first).run
+      puts
+      # MarkabyResults.new(size_desc.first).run
+      # puts
+      # HamlResults.new(size_desc.first).run
+      # puts
+      # ErbResults.new(size_desc.first).run
+      # puts
+      # ErubisResults.new(size_desc.first).run
+      # puts
     end
     puts
   end
