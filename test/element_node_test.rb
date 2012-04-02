@@ -18,14 +18,14 @@ class Undies::ElementNode
     should have_class_methods :hash_attrs, :escape_attr_value
     should have_instance_methods :__attrs, :__flush, :__push, :__pop
     should have_instance_methods :__markup, :__element, :__partial
-    should have_instance_methods :__cached, :__builds
+    should have_instance_methods :__cached, :__build
 
     should "know its name and store it as a string" do
       assert_equal "div", subject.instance_variable_get("@name")
     end
 
-    should "have no builds by default" do
-      assert_empty subject.__builds
+    should "have no build by default" do
+      assert_nil subject.__build
     end
 
     should "have nothing cached by default" do
@@ -408,10 +408,9 @@ class Undies::ElementNode
 
     should "serialize element proxy id call" do
       # content added using build block
-      elem = Undies::ElementNode.new(@io, :div).thing1!
-      elem.send("add_build", Proc.new do
+      elem = Undies::ElementNode.new(@io, :div).thing1! do
         elem.__markup "stuff"
-      end)
+      end
       elem.to_s
 
       assert_equal "#{@io.line_indent}<div id=\"thing1\">stuff</div>#{@io.newline}", @out
@@ -420,35 +419,15 @@ class Undies::ElementNode
     should "serialize element proxy class call" do
       # calling a private method as public to test private methods not
       # polluting public method_missing scope
-      elem = Undies::ElementNode.new(@io, :div).end_tag
-      elem.send("add_build", Proc.new do
+      elem = Undies::ElementNode.new(@io, :div).end_tag do
         elem.__markup "stuff"
-      end)
+      end
       elem.to_s
 
       assert_equal "#{@io.line_indent}<div class=\"end_tag\">stuff</div>#{@io.newline}", @out
     end
 
-    should "serialize content from separate content blocks" do
-      elem = Undies::ElementNode.new(@io, :div)
-      elem.send("add_build", Proc.new do
-        elem.__markup "stuff"
-      end)
-      elem.thing1!
-      # will be serialized with a newline b/c its not the first markup content
-      elem.send("add_build", Proc.new do
-        elem.__markup "and more stuff"
-        elem.__markup "and even more stuff"
-      end)
-      elem.to_s
-
-      assert_equal "#{@io.line_indent}<div id=\"thing1\">stuff  and more stuff
-  and even more stuff
- </div>
-", @out
-    end
-
-    should "serialize nested elements with pp" do
+    should "serialize nested elements with pp and only honor the last build block" do
       io = Undies::IO.new(@out = "", :pp => 1, :level => 0)
 
       elem_1a = Undies::ElementNode.new(io, :span)
@@ -464,32 +443,29 @@ class Undies::ElementNode
       # test you can chain proxy calls and 'add_build' sends
       elem_1c = Undies::ElementNode.new(io, :div)
       elem_1c.
-        proxy.
-        send("add_build", Proc.new do
+        proxy {
           elem_1c.__markup "first build"
-        end).
+        }.
         start_tag.
-        you!.
-        send("add_build", Proc.new do
+        you! {
           elem_1c.__markup "second build"
           elem_1c.__markup "third build"
-        end)
+        }
 
 
-      elem_root = Undies::ElementNode.new(io, :div)
-      elem_root.send("add_build", Proc.new do
+      elem_root = Undies::ElementNode.new(io, :div) do
         elem_root.__element(elem_1a)
         elem_root.__markup "Raw"
         elem_root.__element(elem_1b)
         elem_root.__element(elem_1c)
-      end).to_s
+      end
+      elem_root.to_s
 
       assert_equal "<div>
  <span>Content!</span>
  Raw
  <span>More content</span>
- <div class=\"proxy start_tag\" id=\"you\">first build  second build
-  third build
+ <div class=\"proxy start_tag\" id=\"you\">second build  third build
  </div>
 </div>
 ", @out

@@ -1,13 +1,14 @@
 module Undies
   class ElementNode
 
+    # TODO: optimize this
     def self.hash_attrs(attrs="", ns=nil)
       return attrs.to_s if !attrs.kind_of?(::Hash)
 
-      {}.tap do |a|
-        attrs.each { |k, v| a[ns ? "#{ns}_#{k}" : k.to_s] = v }
+      attrs.collect do |k_v|
+        [ns ? "#{ns}_#{k_v.first}" : k_v.first.to_s, k_v.last]
       end.sort.inject('') do |html, k_v|
-        html + if k_v.last.kind_of?(::Hash)
+        html << if k_v.last.kind_of?(::Hash)
           hash_attrs(k_v.last, k_v.first)
         else
           " #{k_v.first}=\"#{escape_attr_value(k_v.last)}\""
@@ -33,12 +34,11 @@ module Undies
       @io = io
       @name  = name.to_s
       @attrs = attrs
-      @builds = []
-      add_build(build)
+      add_build(build) if build
     end
 
     def __cached; @cached; end
-    def __builds; @builds; end
+    def __build; @build; end
     def __attrs(attrs_hash=nil)
       return @attrs if attrs_hash.nil?
       @attrs.merge!(attrs_hash)
@@ -46,7 +46,8 @@ module Undies
 
     def to_s
       @io.push(self)
-      @builds.each{ |build| build.call }
+
+      @build.call if @build
       __flush
       @io.pop
       write_end_tag
@@ -75,6 +76,7 @@ module Undies
       self
     end
 
+    # TODO: this is deprecated and will be removed when capturing is in place
     def __markup(raw)
       @has_content ||= true
       if !@start_tag_written
@@ -154,8 +156,8 @@ module Undies
     def proxy(value, attrs, build)
       yield value if block_given?
       @attrs.merge!(attrs)
-      # 'add_build' returns self so you can chain proxy method calls
-      add_build(build)
+      add_build(build) if build
+      self
     end
 
     def write_cached
@@ -184,14 +186,10 @@ module Undies
       @has_content ? "</#{@name}>#{@io.newline}" : @io.newline
     end
 
+    # only keep the latest build added
     def add_build(build)
-      if build
-        @builds << build if build
-        @has_content ||= !@builds.empty?
-      end
-
-      # return self so you can chain add_build calls
-      self
+      @build = build
+      @has_content ||= true
     end
 
   end
