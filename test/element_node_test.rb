@@ -1,17 +1,17 @@
 require "assert"
 require 'undies/io'
-require "undies/element"
+require "undies/element_node"
 
 
-class Undies::Element
+class Undies::ElementNode
 
   class BasicTests < Assert::Context
-    desc 'an element'
+    desc 'an element node'
     before do
       # io test with :pp 1 so we can test newline insertion
       # io test with level 1 so we can test element start tag writing
       @io = Undies::IO.new(@out = "", :pp => 1, :level => 1)
-      @e = Undies::Element.new(@io, :div)
+      @e = Undies::ElementNode.new(@io, :div)
     end
     subject { @e }
 
@@ -40,36 +40,36 @@ class Undies::Element
     desc "the element class hash_attrs util"
 
     should "convert an empty hash to element attrs" do
-      assert_equal '', Undies::Element.hash_attrs({})
+      assert_equal '', Undies::ElementNode.hash_attrs({})
     end
 
     should "convert a basic hash to element attrs" do
-      attrs = Undies::Element.hash_attrs(:class => "test", :id => "test_1")
+      attrs = Undies::ElementNode.hash_attrs(:class => "test", :id => "test_1")
       assert_match /^\s{1}/, attrs
       assert_includes 'class="test"', attrs
       assert_includes 'id="test_1"', attrs
 
-      attrs = Undies::Element.hash_attrs('key' => "string")
+      attrs = Undies::ElementNode.hash_attrs('key' => "string")
       assert_includes 'key="string"', attrs
     end
 
     should "escape double-quotes in attr values" do
-      attrs = Undies::Element.hash_attrs('escaped' => '"this" is double-quoted')
+      attrs = Undies::ElementNode.hash_attrs('escaped' => '"this" is double-quoted')
       assert_includes 'escaped="&quot;this&quot; is double-quoted"', attrs
     end
 
     should "escape '<' in attr values" do
-      attrs = Undies::Element.hash_attrs('escaped' => 'not < escaped')
+      attrs = Undies::ElementNode.hash_attrs('escaped' => 'not < escaped')
       assert_includes 'escaped="not &lt; escaped"', attrs
     end
 
     should "escape '&' in attr values" do
-      attrs = Undies::Element.hash_attrs('escaped' => 'not & escaped')
+      attrs = Undies::ElementNode.hash_attrs('escaped' => 'not & escaped')
       assert_includes 'escaped="not &amp; escaped"', attrs
     end
 
     should "convert a nested hash to element attrs" do
-      attrs = Undies::Element.hash_attrs({
+      attrs = Undies::ElementNode.hash_attrs({
         :class => "testing", :id => "test_2",
         :nested => {:something => 'is_awesome'}
       })
@@ -158,12 +158,12 @@ class Undies::Element
     before do
       @raw1  = "some raw markup"
       @raw2  = "more raw markup"
-      @elem1 = Undies::Element.new(@io, :strong) {}
-      @elem2 = Undies::Element.new(@io, :br)
+      @elem1 = Undies::ElementNode.new(@io, :strong) {}
+      @elem2 = Undies::ElementNode.new(@io, :br)
 
       # make the subject element have a build since we are simulating build
       # markup operations
-      @e = Undies::Element.new(@io, :div) {}
+      @e = Undies::ElementNode.new(@io, :div) {}
     end
 
   end
@@ -189,7 +189,7 @@ class Undies::Element
 
     should "cache any raw markup given" do
       subject.__markup @raw1
-      assert_equal @raw1.to_s, subject.__cached
+      assert_equal "#{@io.line_indent}#{@raw1}#{@io.newline}", subject.__cached
     end
 
     should "write out any cached value when new markup is given" do
@@ -197,7 +197,7 @@ class Undies::Element
       assert_empty @out
 
       subject.__markup @raw2
-      assert_equal @raw1.to_s, @out
+      assert_equal "#{@io.line_indent}#{@raw1}#{@io.newline}", @out
     end
 
     should "write out any cached value when flushed" do
@@ -206,7 +206,7 @@ class Undies::Element
 
       subject.__markup @raw1
       subject.__flush
-      assert_equal @raw1.to_s, @out
+      assert_equal "#{@io.line_indent}#{@raw1}#{@io.newline}", @out
     end
 
   end
@@ -228,7 +228,7 @@ class Undies::Element
       subject.__markup @raw1
       subject.__markup @raw2
       assert_equal "<div>#{@raw1}", @out
-      assert_equal @raw2.to_s, subject.__cached
+      assert_equal "#{@io.line_indent}#{@raw2}#{@io.newline}", subject.__cached
     end
 
   end
@@ -377,28 +377,28 @@ class Undies::Element
   class SerializeTests < BasicTests
 
     should "serialize with no child elements" do
-      Undies::Element.new(@io, :br).to_s
+      Undies::ElementNode.new(@io, :br).to_s
       assert_equal "#{@io.line_indent}<br />#{@io.newline}", @out
     end
 
     should "serialize with attrs" do
-      Undies::Element.new(@io, :br, :class => 'big').to_s
+      Undies::ElementNode.new(@io, :br, :class => 'big').to_s
       assert_equal "#{@io.line_indent}<br class=\"big\" />#{@io.newline}", @out
     end
 
     should "serialize with attrs that have double-quotes" do
-      Undies::Element.new(@io, :br, :class => '"this" is double-quoted').to_s
+      Undies::ElementNode.new(@io, :br, :class => '"this" is double-quoted').to_s
       assert_equal "#{@io.line_indent}<br class=\"&quot;this&quot; is double-quoted\" />#{@io.newline}", @out
     end
 
     should "serialize with empty content" do
-      (Undies::Element.new(@io, :strong) {}).to_s
+      (Undies::ElementNode.new(@io, :strong) {}).to_s
       assert_equal "#{@io.line_indent}<strong></strong>#{@io.newline}", @out
     end
 
     should "serialize with attrs and content" do
       # content added using manual build
-      elem = Undies::Element.new(@io, :strong, {:class => 'big'})
+      elem = Undies::ElementNode.new(@io, :strong, {:class => 'big'})
       elem.__push
       elem.__markup "Loud Noises!"
       elem.__pop
@@ -408,7 +408,7 @@ class Undies::Element
 
     should "serialize element proxy id call" do
       # content added using build block
-      elem = Undies::Element.new(@io, :div).thing1!
+      elem = Undies::ElementNode.new(@io, :div).thing1!
       elem.send("add_build", Proc.new do
         elem.__markup "stuff"
       end)
@@ -420,7 +420,7 @@ class Undies::Element
     should "serialize element proxy class call" do
       # calling a private method as public to test private methods not
       # polluting public method_missing scope
-      elem = Undies::Element.new(@io, :div).end_tag
+      elem = Undies::ElementNode.new(@io, :div).end_tag
       elem.send("add_build", Proc.new do
         elem.__markup "stuff"
       end)
@@ -430,7 +430,7 @@ class Undies::Element
     end
 
     should "serialize content from separate content blocks" do
-      elem = Undies::Element.new(@io, :div)
+      elem = Undies::ElementNode.new(@io, :div)
       elem.send("add_build", Proc.new do
         elem.__markup "stuff"
       end)
@@ -451,18 +451,18 @@ class Undies::Element
     should "serialize nested elements with pp" do
       io = Undies::IO.new(@out = "", :pp => 1, :level => 0)
 
-      elem_1a = Undies::Element.new(io, :span)
+      elem_1a = Undies::ElementNode.new(io, :span)
       elem_1a.send("add_build", Proc.new do
         elem_1a.__markup "Content!"
       end)
 
-      elem_1b = Undies::Element.new(io, :span)
+      elem_1b = Undies::ElementNode.new(io, :span)
       elem_1b.send("add_build", Proc.new do
         elem_1b.__markup "More content"
       end)
 
       # test you can chain proxy calls and 'add_build' sends
-      elem_1c = Undies::Element.new(io, :div)
+      elem_1c = Undies::ElementNode.new(io, :div)
       elem_1c.
         proxy.
         send("add_build", Proc.new do
@@ -476,7 +476,7 @@ class Undies::Element
         end)
 
 
-      elem_root = Undies::Element.new(io, :div)
+      elem_root = Undies::ElementNode.new(io, :div)
       elem_root.send("add_build", Proc.new do
         elem_root.__element(elem_1a)
         elem_root.__markup "Raw"

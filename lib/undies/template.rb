@@ -1,7 +1,7 @@
 require 'undies/source_stack'
 require 'undies/api'
 require 'undies/root_node'
-require 'undies/element'
+require 'undies/element_node'
 
 module Undies
   class Template
@@ -125,7 +125,7 @@ module Undies
 
     # Add an element to the node stack
     def element(*args, &build)
-      @_undies_io.current.__element(Element.new(@_undies_io, *args, &build))
+      @_undies_io.current.__element(ElementNode.new(@_undies_io, *args, &build))
     end
     alias_method :tag, :element
 

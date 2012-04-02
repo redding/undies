@@ -1,5 +1,5 @@
 module Undies
-  class Element
+  class ElementNode
 
     def self.hash_attrs(attrs="", ns=nil)
       return attrs.to_s if !attrs.kind_of?(::Hash)
@@ -28,8 +28,9 @@ module Undies
       @start_tag_written = false
       @end_tag_line_indent = false
       @has_content = false
-      @io = io
       @cached = nil
+
+      @io = io
       @name  = name.to_s
       @attrs = attrs
       @builds = []
@@ -140,7 +141,7 @@ module Undies
     # overriding this because the base Node class defines a 'to_s' method that
     # needs to be honored
     def to_str(*args)
-      "Undies::Element:#{self.object_id} " +
+      "Undies::ElementNode:#{self.object_id} " +
       "@name=#{@name.inspect}, @attrs=#{@attrs.inspect}"
     end
     alias_method :inspect, :to_str
@@ -184,8 +185,10 @@ module Undies
     end
 
     def add_build(build)
-      @builds << build if build
-      @has_content ||= !@builds.empty?
+      if build
+        @builds << build if build
+        @has_content ||= !@builds.empty?
+      end
 
       # return self so you can chain add_build calls
       self

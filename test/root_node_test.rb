@@ -1,6 +1,6 @@
 require "assert"
 require 'undies/io'
-require 'undies/element'
+require 'undies/element_node'
 require "undies/root_node"
 
 class Undies::RootNode
@@ -39,20 +39,20 @@ class Undies::RootNode
     end
 
     should "cache any element given" do
-      subject.__element(elem = Undies::Element.new(@io, :br))
+      subject.__element(elem = Undies::ElementNode.new(@io, :br))
       assert_equal elem, subject.__cached
     end
 
     should "return the element when given" do
-      elem = Undies::Element.new(@io, :br)
+      elem = Undies::ElementNode.new(@io, :br)
       assert_equal elem, subject.__element(elem)
     end
 
     should "write out any cached value when a new element is given" do
-      subject.__element(elem = Undies::Element.new(@io, :br))
+      subject.__element(elem = Undies::ElementNode.new(@io, :br))
       assert_empty @out
 
-      subject.__element(elem = Undies::Element.new(@io, :strong))
+      subject.__element(elem = Undies::ElementNode.new(@io, :strong))
       assert_equal "<br />#{@io.newline}", @out
     end
 
