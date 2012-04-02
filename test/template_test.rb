@@ -15,7 +15,7 @@ class Undies::Template
     subject { @t }
 
     should have_class_methods    :flush, :escape_html
-    should have_instance_methods :to_s, :element, :tag
+    should have_instance_methods :element, :tag
     should have_instance_methods :_, :__
     should have_instance_methods :__yield, :__partial
     should have_instance_methods :__push, :__pop, :__flush
@@ -42,6 +42,25 @@ class Undies::Template
 
     should "push a root node onto its IO" do
       assert_kind_of Undies::RootNode, @io.current
+    end
+
+  end
+
+
+
+  class PlainTextTests < BasicTests
+    before do
+      @data = "stuff & <em>more stuff</em>"
+    end
+
+    should have_instance_methods :raw
+
+    should "add the text un-escaped using the 'raw' method" do
+      assert_equal @data, subject.raw(@data)
+    end
+
+    should "escape the text using the Template#escape_html method" do
+      assert_equal "stuff &amp; &lt;em&gt;more stuff&lt;&#x2F;em&gt;", Undies::Template.escape_html(@data)
     end
 
   end

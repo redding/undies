@@ -47,16 +47,14 @@ Will stream out
 
 ### Plain text
 
-Capture escaped (xml / html) text into a string:
+All text is escaped by default.
 
 ```ruby
-    # all normal text is HTML escaped by default, you can force it using the `h` method
-
-    h "this (%<>) will be escaped"
-    # => "this (&amp;&lt;&gt;) will be escaped"
+    Undies::Template.escape_html("ab&<>'\"/yz")
+    # => "ab&amp;&lt;&gt;&#x27;&quot;&#x2F;yz"
 ```
 
-Capture raw (un-escaped) text:
+Capture raw (un-escaped) text using the `raw` method
 
 ```ruby
     raw "this will <em>not</em> be escaped"

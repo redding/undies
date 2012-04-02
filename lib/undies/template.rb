@@ -1,10 +1,11 @@
 require 'undies/source_stack'
-
+require 'undies/api'
 require 'undies/root_node'
 require 'undies/element'
 
 module Undies
   class Template
+    include API
 
     # have as many methods on the class level as possible to keep from
     # polluting the public instance methods, the instance scope, and to
@@ -16,6 +17,7 @@ module Undies
 
     # Ripped from Rack v1.3.0 ======================================
     # => ripped b/c I don't want a dependency on Rack for just this
+        # TODO: can optimize this any?
     ESCAPE_HTML = {
       "&" => "&amp;",
       "<" => "&lt;",
