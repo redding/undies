@@ -222,12 +222,12 @@ class UndiesBenchRunner
       puts
       MarkabyResults.new(size_desc.first).run
       puts
-      HamlResults.new(size_desc.first).run
-      puts
-      ErbResults.new(size_desc.first).run
-      puts
-      ErubisResults.new(size_desc.first).run
-      puts
+      # HamlResults.new(size_desc.first).run
+      # puts
+      # ErbResults.new(size_desc.first).run
+      # puts
+      # ErubisResults.new(size_desc.first).run
+      # puts
     end
     puts
   end

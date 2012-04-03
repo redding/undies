@@ -113,22 +113,6 @@ module Undies
       @_undies_io.current.__attrs(attrs_hash)
     end
 
-    # Add a text node (data escaped) to the nodes of the current node
-    def _(data="")
-      self.__ self.class.escape_html(data.to_s)
-    end
-
-    # Add a text node with the data un-escaped
-    def __(data="")
-      @_undies_io.current.__markup(data)
-    end
-
-    # Add an element to the node stack
-    def element(*args, &build)
-      @_undies_io.current.__element(ElementNode.new(@_undies_io, *args, &build))
-    end
-    alias_method :tag, :element
-
     # TODO: mixin and elements API that explicitly defines the
     # element helper methods (see markaby/erector for reference)
     # hopefully yields performance improvement
@@ -136,7 +120,7 @@ module Undies
     ELEM_METH_REGEX = /^_(.+)$/
     def method_missing(meth, *args, &block)
       if meth.to_s =~ ELEM_METH_REGEX
-        element($1, *args, &block)
+        __element($1, *args, &block)
       else
         super
       end

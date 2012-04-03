@@ -36,13 +36,13 @@ module Undies
       __flush
     end
 
-    def __markup(raw)
+    def __text(raw)
       write_cached
       @cached = "#{@io.line_indent}#{raw.to_s}#{@io.newline}"
     end
 
     def __partial(partial)
-      __markup(partial)
+      __text(partial)
     end
 
     def __element(element)

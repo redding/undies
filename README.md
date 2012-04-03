@@ -176,14 +176,13 @@ Up to this point we've just looked at 'capture methods' - the generated output i
 ### Plain text
 
 Stream plain text
+*note*: this is only valid at the root of the view.  to add plain text to an element, pass it in as an argument.  it will get streamed out as the element is streamed.
 
 ```ruby
     _ "this will be escaped"
 
     _ raw("this will not be escaped")
-
-    __raw "this will not be escaped"
-```
+    ```
 
 ### XML
 

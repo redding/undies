@@ -17,12 +17,14 @@ module Undies
     end
 
     # TODO: can optimize this any?
+    ESCAPE_ATTRS = {
+      "&" => "&amp;",
+      "<" => "&lt;",
+      '"' => "&quot;"
+    }
+    ESCAPE_ATTRS_PATTERN = Regexp.union(*ESCAPE_ATTRS.keys)
     def self.escape_attr_value(value)
-      value.
-        to_s.
-        gsub('&', '&amp;').
-        gsub('<', '&lt;').
-        gsub('"', '&quot;')
+      value.to_s.gsub(ESCAPE_ATTRS_PATTERN){|c| ESCAPE_ATTRS[c] }
     end
 
     def initialize(io, name, *args, &build)

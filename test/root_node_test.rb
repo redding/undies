@@ -14,7 +14,7 @@ class Undies::RootNode
     subject { @n }
 
     should have_instance_methods :__attrs, :__flush, :__push, :__pop
-    should have_instance_methods :__markup, :__element, :__partial
+    should have_instance_methods :__text, :__element, :__partial
     should have_instance_methods :__cached, :__builds
 
     should "have no builds" do
@@ -25,16 +25,16 @@ class Undies::RootNode
       assert_nil subject.__cached
     end
 
-    should "cache any raw markup given" do
-      subject.__markup "some raw markup"
+    should "cache any raw text given" do
+      subject.__text "some raw markup"
       assert_equal "some raw markup#{@io.newline}", subject.__cached
     end
 
     should "write out any cached value when new markup is given" do
-      subject.__markup "some raw markup"
+      subject.__text "some raw markup"
       assert_empty @out
 
-      subject.__markup "more raw markup"
+      subject.__text "more raw markup"
       assert_equal "some raw markup\n", @out
     end
 
@@ -73,14 +73,14 @@ class Undies::RootNode
       subject.__flush
       assert_empty @out
 
-      subject.__markup "some raw markup"
+      subject.__text "some raw markup"
       subject.__flush
       assert_equal "some raw markup\n", @out
     end
 
     should "only flush if popped" do
       io_level = @io.level
-      subject.__markup "some raw markup"
+      subject.__text "some raw markup"
       subject.__pop
       assert_equal "some raw markup\n", @out
       assert_equal io_level, @io.level
@@ -88,7 +88,7 @@ class Undies::RootNode
 
     should "push the cached content to the IO handler" do
       io_level = @io.level
-      subject.__markup "some raw markup"
+      subject.__text "some raw markup"
       subject.__push
       assert_equal io_level+1, @io.level
       assert_equal "some raw markup#{@io.newline}", @io.current

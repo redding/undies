@@ -15,11 +15,15 @@ class Undies::Template
     subject { @t }
 
     should have_class_methods    :flush, :escape_html
-    should have_instance_methods :element, :tag
-    should have_instance_methods :_, :__
     should have_instance_methods :__yield, :__partial
     should have_instance_methods :__push, :__pop, :__flush
     should have_instance_methods :__attrs
+
+    # capture api
+    should have_instance_methods :raw
+
+    # streaming api
+    should have_instance_methods :_, :__element, :__tag
 
     should "complain if creating a template with no IO obj" do
       assert_raises ArgumentError do
@@ -67,7 +71,7 @@ class Undies::Template
 
 
 
-  class NodeTests < BasicTests
+  class PlainTextTests < BasicTests
     desc "with text data"
     before do
       @data = "stuff & <em>more stuff</em>"
@@ -80,21 +84,6 @@ class Undies::Template
       assert_equal subject.class.escape_html(@data), @out
     end
 
-    should "add the text un-escaped using the '__' method" do
-      subject.__ @data
-      subject.__flush
-
-      assert_equal @data, @out
-    end
-
-    should "add empty string nodes using '__' and '_' methods with no args" do
-      subject._
-      subject.__
-      subject.__flush
-
-      assert_equal "", @out
-    end
-
   end
 
 
@@ -103,14 +92,14 @@ class Undies::Template
     desc "using the 'element' helper"
 
     should "stream element output" do
-      subject.element(:br)
+      subject.__element(:br)
       subject.__flush
 
       assert_equal "<br />", @out
     end
 
     should "alias it with 'tag'" do
-      subject.tag(:br)
+      subject.__tag(:br)
       subject.__flush
 
       assert_equal "<br />", @out
@@ -141,7 +130,7 @@ class Undies::Template
   class BuildAttrsTests < BasicTests
 
     should "modify attributes during a build using the __attrs method" do
-      subject.element(:div)
+      subject.__element(:div)
       subject.__push
       subject.__attrs :class => 'test'
       subject.__pop
@@ -151,7 +140,7 @@ class Undies::Template
     end
 
     should "should merge __attrs values with existing attrs" do
-      subject.element(:div).test
+      subject.__element(:div).test
       subject.__push
       subject.__attrs :id => 'this'
       subject.__pop
@@ -161,7 +150,7 @@ class Undies::Template
     end
 
     should "should merge __attrs class values by appending to the existing" do
-      subject.element(:div).test
+      subject.__element(:div).test
       subject.__push
       subject.__attrs :class => 'this'
       subject.__pop
@@ -171,7 +160,7 @@ class Undies::Template
     end
 
     should "add __attrs even though content has been added" do
-      subject.element(:div, 'hi there', 'friend')
+      subject.__element(:div, 'hi there', 'friend')
       subject.__push
       subject.__attrs :class => 'this'
       subject.__pop
@@ -181,7 +170,7 @@ class Undies::Template
     end
 
     should "ignore __attrs values once child elements have been added" do
-      subject.element(:div)
+      subject.__element(:div)
       subject.__push
       subject.__attrs :class => 'this'
       subject._p 'hi there'
