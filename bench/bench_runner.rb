@@ -59,16 +59,16 @@ class MarkabyResults < UndiesBenchResults
     body do
       1.times do
         5.times do
-          span.awesome { "Yo" }
+          span.awesome "Yo"
         end
         5.times do
-          span.cool { "YoYo" }
+          span.cool "YoYo"
         end
         5.times do
           br
         end
         5.times do
-          div.last { "Hi" }
+          div.last "Hi"
         end
       end
     end
@@ -79,16 +79,16 @@ class MarkabyResults < UndiesBenchResults
     body do
       100.times do
         5.times do
-          span.awesome { "Yo" }
+          span.awesome "Yo"
         end
         5.times do
-          span.cool { "YoYo" }
+          span.cool "YoYo"
         end
         5.times do
           br
         end
         5.times do
-          div.last { "Hi" }
+          div.last "Hi"
         end
       end
     end
@@ -99,16 +99,18 @@ class MarkabyResults < UndiesBenchResults
     body do
       1000.times do
         5.times do
-          span.awesome { "Yo" }
+          span.awesome "Yo"
         end
         5.times do
-          span.cool { "YoYo" }
+          span.cool "YoYo"
         end
         5.times do
           br
         end
         5.times do
-          div.last { "Hi" }
+          div.last do
+            span "hi"
+          end
         end
       end
     end
@@ -133,16 +135,18 @@ class ErectorResults < UndiesBenchResults
       body do
         @num.times do
           5.times do
-            span(:class => 'awesome') { "Yo" }
+            span("Yo", :class => 'awesome')
           end
           5.times do
-            span(:class => 'cool') { "YoYo" }
+            span("YoYo", :class => 'cool')
           end
           5.times do
             br
           end
           5.times do
-            div(:class => 'last') { "Hi" }
+            div(:class => 'last') do
+              span "Hi"
+            end
           end
         end
       end
@@ -216,14 +220,14 @@ class UndiesBenchRunner
       puts
       ErectorResults.new(size_desc.first).run
       puts
-      # MarkabyResults.new(size_desc.first).run
-      # puts
-      # HamlResults.new(size_desc.first).run
-      # puts
-      # ErbResults.new(size_desc.first).run
-      # puts
-      # ErubisResults.new(size_desc.first).run
-      # puts
+      MarkabyResults.new(size_desc.first).run
+      puts
+      HamlResults.new(size_desc.first).run
+      puts
+      ErbResults.new(size_desc.first).run
+      puts
+      ErubisResults.new(size_desc.first).run
+      puts
     end
     puts
   end

@@ -25,16 +25,16 @@ module Undies
         gsub('"', '&quot;')
     end
 
-    def initialize(io, name, attrs={}, &build)
-      @start_tag_written = false
-      @end_tag_line_indent = false
-      @has_content = false
-      @cached = nil
-
+    def initialize(io, name, *args, &build)
       @io = io
       @name  = name.to_s
-      @attrs = attrs
-      add_build(build) if build
+      @attrs = {}
+      @content = []
+      @start_tag_written = false
+      @end_tag_line_indent = false
+      @cached = nil
+
+      proxy(name, args, build)
     end
 
     def __cached; @cached; end
@@ -76,22 +76,6 @@ module Undies
       self
     end
 
-    # TODO: this is deprecated and will be removed when capturing is in place
-    def __markup(raw)
-      @has_content ||= true
-      if !@start_tag_written
-        # no newline
-        # -1 level offset b/c we are operating on the element build one deep
-        write_start_tag('', -1)
-        # write_cached
-        @cached = raw.to_s
-      else
-        write_cached
-        @cached = "#{@io.line_indent}#{raw}#{@io.newline}"
-        @end_tag_line_indent ||= true
-      end
-    end
-
     def __element(element)
       @has_content ||= true
       if !@start_tag_written
@@ -114,11 +98,11 @@ module Undies
 
     def method_missing(meth, *args, &block)
       if meth.to_s =~ ID_METH_REGEX
-        proxy($1, args.first || {}, block) do |value|
+        proxy($1, args, block) do |value|
           @attrs.merge!(:id => value)
         end
       elsif meth.to_s =~ CLASS_METH_REGEX
-        proxy($1, args.first || {}, block) do |value|
+        proxy($1, args, block) do |value|
           @attrs[:class] = [@attrs[:class], value].compact.join(' ')
         end
       else
@@ -153,10 +137,19 @@ module Undies
     # private methods are needed so as not to pollute the
     # method_missing public scope
 
-    def proxy(value, attrs, build)
+    def proxy(value, args, build)
       yield value if block_given?
-      @attrs.merge!(attrs)
-      add_build(build) if build
+
+      @attrs.merge!(args.last.kind_of?(Hash) ? args.pop : {})
+      @content.push *args
+
+      @inline_content = !@content.empty?
+      @has_content = @inline_content
+      if build && !@inline_content
+        @build = build
+        @has_content ||= true
+      end
+
       self
     end
 
@@ -172,6 +165,7 @@ module Undies
     def write_end_tag(level_offset=0)
       if !@start_tag_written
         write_start_tag('', level_offset)
+        @io << @content.join if @inline_content
       elsif @end_tag_line_indent
         @io << @io.line_indent(level_offset)
       end
@@ -184,12 +178,6 @@ module Undies
 
     def end_tag
       @has_content ? "</#{@name}>#{@io.newline}" : @io.newline
-    end
-
-    # only keep the latest build added
-    def add_build(build)
-      @build = build
-      @has_content ||= true
     end
 
   end

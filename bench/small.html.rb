@@ -3,16 +3,16 @@ _html {
   _body {
     1.times do
       5.times do
-        _span.awesome { _ "Yo" }
+        _span.awesome "Yo"
       end
       5.times do
-        _span.cool! { __ "YoYo" }
+        _span.cool! "YoYo"
       end
       5.times do
         _br
       end
       5.times do
-        _div.last { _ "Hi" }
+        _div.last _ "Hi"
       end
     end
   }

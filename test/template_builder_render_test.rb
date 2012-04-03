@@ -15,9 +15,7 @@ class Undies::Template
     should "maintain scope throughout the build blocks" do
       templ = Undies::Template.new(@io)
       templ._div {
-        templ._div {
-          templ.__ self.object_id
-        }
+        templ._div self.object_id
       }
       templ.__flush
 

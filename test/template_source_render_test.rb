@@ -17,9 +17,7 @@ class Undies::Template
     should "maintain the template's scope throughout the build blocks" do
       templ = Undies::Template.new(Undies::Source.new do
         _div {
-          _div {
-            __ self.object_id
-          }
+          _div self.object_id
         }
       end, {}, @io)
       assert_equal "<div><div>#{templ.object_id}</div></div>", @out
@@ -44,7 +42,7 @@ class Undies::Template
       @layout_file = File.expand_path "test/templates/layout.html.rb"
 
       @content_proc = Proc.new do
-        _div { _ "Hi" }
+        _div "Hi"
       end
       @content_file = File.expand_path "test/templates/content.html.rb"
 
@@ -85,11 +83,11 @@ class Undies::Template
       @io = Undies::IO.new(@out = "", :pp => 2)
       @source = Undies::Source.new(Proc.new do
         partial_source = Undies::Source.new(Proc.new do
-          _p { _ thing }
+          _p thing
         end)
 
         _div {
-          _span { _ thing }
+          _span thing
           __partial partial_source, {:thing => 1234}
 
           _div {

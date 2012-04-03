@@ -170,13 +170,10 @@ class Undies::Template
       assert_equal "<div class=\"this\"></div>", @out
     end
 
-    should "ignore __attrs values once content has been added" do
-      subject.element(:div)
+    should "add __attrs even though content has been added" do
+      subject.element(:div, 'hi there', 'friend')
       subject.__push
       subject.__attrs :class => 'this'
-      subject._ "hi there"
-      subject._ "friend"
-      subject.__attrs :title => 'missedtheboat'
       subject.__pop
       subject.__flush
 
@@ -187,11 +184,8 @@ class Undies::Template
       subject.element(:div)
       subject.__push
       subject.__attrs :class => 'this'
-      subject._p
-      subject.__push
-      subject._ "hi there"
-      subject.__pop
-      subject._p { subject._ "friend" }
+      subject._p 'hi there'
+      subject._p 'friend'
       subject.__attrs :title => 'missedtheboat'
       subject.__pop
       subject.__flush
@@ -234,8 +228,8 @@ class Undies::Template
     end
 
     should "not stream full content until Undies#flush called on the template" do
-      @template._div { @template._ "Added post-init" }
-      @expected_output = "<div>Added post-init</div>"
+      @template._div "Added"
+      @expected_output = "<div>Added</div>"
 
       assert_equal "", @output
       Undies::Template.flush(@template)
@@ -245,13 +239,13 @@ class Undies::Template
     should "should write to the stream as its being constructed" do
       @template._div.good.thing!(:type => "something")
       @template.__push
-      @template._p { @template._ 'hi' }
+      @template._p 'hi'
       @template.__flush
 
       @expected_output = "<div class=\"good\" id=\"thing\" type=\"something\"><p>hi</p>"
       assert_equal @expected_output, @output
 
-      @template._p { @template._ "action" }
+      @template._p "action"
       @template.__pop
       @template.__flush
 
@@ -274,7 +268,7 @@ class Undies::Template
       templ._head {}
       templ._body
       templ.__push
-      templ._div { templ._ "Hi" }
+      templ._div "Hi"
       templ.__pop
       templ.__pop
       templ.__flush
