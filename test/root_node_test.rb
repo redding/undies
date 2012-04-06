@@ -1,6 +1,7 @@
 require "assert"
 require 'undies/io'
 require 'undies/element_node'
+require 'undies/element'
 require "undies/root_node"
 
 class Undies::RootNode
@@ -9,87 +10,95 @@ class Undies::RootNode
     desc 'a root node'
     before do
       @io = Undies::IO.new(@out = "", :pp => 1)
-      @n = Undies::RootNode.new(@io)
+      @rn = Undies::RootNode.new(@io)
+
+      @e  = Undies::Element::Closed.new(:br)
+      @en = Undies::ElementNode.new(@io, @e)
     end
-    subject { @n }
+    subject { @rn }
 
-    should have_instance_methods :__attrs, :__flush, :__push, :__pop
-    should have_instance_methods :__text, :__element, :__partial
-    should have_instance_methods :__cached, :__builds
+    should have_readers :io, :cached
+    should have_instance_methods :attrs, :text, :element_node
+    should have_instance_methods :partial, :flush, :push, :pop
 
-    should "have no builds" do
-      assert_empty subject.__builds
+    should "know its IO" do
+      assert_equal @io, subject.io
     end
 
     should "have nothing cached by default" do
-      assert_nil subject.__cached
+      assert_nil subject.cached
+    end
+
+    should "complain if trying to specify attrs" do
+      assert_raises Undies::RootAPIError do
+        subject.attrs({:blah => 'whatever'})
+      end
     end
 
     should "cache any raw text given" do
-      subject.__text "some raw markup"
-      assert_equal "some raw markup#{@io.newline}", subject.__cached
+      subject.text "some raw markup"
+      assert_equal "some raw markup#{@io.newline}", subject.cached
     end
 
     should "write out any cached value when new markup is given" do
-      subject.__text "some raw markup"
+      subject.text "some raw markup"
       assert_empty @out
 
-      subject.__text "more raw markup"
+      subject.text "more raw markup"
       assert_equal "some raw markup\n", @out
     end
 
-    should "cache any element given" do
-      subject.__element(elem = Undies::ElementNode.new(@io, :br))
-      assert_equal elem, subject.__cached
+    should "cache any element node given" do
+      subject.element_node(@en)
+      assert_equal @en, subject.cached
     end
 
     should "return the element when given" do
-      elem = Undies::ElementNode.new(@io, :br)
-      assert_equal elem, subject.__element(elem)
+      assert_equal @en, subject.element_node(@en)
     end
 
     should "write out any cached value when a new element is given" do
-      subject.__element(elem = Undies::ElementNode.new(@io, :br))
+      subject.element_node(@en)
       assert_empty @out
 
-      subject.__element(elem = Undies::ElementNode.new(@io, :strong))
+      subject.element_node(@en)
       assert_equal "<br />#{@io.newline}", @out
     end
 
     should "cache any partial markup given" do
-      subject.__partial "some partial markup"
-      assert_equal "some partial markup#{@io.newline}", subject.__cached
+      subject.partial "some partial markup"
+      assert_equal "some partial markup#{@io.newline}", subject.cached
     end
 
     should "write out any cached value when new partial markup is given" do
-      subject.__partial "some partial markup"
+      subject.partial "some partial markup"
       assert_empty @out
 
-      subject.__partial "more partial markup"
+      subject.partial "more partial markup"
       assert_equal "some partial markup\n", @out
     end
 
     should "write out any cached value when flushed" do
-      subject.__flush
+      subject.flush
       assert_empty @out
 
-      subject.__text "some raw markup"
-      subject.__flush
+      subject.text "some raw markup"
+      subject.flush
       assert_equal "some raw markup\n", @out
     end
 
     should "only flush if popped" do
       io_level = @io.level
-      subject.__text "some raw markup"
-      subject.__pop
+      subject.text "some raw markup"
+      subject.pop
       assert_equal "some raw markup\n", @out
       assert_equal io_level, @io.level
     end
 
     should "push the cached content to the IO handler" do
       io_level = @io.level
-      subject.__text "some raw markup"
-      subject.__push
+      subject.text "some raw markup"
+      subject.push
       assert_equal io_level+1, @io.level
       assert_equal "some raw markup#{@io.newline}", @io.current
     end

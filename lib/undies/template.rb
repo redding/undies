@@ -1,7 +1,6 @@
 require 'undies/source_stack'
-require 'undies/api'
 require 'undies/root_node'
-require 'undies/element_node'
+require 'undies/api'
 
 module Undies
   class Template
@@ -17,7 +16,6 @@ module Undies
 
     # Ripped from Rack v1.3.0 ======================================
     # => ripped b/c I don't want a dependency on Rack for just this
-        # TODO: can optimize this any?
     ESCAPE_HTML = {
       "&" => "&amp;",
       "<" => "&lt;",
@@ -28,7 +26,6 @@ module Undies
     }
     ESCAPE_HTML_PATTERN = Regexp.union(*ESCAPE_HTML.keys)
     # Escape ampersands, brackets and quotes to their HTML/XML entities.
-    # TODO: can optimize this any?
     def self.escape_html(string)
       string.to_s.gsub(ESCAPE_HTML_PATTERN){|c| ESCAPE_HTML[c] }
     end
@@ -68,19 +65,19 @@ module Undies
     # cached element (if any)
     # - changes the context of template method calls to operate on that element
     def __push
-      @_undies_io.current.__push
+      @_undies_io.current.push
     end
 
     # call this method to manually pop the current scope to the previous scope
     # - changes the context of template method calls to operate on the parent
     #   element or root node
     def __pop
-      @_undies_io.current.__pop
+      @_undies_io.current.pop
     end
 
     # call this to manually flush a template
     def __flush
-      @_undies_io.current.__flush
+      @_undies_io.current.flush
     end
 
     # call this to render template source
@@ -101,7 +98,7 @@ module Undies
       if source.kind_of?(Source)
         Undies::Template.new(source, data, @_undies_io)
       else
-        @_undies_io.current.__partial(source.to_s)
+        @_undies_io.current.partial(source.to_s)
       end
     end
 
@@ -110,7 +107,7 @@ module Undies
     # be ignored b/c the elements start_tag has already been flushed
     # to the output
     def __attrs(attrs_hash={})
-      @_undies_io.current.__attrs(attrs_hash)
+      @_undies_io.current.attrs(attrs_hash)
     end
 
     # TODO: mixin and elements API that explicitly defines the

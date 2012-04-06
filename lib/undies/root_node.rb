@@ -1,5 +1,7 @@
 module Undies
 
+  class RootAPIError < RuntimeError; end
+
   class RootNode
 
     # Used internally to implement the markup tree nodes.  Each node caches and
@@ -8,46 +10,46 @@ module Undies
     # is defined, or until the node is flushed.  This keeps nodes from bloating
     # memory on large documents and allows for output streaming.
 
-    # Node is specifically used to handle root document markup.
+    # RootNode is specifically used to handle root document markup.
+
+    attr_reader :io, :cached
 
     def initialize(io)
       @io = io
       @cached = nil
-      @builds = []
     end
 
-    def __cached; @cached; end
-    def __builds; @builds; end
-
-    # just silently do nothing - shouldn't be called on a plain Node
-    def __attrs(*args, &block); end
-
-    def __flush
-      write_cached
-      @cached = nil
+    def attrs(*args, &block)
+      raise RootAPIError, "can't call '__attrs' at the root node level"
     end
 
-    def __push
-      @io.push(@cached)
-      @cached = nil
-    end
-
-    def __pop
-      __flush
-    end
-
-    def __text(raw)
+    def text(raw)
       write_cached
       @cached = "#{@io.line_indent}#{raw.to_s}#{@io.newline}"
     end
 
-    def __partial(partial)
-      __text(partial)
+    def element_node(element_node)
+      write_cached
+      @cached = element_node
     end
 
-    def __element(element)
+    def partial(partial)
+      text(partial)
+    end
+
+    def flush
       write_cached
-      @cached = element
+      @cached = nil
+      self
+    end
+
+    def push
+      @io.push(@cached)
+      @cached = nil
+    end
+
+    def pop
+      flush
     end
 
     private

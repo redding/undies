@@ -1,185 +1,115 @@
 module Undies
+
+  class ElementAPIError < RuntimeError; end
+
   class ElementNode
 
-    # TODO: optimize this
-    def self.hash_attrs(attrs="", ns=nil)
-      return attrs.to_s if !attrs.kind_of?(::Hash)
+    # Used internally to implement the markup tree nodes.  Each node caches and
+    # processes nested markup and elements.  At each node level in the markup
+    # tree, nodes/markup are cached until the next sibling node or raw markup
+    # is defined, or until the node is flushed.  This keeps nodes from bloating
+    # memory on large documents and allows for output streaming.
 
-      attrs.collect do |k_v|
-        [ns ? "#{ns}_#{k_v.first}" : k_v.first.to_s, k_v.last]
-      end.sort.inject('') do |html, k_v|
-        html << if k_v.last.kind_of?(::Hash)
-          hash_attrs(k_v.last, k_v.first)
-        else
-          " #{k_v.first}=\"#{escape_attr_value(k_v.last)}\""
-        end
-      end
-    end
+    # ElementNode is specifically used to handle nested element markup.
 
-    # TODO: can optimize this any?
-    ESCAPE_ATTRS = {
-      "&" => "&amp;",
-      "<" => "&lt;",
-      '"' => "&quot;"
-    }
-    ESCAPE_ATTRS_PATTERN = Regexp.union(*ESCAPE_ATTRS.keys)
-    def self.escape_attr_value(value)
-      value.to_s.gsub(ESCAPE_ATTRS_PATTERN){|c| ESCAPE_ATTRS[c] }
-    end
+    attr_reader :io, :element, :cached
 
-    def initialize(io, name, *args, &build)
+    def initialize(io, element)
       @io = io
-      @name  = name.to_s
-      @attrs = {}
-      @content = []
+      @cached = nil
+      @element = element
+
       @start_tag_written = false
-      @end_tag_line_indent = false
-      @cached = nil
-
-      proxy(name, args, build)
     end
 
-    def __cached; @cached; end
-    def __build; @build; end
-    def __attrs(attrs_hash=nil)
-      return @attrs if attrs_hash.nil?
-      @attrs.merge!(attrs_hash)
+    def attrs(*args, &block)
+      @element.__attrs(*args, &block)
     end
 
-    def to_s
-      @io.push(self)
-
-      @build.call if @build
-      __flush
-      @io.pop
-      write_end_tag
-
-      # needed so the `write_cached` calls on Element and Node won't add
-      # anything else to the IO
-      return ""
+    def text(raw)
+      raise ElementAPIError, "can't insert text markup in an element build block - pass in as a content argument instead"
     end
 
-    def __push
-      @has_content ||= true
-      @io.push(@cached)
-      @cached = nil
-    end
-
-    def __pop
-      @has_content ||= true
-      __flush
-      @io.pop
-      write_end_tag
-    end
-
-    def __flush
-      write_cached
-      @cached = nil
-      self
-    end
-
-    def __element(element)
-      @has_content ||= true
+    def element_node(element_node)
       if !@start_tag_written
         # with newline
         # -1 level offset b/c we are operating on the element build one deep
         write_start_tag(@io.newline, -1)
       end
-      @end_tag_line_indent ||= true
       write_cached
-      @cached = element
+      @cached = element_node
     end
 
-    def __partial(partial)
-      __element(partial)
+    def partial(partial)
+      element_node(partial)
     end
 
-    # CSS proxy methods ============================================
-    ID_METH_REGEX = /^([^_].+)!$/
-    CLASS_METH_REGEX = /^([^_].+)$/
-
-    def method_missing(meth, *args, &block)
-      if meth.to_s =~ ID_METH_REGEX
-        proxy($1, args, block) do |value|
-          @attrs.merge!(:id => value)
-        end
-      elsif meth.to_s =~ CLASS_METH_REGEX
-        proxy($1, args, block) do |value|
-          @attrs[:class] = [@attrs[:class], value].compact.join(' ')
-        end
-      else
-        super
-      end
+    def flush
+      write_cached
+      @cached = nil
+      self
     end
 
-    def respond_to?(*args)
-      if args.first.to_s =~ ID_METH_REGEX || args.first.to_s =~ CLASS_METH_REGEX
-        true
-      else
-        super
-      end
+    def push
+      @io.push(@cached)
+      @cached = nil
     end
-    # ==============================================================
+
+    def pop
+      flush
+      @io.pop
+      write_end_tag
+    end
+
+    def to_s
+      @io.push(self)
+
+      @element.__build
+      flush
+
+      @io.pop
+      write_end_tag
+
+      # needed so the `write_cached` calls on ElementNode and RootNode won't add
+      # anything else to the IO
+      return ""
+    end
 
     def ==(other)
-      other.instance_variable_get("@name")  == @name  &&
-      other.instance_variable_get("@attrs") == @attrs
+      other.instance_variable_get("@io") == @io &&
+      other.instance_variable_get("@element") == @element
     end
 
     # overriding this because the base Node class defines a 'to_s' method that
     # needs to be honored
     def to_str(*args)
-      "Undies::ElementNode:#{self.object_id} " +
-      "@name=#{@name.inspect}, @attrs=#{@attrs.inspect}"
+      "Undies::ElementNode:#{self.object_id} @element=#{@element.inspect}"
     end
     alias_method :inspect, :to_str
 
     private
-
-    # private methods are needed so as not to pollute the
-    # method_missing public scope
-
-    def proxy(value, args, build)
-      yield value if block_given?
-
-      @attrs.merge!(args.last.kind_of?(Hash) ? args.pop : {})
-      @content.push *args
-
-      @inline_content = !@content.empty?
-      @has_content = @inline_content
-      if build && !@inline_content
-        @build = build
-        @has_content ||= true
-      end
-
-      self
-    end
 
     def write_cached
       @io << @cached.to_s
     end
 
     def write_start_tag(newline='', level_offset=0)
-      @io << "#{@io.line_indent(level_offset)}#{start_tag}#{newline}"
+      @io << "#{@io.line_indent(level_offset)}#{@element.__start_tag}#{newline}"
       @start_tag_written = true
+    end
+
+    def write_content
+      @io << @element.__content
     end
 
     def write_end_tag(level_offset=0)
       if !@start_tag_written
         write_start_tag('', level_offset)
-        @io << @content.join if @inline_content
-      elsif @end_tag_line_indent
-        @io << @io.line_indent(level_offset)
+        write_content
+        @io << "#{@element.__end_tag}#{@io.newline}"
+      else
+        @io << "#{@io.line_indent(level_offset)}#{@element.__end_tag}#{@io.newline}"
       end
-      @io << end_tag
-    end
-
-    def start_tag
-      "<#{@name}#{self.class.hash_attrs(@attrs)}#{@has_content ? '>' : ' />'}"
-    end
-
-    def end_tag
-      @has_content ? "</#{@name}>#{@io.newline}" : @io.newline
     end
 
   end

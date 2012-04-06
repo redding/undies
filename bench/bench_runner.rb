@@ -220,8 +220,8 @@ class UndiesBenchRunner
       puts
       ErectorResults.new(size_desc.first).run
       puts
-      MarkabyResults.new(size_desc.first).run
-      puts
+      # MarkabyResults.new(size_desc.first).run
+      # puts
       # HamlResults.new(size_desc.first).run
       # puts
       # ErbResults.new(size_desc.first).run

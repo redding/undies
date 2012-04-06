@@ -24,6 +24,8 @@ class Undies::Template
 
     # streaming api
     should have_instance_methods :_, :__element, :__tag
+    should have_instance_methods :__open_element, :__open_tag
+    should have_instance_methods :__closed_element, :__closed_tag
 
     should "complain if creating a template with no IO obj" do
       assert_raises ArgumentError do
@@ -89,20 +91,20 @@ class Undies::Template
 
 
   class ElementTests < BasicTests
-    desc "using the 'element' helper"
+    desc "using the api methods"
 
-    should "stream element output" do
-      subject.__element(:br)
+    should "stream `element` output" do
+      subject.__closed_element(:br)
       subject.__flush
 
       assert_equal "<br />", @out
     end
 
-    should "alias it with 'tag'" do
-      subject.__tag(:br)
+    should "alias it with `tag` versions" do
+      subject.__open_tag(:span)
       subject.__flush
 
-      assert_equal "<br />", @out
+      assert_equal "<span></span>", @out
     end
 
     should "respond to underscore-prefix methods" do
