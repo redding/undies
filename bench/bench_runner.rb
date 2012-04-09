@@ -57,18 +57,14 @@ class MarkabyResults < UndiesBenchResults
   BUILDS['small'] = Proc.new do
     head {}
     body do
-      1.times do
-        5.times do
-          span.awesome "Yo"
-        end
-        5.times do
-          span.cool "YoYo"
-        end
-        5.times do
-          br
-        end
-        5.times do
-          div.last "Hi"
+      100.times do |n|
+        span "Yo", :id => "cool-#{n}!"
+        p "Yo", :class => "awesome"
+
+        br
+
+        div :class => 'last' do
+          span "Hi " + em('there') + '!!'
         end
       end
     end
@@ -77,18 +73,14 @@ class MarkabyResults < UndiesBenchResults
   BUILDS['large'] = Proc.new do
     head {}
     body do
-      100.times do
-        5.times do
-          span.awesome "Yo"
-        end
-        5.times do
-          span.cool "YoYo"
-        end
-        5.times do
-          br
-        end
-        5.times do
-          div.last "Hi"
+      1000.times do |n|
+        span "Yo", :id => "cool-#{n}!"
+        p "Yo", :class => "awesome"
+
+        br
+
+        div :class => 'last' do
+          span "Hi " + em('there') + '!!'
         end
       end
     end
@@ -97,20 +89,14 @@ class MarkabyResults < UndiesBenchResults
   BUILDS['verylarge'] = Proc.new do
     head {}
     body do
-      1000.times do
-        5.times do
-          span.awesome "Yo"
-        end
-        5.times do
-          span.cool "YoYo"
-        end
-        5.times do
-          br
-        end
-        5.times do
-          div.last do
-            span "hi"
-          end
+      10000.times do |n|
+        span "Yo", :id => "cool-#{n}!"
+        p "Yo", :class => "awesome"
+
+        br
+
+        div :class => 'last' do
+          span "Hi " + em('there') + '!!'
         end
       end
     end
@@ -133,19 +119,17 @@ class ErectorResults < UndiesBenchResults
     def content
       head {}
       body do
-        @num.times do
-          5.times do
-            span("Yo", :class => 'awesome')
-          end
-          5.times do
-            span("YoYo", :class => 'cool')
-          end
-          5.times do
-            br
-          end
-          5.times do
-            div(:class => 'last') do
-              span "Hi"
+        @num.times do |n|
+          span "Yo", :id => "cool-#{n}!"
+          p "Yo", :class => "awesome"
+
+          br
+
+          div :class => 'last' do
+            span do
+              text "Hi "
+              em "there"
+              text "!!"
             end
           end
         end
@@ -155,9 +139,9 @@ class ErectorResults < UndiesBenchResults
 
   BUILDS = {}
 
-  BUILDS['small'] = Build.new(:num => 1)
-  BUILDS['large'] = Build.new(:num => 100)
-  BUILDS['verylarge'] = Build.new(:num => 1000)
+  BUILDS['small'] = Build.new(:num => 100)
+  BUILDS['large'] = Build.new(:num => 1000)
+  BUILDS['verylarge'] = Build.new(:num => 10000)
 
   def initialize(size='large')
     @out = ""
@@ -206,9 +190,9 @@ end
 class UndiesBenchRunner
 
   SIZES = [
-    # [:small    , "~20 nodes"],
-    # [:large    , "~2000 nodes"],
-    [:verylarge, "~20000 nodes"]
+    # [:small    , "~500 nodes"],
+    # [:large    , "~5000 nodes"],
+    [:verylarge, "~50000 nodes"]
   ]
 
 
@@ -220,8 +204,8 @@ class UndiesBenchRunner
       puts
       ErectorResults.new(size_desc.first).run
       puts
-      # MarkabyResults.new(size_desc.first).run
-      # puts
+      MarkabyResults.new(size_desc.first).run
+      puts
       # HamlResults.new(size_desc.first).run
       # puts
       # ErbResults.new(size_desc.first).run
