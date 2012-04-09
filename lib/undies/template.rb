@@ -110,26 +110,5 @@ module Undies
       @_undies_io.current.attrs(attrs_hash)
     end
 
-    # TODO: mixin and elements API that explicitly defines the
-    # element helper methods (see markaby/erector for reference)
-    # hopefully yields performance improvement
-    # Element proxy methods ('_<element>'') ========================
-    ELEM_METH_REGEX = /^_(.+)$/
-    def method_missing(meth, *args, &block)
-      if meth.to_s =~ ELEM_METH_REGEX
-        __element($1, *args, &block)
-      else
-        super
-      end
-    end
-    def respond_to?(*args)
-      if args.first.to_s =~ ELEM_METH_REGEX
-        true
-      else
-        super
-      end
-    end
-    # ==============================================================
-
   end
 end

@@ -39,12 +39,53 @@ module Undies
     end
     alias_method :__closed_tag, :__closed_element
 
-    def _html(*args, &build); __open_element(:html, *args, &build); end
-    def _head(*args, &build); __open_element(:head, *args, &build); end
-    def _body(*args, &build); __open_element(:body, *args, &build); end
-    def _span(*args, &build); __open_element(:span, *args, &build); end
-    def _div(*args, &build);  __open_element(:div,  *args, &build); end
-    def _br(*args, &build);   __closed_element(:br,   *args, &build); end
+    SELF_CLOSING_TAGS = [
+      :area,
+      :base, :br,
+      :col,
+      :embed,
+      :frame,
+      :hr,
+      :img, :input,
+      :link,
+      :meta,
+      :param
+    ]
+
+    SELF_CLOSING_TAGS.each do |tag|
+      define_method("_#{tag}") do |*args, &build|
+         __closed_element(tag, *args, &build)
+      end
+    end
+
+    OPEN_TAGS = [
+      :a, :abbr, :acronym, :address, :article, :aside, :audio,
+      :b, :bdo, :big, :blockquote, :body, :button,
+      :canvas, :caption, :center, :cite, :code, :colgroup, :command,
+      :datalist, :dd, :del, :details, :dfn, :dialog, :div, :dl, :dt,
+      :em,
+      :fieldset, :figure, :footer, :form, :frameset,
+      :h1, :h2, :h3, :h4, :h5, :h6, :head, :header, :hgroup, :html,
+      :i, :iframe, :ins,
+      :keygen, :kbd,
+      :label, :legend, :li,
+      :map, :mark, :meter,
+      :nav, :noframes, :noscript,
+      :object, :ol, :optgroup, :option,
+      :p, :pre, :progress,
+      :q,
+      :ruby, :rt, :rp,
+      :s, :samp, :script, :section, :select, :small, :source, :span, :strike, :strong, :style, :sub, :sup,
+      :table, :tbody, :td, :textarea, :tfoot, :th, :thead, :time, :title, :tr, :tt,
+      :u, :ul,
+      :v, :video
+    ]
+
+    OPEN_TAGS.each do |tag|
+      define_method("_#{tag}") do |*args, &build|
+         __open_element(tag, *args, &build)
+      end
+    end
 
   end
 end
