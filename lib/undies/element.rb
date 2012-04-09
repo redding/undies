@@ -84,6 +84,27 @@ module Undies
 
 
 
+  class Raw < ::String
+
+    # A Raw string is one that is impervious to String#gsub and returns itself
+    # when `to_s` is called.
+
+    def gsub(*args, &block)
+      self
+    end
+
+    def gsub!(*args, &block)
+      nil
+    end
+
+    def to_s
+      self
+    end
+
+  end
+
+
+
   class Element::Open
     include CSSProxy
     include MergeAttrs
@@ -102,7 +123,7 @@ module Undies
     end
 
     def __content
-      @content.join
+      @content.collect{ |c| Template.escape_html(c) }.join
     end
 
     def __build
@@ -192,27 +213,6 @@ module Undies
 
     def proxy(args, build=nil)
       @attrs.merge!(args.last || {})
-      self
-    end
-
-  end
-
-
-
-  class Raw < ::String
-
-    # A Raw string is one that is impervious to String#gsub and returns itself
-    # when `to_s` is called.
-
-    def gsub(*args, &block)
-      self
-    end
-
-    def gsub!(*args, &block)
-      nil
-    end
-
-    def to_s
       self
     end
 

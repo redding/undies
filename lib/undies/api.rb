@@ -5,38 +5,7 @@ module Undies
 
   module API
 
-    # capture methods
-
-    def raw(string)
-      Raw.new(string)
-    end
-
-    # streaming methods
-
-    # Add a text node (data escaped) to the nodes of the current node
-    def _(data="")
-      @_undies_io.current.text(self.class.escape_html(data.to_s))
-    end
-
-    # stream an open element
-    def __open_element(name, *args, &build)
-      @_undies_io.
-        current.
-        element_node(ElementNode.new(@_undies_io, Element::Open.new(name, *args, &build))).
-        element
-    end
-    alias_method :__open_tag, :__open_element
-    alias_method :__element,  :__open_element
-    alias_method :__tag,      :__open_element
-
-    # stream an open element
-    def __closed_element(name, *args, &build)
-      @_undies_io.
-        current.
-        element_node(ElementNode.new(@_undies_io, Element::Closed.new(name, *args, &build))).
-        element
-    end
-    alias_method :__closed_tag, :__closed_element
+    # HTML tag helpers
 
     SELF_CLOSING_TAGS = [
       :area,
@@ -50,12 +19,6 @@ module Undies
       :meta,
       :param
     ]
-
-    SELF_CLOSING_TAGS.each do |tag|
-      define_method("_#{tag}") do |*args, &build|
-         __closed_element(tag, *args, &build)
-      end
-    end
 
     OPEN_TAGS = [
       :a, :abbr, :acronym, :address, :article, :aside, :audio,
@@ -80,9 +43,66 @@ module Undies
       :v, :video
     ]
 
+    # capture methods
+
+    def raw(string)
+      Raw.new(string)
+    end
+
+    def open_element(name, *args)
+      Raw.new(Element::Open.new(name, *args).to_s)
+    end
+    alias_method :open_tag, :open_element
+    alias_method :element,  :open_element
+    alias_method :tag,      :open_element
+
+    def closed_element(name, *args)
+      Raw.new(Element::Closed.new(name, *args).to_s)
+    end
+    alias_method :closed_tag, :closed_element
+
+    SELF_CLOSING_TAGS.each do |tag|
+      define_method(tag){ |*args| closed_element(tag, *args, &build) }
+    end
+
+    OPEN_TAGS.each do |tag|
+      define_method(tag){ |*args| open_element(tag, *args) }
+    end
+
+    # streaming methods
+
+    # Add a text node (data escaped) to the nodes of the current node
+    def _(data="")
+      @_undies_io.current.text(self.class.escape_html(data.to_s))
+    end
+
+    def __open_element(name, *args, &build)
+      @_undies_io.
+        current.
+        element_node(ElementNode.new(@_undies_io, Element::Open.new(name, *args, &build))).
+        element
+    end
+    alias_method :__open_tag, :__open_element
+    alias_method :__element,  :__open_element
+    alias_method :__tag,      :__open_element
+
+    def __closed_element(name, *args, &build)
+      @_undies_io.
+        current.
+        element_node(ElementNode.new(@_undies_io, Element::Closed.new(name, *args, &build))).
+        element
+    end
+    alias_method :__closed_tag, :__closed_element
+
+    SELF_CLOSING_TAGS.each do |tag|
+      define_method("_#{tag}") do |*args, &build|
+        __closed_element(tag, *args, &build)
+      end
+    end
+
     OPEN_TAGS.each do |tag|
       define_method("_#{tag}") do |*args, &build|
-         __open_element(tag, *args, &build)
+        __open_element(tag, *args, &build)
       end
     end
 

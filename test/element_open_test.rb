@@ -1,5 +1,4 @@
 require "assert"
-require 'undies/io'
 require "undies/element"
 
 
@@ -55,19 +54,29 @@ module Undies::Element
       assert_equal "<div class=\"big\"></div>", elem.to_s
     end
 
-    should "serialize with attrs that have double-quotes" do
+    should "serialize with escaped attrs content" do
       elem = Undies::Element::Open.new(:div, :class => '"this" is double-quoted')
       assert_equal "<div class=\"&quot;this&quot; is double-quoted\"></div>", elem.to_s
     end
 
-    should "serialize with single content" do
+    should "serialize with a single piece of content" do
       elem = Undies::Element::Open.new(:div, "hi")
       assert_equal "<div>hi</div>", elem.to_s
     end
 
-    should "serialize with multiple contents joined" do
+    should "serialize with multiple pieces of content joined" do
       elem = Undies::Element::Open.new(:div, "hi", ' there', ' you')
       assert_equal "<div>hi there you</div>", elem.to_s
+    end
+
+    should "serialize with escaped content" do
+      elem = Undies::Element::Open.new(:div, "stuff & <em>more stuff</em>")
+      assert_equal "<div>stuff &amp; &lt;em&gt;more stuff&lt;&#x2F;em&gt;</div>", elem.to_s
+    end
+
+    should "serialize with raw content" do
+      elem = Undies::Element::Open.new(:div, Undies::Raw.new("stuff & <em>more stuff</em>"))
+      assert_equal "<div>stuff & <em>more stuff</em></div>", elem.to_s
     end
 
     should "serialize element proxy id call" do

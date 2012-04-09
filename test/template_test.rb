@@ -20,7 +20,9 @@ class Undies::Template
     should have_instance_methods :__attrs
 
     # capture api
-    should have_instance_methods :raw
+    should have_instance_methods :raw, :element, :tag
+    should have_instance_methods :open_element, :open_tag
+    should have_instance_methods :closed_element, :closed_tag
 
     # streaming api
     should have_instance_methods :_, :__element, :__tag
@@ -90,8 +92,35 @@ class Undies::Template
 
 
 
-  class ElementTests < BasicTests
-    desc "using the api methods"
+  class CapturedElementTests < BasicTests
+    desc "using the captured element api methods"
+
+    should "capture `element` output as Raw output" do
+      assert_kind_of Undies::Raw, subject.closed_element(:br)
+    end
+
+    should "capture `element` output correctly" do
+      assert_equal "<br />", subject.closed_element(:br).to_s
+    end
+
+    should "capture with `tag` method versions" do
+      assert_equal "<span></span>", subject.open_tag(:span).to_s
+    end
+
+    should "capture and escape data approptiately" do
+      elem = subject.open_element(:span, *[
+        "stuff & <em>more stuff</em>",
+        subject.strong(subject.i('ITALICS!!'), ' (here)')
+      ])
+      assert_equal "<span>stuff &amp; &lt;em&gt;more stuff&lt;&#x2F;em&gt;<strong><i>ITALICS!!</i> (here)</strong></span>", elem.to_s
+    end
+
+  end
+
+
+
+  class StreamedElementTests < BasicTests
+    desc "using the streamed element api methods"
 
     should "stream `element` output" do
       subject.__closed_element(:br)
@@ -116,13 +145,6 @@ class Undies::Template
       subject.__flush
 
       assert_equal "<br />", @out
-    end
-
-    should "not respond to element methods without an underscore-prefix" do
-      assert !subject.respond_to?(:div)
-      assert_raises NoMethodError do
-        subject.div
-      end
     end
 
   end
