@@ -1,6 +1,6 @@
 require 'assert'
 require 'undies/template'
-require 'undies/raw'
+require 'undies/element'
 
 module Undies
 

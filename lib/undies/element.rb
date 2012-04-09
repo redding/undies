@@ -1,5 +1,7 @@
 module Undies
 
+
+
   module Element
 
     def self.hash_attrs(attrs="", ns=nil)
@@ -38,6 +40,8 @@ module Undies
 
   end
 
+
+
   module CSSProxy
 
     # CSS proxy methods ============================================
@@ -67,6 +71,8 @@ module Undies
 
   end
 
+
+
   module MergeAttrs
 
     def __attrs(attrs_hash=nil)
@@ -75,6 +81,8 @@ module Undies
     end
 
   end
+
+
 
   class Element::Open
     include CSSProxy
@@ -138,6 +146,8 @@ module Undies
 
   end
 
+
+
   class Element::Closed
     include CSSProxy
     include MergeAttrs
@@ -186,5 +196,28 @@ module Undies
     end
 
   end
+
+
+
+  class Raw < ::String
+
+    # A Raw string is one that is impervious to String#gsub and returns itself
+    # when `to_s` is called.
+
+    def gsub(*args, &block)
+      self
+    end
+
+    def gsub!(*args, &block)
+      nil
+    end
+
+    def to_s
+      self
+    end
+
+  end
+
+
 
 end

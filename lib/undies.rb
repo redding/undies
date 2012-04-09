@@ -1,5 +1,4 @@
-require 'undies/template'
-require 'undies/io'
-
 module Undies; end
 
+require 'undies/io'
+require 'undies/template'

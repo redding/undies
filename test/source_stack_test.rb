@@ -1,6 +1,6 @@
 require "assert"
 
-require "undies/source_stack"
+require "undies/source"
 
 class Undies::SourceStack
 
