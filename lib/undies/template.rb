@@ -41,13 +41,10 @@ module Undies
         raise ArgumentError, "please provide an IO object"
       end
 
-      # apply any given data to template scope
-      data = args.last.kind_of?(::Hash) ? args.pop : {}
-      if (data.keys.map(&:to_s) & self.public_methods.map(&:to_s)).size > 0
-        raise ArgumentError, "data conflicts with template public methods."
+      # apply any given data to template scope as instance variables
+      (args.last.kind_of?(::Hash) ? args.pop : {}).each do |k, v|
+        self.instance_variable_set("@#{k}", v)
       end
-      metaclass = class << self; self; end
-      data.each {|key, value| metaclass.class_eval { define_method(key){value} }}
 
       # setup a source stack with the given source
       source = args.last.kind_of?(Source) ? args.pop : Source.new(Proc.new {})

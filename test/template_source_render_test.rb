@@ -83,11 +83,11 @@ class Undies::Template
       @io = Undies::IO.new(@out = "", :pp => 2)
       @source = Undies::Source.new(Proc.new do
         partial_source = Undies::Source.new(Proc.new do
-          _p thing
+          _p @thing
         end)
 
         _div {
-          _span thing
+          _span @thing
           __partial partial_source, {:thing => 1234}
 
           _div {

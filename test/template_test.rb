@@ -211,22 +211,10 @@ class Undies::Template
 
 
   class LocalDataTests < BasicTests
-    should "only accept the data if it is a Hash" do
-      assert_respond_to(
-        :some,
-        Undies::Template.new(Undies::Source.new(Proc.new {}), {:some => 'data'}, @io)
-      )
-    end
 
-    should "complain if trying to set locals that conflict with public methods" do
-      assert_raises ArgumentError do
-        Undies::Template.new(Undies::Source.new(Proc.new {}), {:_ => "yay!"}, @io)
-      end
-    end
-
-    should "respond to each locals key with its value" do
-      templ = Undies::Template.new(Undies::Source.new(Proc.new {}), {:some => 'data'}, @io)
-      assert_equal "data", templ.some
+    should "accept a hash of data and apply them to the template scope as instance variables" do
+      t = Undies::Template.new(Undies::Source.new(Proc.new {}), {:some => 'data'}, @io)
+      assert_equal 'data', t.instance_variable_get("@some")
     end
 
   end
