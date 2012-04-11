@@ -1,7 +1,4 @@
 require "assert"
-require "stringio"
-require 'undies/node_stack'
-
 require "undies/template"
 
 class Undies::Template
@@ -12,23 +9,27 @@ class Undies::Template
     desc 'a template'
     before do
       @src = Undies::Source.new(Proc.new {})
-      @output = Undies::Output.new(@outstream = StringIO.new(@out = ""))
-      @t = Undies::Template.new(@src, {}, @output)
+      @io = Undies::IO.new(@out = "")
+      @t = Undies::Template.new(@src, {}, @io)
     end
     subject { @t }
 
-    should have_class_method :source_stack, :node_stack, :flush, :escape_html
-    should have_instance_methods :to_s, :element, :tag
-    should have_instance_methods :_, :__
+    should have_class_methods    :flush, :escape_html
     should have_instance_methods :__yield, :__partial
     should have_instance_methods :__push, :__pop, :__flush
     should have_instance_methods :__attrs
 
-    should "know it's node stack" do
-      assert_kind_of Undies::NodeStack, subject.class.node_stack(subject)
-    end
+    # capture api
+    should have_instance_methods :raw, :element, :tag
+    should have_instance_methods :open_element, :open_tag
+    should have_instance_methods :closed_element, :closed_tag
 
-    should "complain if creating a template with no Output obj" do
+    # streaming api
+    should have_instance_methods :_, :__element, :__tag
+    should have_instance_methods :__open_element, :__open_tag
+    should have_instance_methods :__closed_element, :__closed_tag
+
+    should "complain if creating a template with no IO obj" do
       assert_raises ArgumentError do
         Undies::Template.new(@src, {})
       end
@@ -36,22 +37,45 @@ class Undies::Template
 
     should "default the data to an empty hash if none provided" do
       assert_nothing_raised do
-        Undies::Template.new(@src, @output)
+        Undies::Template.new(@src, @io)
       end
     end
 
     should "default the source to an empty Proc source if none provided" do
       assert_nothing_raised do
-        Undies::Template.new(@output)
+        Undies::Template.new(@io)
       end
       assert_equal "", @out
+    end
+
+    should "push a root node onto its IO" do
+      assert_kind_of Undies::RootNode, @io.current
     end
 
   end
 
 
 
-  class NodeTests < BasicTests
+  class PlainTextTests < BasicTests
+    before do
+      @data = "stuff & <em>more stuff</em>"
+    end
+
+    should have_instance_methods :raw
+
+    should "add the text un-escaped using the 'raw' method" do
+      assert_equal @data, subject.raw(@data)
+    end
+
+    should "escape the text using the Template#escape_html method" do
+      assert_equal "stuff &amp; &lt;em&gt;more stuff&lt;&#x2F;em&gt;", Undies::Template.escape_html(@data)
+    end
+
+  end
+
+
+
+  class PlainTextTests < BasicTests
     desc "with text data"
     before do
       @data = "stuff & <em>more stuff</em>"
@@ -64,40 +88,52 @@ class Undies::Template
       assert_equal subject.class.escape_html(@data), @out
     end
 
-    should "add the text un-escaped using the '__' method" do
-      subject.__ @data
-      subject.__flush
+  end
 
-      assert_equal @data, @out
+
+
+  class CapturedElementTests < BasicTests
+    desc "using the captured element api methods"
+
+    should "capture `element` output as Raw output" do
+      assert_kind_of Undies::Raw, subject.closed_element(:br)
     end
 
-    should "add empty string nodes using '__' and '_' methods with no args" do
-      subject._
-      subject.__
-      subject.__flush
+    should "capture `element` output correctly" do
+      assert_equal "<br />", subject.closed_element(:br).to_s
+    end
 
-      assert_equal "", @out
+    should "capture with `tag` method versions" do
+      assert_equal "<span></span>", subject.open_tag(:span).to_s
+    end
+
+    should "capture and escape data approptiately" do
+      elem = subject.open_element(:span, *[
+        "stuff & <em>more stuff</em>",
+        subject.strong(subject.i('ITALICS!!'), ' (here)')
+      ])
+      assert_equal "<span>stuff &amp; &lt;em&gt;more stuff&lt;&#x2F;em&gt;<strong><i>ITALICS!!</i> (here)</strong></span>", elem.to_s
     end
 
   end
 
 
 
-  class ElementTests < BasicTests
-    desc "using the 'element' helper"
+  class StreamedElementTests < BasicTests
+    desc "using the streamed element api methods"
 
-    should "stream element output" do
-      subject.element(:br)
+    should "stream `element` output" do
+      subject.__closed_element(:br)
       subject.__flush
 
       assert_equal "<br />", @out
     end
 
-    should "alias it with 'tag'" do
-      subject.tag(:br)
+    should "alias it with `tag` versions" do
+      subject.__open_tag(:span)
       subject.__flush
 
-      assert_equal "<br />", @out
+      assert_equal "<span></span>", @out
     end
 
     should "respond to underscore-prefix methods" do
@@ -111,13 +147,6 @@ class Undies::Template
       assert_equal "<br />", @out
     end
 
-    should "not respond to element methods without an underscore-prefix" do
-      assert !subject.respond_to?(:div)
-      assert_raises NoMethodError do
-        subject.div
-      end
-    end
-
   end
 
 
@@ -125,7 +154,7 @@ class Undies::Template
   class BuildAttrsTests < BasicTests
 
     should "modify attributes during a build using the __attrs method" do
-      subject.element(:div)
+      subject.__element(:div)
       subject.__push
       subject.__attrs :class => 'test'
       subject.__pop
@@ -135,7 +164,7 @@ class Undies::Template
     end
 
     should "should merge __attrs values with existing attrs" do
-      subject.element(:div).test
+      subject.__element(:div).test
       subject.__push
       subject.__attrs :id => 'this'
       subject.__pop
@@ -145,7 +174,7 @@ class Undies::Template
     end
 
     should "should merge __attrs class values by appending to the existing" do
-      subject.element(:div).test
+      subject.__element(:div).test
       subject.__push
       subject.__attrs :class => 'this'
       subject.__pop
@@ -154,13 +183,10 @@ class Undies::Template
       assert_equal "<div class=\"this\"></div>", @out
     end
 
-    should "ignore __attrs values once content has been added" do
-      subject.element(:div)
+    should "add __attrs even though content has been added" do
+      subject.__element(:div, 'hi there', 'friend')
       subject.__push
       subject.__attrs :class => 'this'
-      subject._ "hi there"
-      subject._ "friend"
-      subject.__attrs :title => 'missedtheboat'
       subject.__pop
       subject.__flush
 
@@ -168,14 +194,11 @@ class Undies::Template
     end
 
     should "ignore __attrs values once child elements have been added" do
-      subject.element(:div)
+      subject.__element(:div)
       subject.__push
       subject.__attrs :class => 'this'
-      subject._p
-      subject.__push
-      subject._ "hi there"
-      subject.__pop
-      subject._p { subject._ "friend" }
+      subject._p 'hi there'
+      subject._p 'friend'
       subject.__attrs :title => 'missedtheboat'
       subject.__pop
       subject.__flush
@@ -189,22 +212,9 @@ class Undies::Template
 
   class LocalDataTests < BasicTests
 
-    should "only accept the data if it is a Hash" do
-      assert_respond_to(
-        :some,
-        Undies::Template.new(Undies::Source.new(Proc.new {}), {:some => 'data'}, @output)
-      )
-    end
-
-    should "complain if trying to set locals that conflict with public methods" do
-      assert_raises ArgumentError do
-        Undies::Template.new(Undies::Source.new(Proc.new {}), {:_ => "yay!"})
-      end
-    end
-
-    should "respond to each locals key with its value" do
-      templ = Undies::Template.new(Undies::Source.new(Proc.new {}), {:some => 'data'}, @output)
-      assert_equal "data", templ.some
+    should "accept a hash of data and apply them to the template scope as instance variables" do
+      t = Undies::Template.new(Undies::Source.new(Proc.new {}), {:some => 'data'}, @io)
+      assert_equal 'data', t.instance_variable_get("@some")
     end
 
   end
@@ -215,13 +225,12 @@ class Undies::Template
     desc "that is streaming"
 
     before do
-      outstream = StringIO.new(@output = "")
-      @template = Undies::Template.new(Undies::Output.new(outstream))
+      @template = Undies::Template.new(Undies::IO.new(@output = ""))
     end
 
     should "not stream full content until Undies#flush called on the template" do
-      @template._div { @template._ "Added post-init" }
-      @expected_output = "<div>Added post-init</div>"
+      @template._div "Added"
+      @expected_output = "<div>Added</div>"
 
       assert_equal "", @output
       Undies::Template.flush(@template)
@@ -231,13 +240,13 @@ class Undies::Template
     should "should write to the stream as its being constructed" do
       @template._div.good.thing!(:type => "something")
       @template.__push
-      @template._p { @template._ 'hi' }
+      @template._p 'hi'
       @template.__flush
 
       @expected_output = "<div class=\"good\" id=\"thing\" type=\"something\"><p>hi</p>"
       assert_equal @expected_output, @output
 
-      @template._p { @template._ "action" }
+      @template._p "action"
       @template.__pop
       @template.__flush
 
@@ -252,7 +261,7 @@ class Undies::Template
   class PrettyPrintTests < BasicTests
 
     should "generate pretty printed markup" do
-      output = Undies::Output.new(@outstream, :pp => 2)
+      output = Undies::IO.new(@out = "", :pp => 2)
       templ = Undies::Template.new(output)
 
       templ._html
@@ -260,10 +269,7 @@ class Undies::Template
       templ._head {}
       templ._body
       templ.__push
-      templ._div { templ._ "Hi" }
-      # templ.__push
-      # templ._ "Hi"
-      # templ.__pop
+      templ._div "Hi"
       templ.__pop
       templ.__pop
       templ.__flush
@@ -274,7 +280,8 @@ class Undies::Template
   <body>
     <div>Hi</div>
   </body>
-</html>}, @out )
+</html>
+}, @out )
     end
 
   end
