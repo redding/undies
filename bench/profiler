@@ -3,4 +3,4 @@
 require 'bench/profiler_runner'
 
 runner = UndiesProfilerRunner.new(ARGV[0] || 'large')
-runner.print_flat(STDOUT, :min_percent => 1)
+runner.print_flat(STDOUT)

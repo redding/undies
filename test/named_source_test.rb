@@ -1,6 +1,6 @@
 require "assert"
 
-require "undies/named_source"
+require "undies/source"
 
 class Undies::NamedSource
 
