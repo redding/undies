@@ -11,7 +11,7 @@ class Undies::ElementNode
     before do
       # io test with :pp 1 so we can test newline insertion
       # io test with level 1 so we can test element start tag writing
-      @io = Undies::IO.new(@out = "", :pp => 1, :level => 1)
+      @io = Undies::IO.new(@out = "", :pp => 1, :level => 2)
       @e  = Undies::Element.open(:div, "hi")
       @en = Undies::ElementNode.new(@io, @e)
     end
@@ -146,20 +146,22 @@ class Undies::ElementNode
 
     should "write out the start tag with IO#newline when an element is given" do
       subject.element_node(@en1)
-      assert_equal "<div>#{@io.newline}", @out
+      assert_equal "#{@io.line_indent(-1)}<div>#{@io.newline}", @out
     end
 
     should "write out any cached content and cache new markup when given" do
       subject.element_node @en1
       subject.element_node @en2
-      assert_equal "<div>#{@io.newline}#{@io.line_indent}<strong>blah</strong>#{@io.newline}", @out
+      assert_equal "#{@io.line_indent(-1)}<div>#{@io.newline}#{@io.line_indent}<strong>blah</strong>#{@io.newline}", @out
       assert_equal @en2, subject.cached
     end
 
     should "write out the end tag with IO#newline indented when popped" do
       subject.element_node(@en1)
+      expected = "#{@io.line_indent(-1)}<div>#{@io.newline}#{@io.line_indent}<strong>blah</strong>#{@io.newline}#{@io.line_indent(-1)}</div>#{@io.newline}"
       subject.pop
-      assert_equal "<div>#{@io.newline} <strong>blah</strong>#{@io.newline}</div>#{@io.newline}", @out
+
+      assert_equal expected, @out
     end
 
   end
@@ -174,13 +176,14 @@ class Undies::ElementNode
 
     should "write out the start tag with IO#newline when a partial is given" do
       subject.partial("partial markup")
-      assert_equal "<div>#{@io.newline}", @out
+      assert_equal "#{@io.line_indent(-1)}<div>#{@io.newline}", @out
     end
 
     should "write out the end tag with IO#newline indented when a partial is given" do
       subject.partial("  partial markup\n")
+      expected = "#{@io.line_indent(-1)}<div>#{@io.newline}#{@io.line_indent}partial markup#{@io.newline}#{@io.line_indent(-1)}</div>#{@io.newline}"
       subject.pop
-      assert_equal "<div>#{@io.newline}  partial markup\n</div>#{@io.newline}", @out
+      assert_equal expected, @out
     end
 
   end
@@ -192,7 +195,7 @@ class Undies::ElementNode
       subject.attrs(:test => 'value')
       subject.element_node(@en1)
 
-      assert_equal "<div test=\"value\">#{@io.newline}", @out
+      assert_equal "#{@io.line_indent(-1)}<div test=\"value\">#{@io.newline}", @out
     end
 
     should "not effect the start tag once child elements have been written" do
@@ -200,7 +203,7 @@ class Undies::ElementNode
       subject.element_node(@en1)
       subject.attrs(:another => 'val')
 
-      assert_equal "<div test=\"value\">#{@io.newline}", @out
+      assert_equal "#{@io.line_indent(-1)}<div test=\"value\">#{@io.newline}", @out
     end
 
   end
