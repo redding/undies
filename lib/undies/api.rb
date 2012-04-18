@@ -86,23 +86,25 @@ module Undies
     alias_method :__element,  :__open_element
     alias_method :__tag,      :__open_element
 
-    def __closed_element(name, *args, &build)
+    def __closed_element(name, *args)
       @_undies_io.
         current.
-        element_node(ElementNode.new(@_undies_io, Element::Closed.new(name, *args, &build))).
+        element_node(ElementNode.new(
+          @_undies_io, Element::Closed.new(name, *args)
+        )).
         element
     end
     alias_method :__closed_tag, :__closed_element
 
-    SELF_CLOSING_TAGS.each do |tag|
-      define_method("_#{tag}") do |*args, &build|
-        __closed_element(tag, *args, &build)
-      end
-    end
-
     OPEN_TAGS.each do |tag|
       define_method("_#{tag}") do |*args, &build|
         __open_element(tag, *args, &build)
+      end
+    end
+
+    SELF_CLOSING_TAGS.each do |tag|
+      define_method("_#{tag}") do |*args|
+        __closed_element(tag, *args)
       end
     end
 

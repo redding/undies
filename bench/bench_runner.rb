@@ -191,8 +191,8 @@ class UndiesBenchRunner
 
   SIZES = [
     # [:small    , "~500 nodes"],
-    # [:large    , "~5000 nodes"],
-    [:verylarge, "~50000 nodes"]
+    [:large    , "~5000 nodes"],
+    # [:verylarge, "~50000 nodes"]
   ]
 
 
