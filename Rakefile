@@ -24,9 +24,9 @@ namespace :bench do
   task :all do
     Rake::Task['test'].invoke
     puts
-    Rake::Task['run_profiler'].invoke
+    Rake::Task['bench:profiler'].invoke
     puts
-    Rake::Task['run_bench'].invoke
+    Rake::Task['bench:run'].invoke
   end
 
 end
