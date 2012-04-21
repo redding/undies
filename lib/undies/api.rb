@@ -50,19 +50,19 @@ module Undies
     end
 
     def open_element(name, *args)
-      Raw.new(Element::Open.new(name, *args).to_s)
+      Element::Open.new(name, *args)
     end
     alias_method :open_tag, :open_element
     alias_method :element,  :open_element
     alias_method :tag,      :open_element
 
     def closed_element(name, *args)
-      Raw.new(Element::Closed.new(name, *args).to_s)
+      Element::Closed.new(name, *args)
     end
     alias_method :closed_tag, :closed_element
 
     SELF_CLOSING_TAGS.each do |tag|
-      define_method(tag){ |*args| closed_element(tag, *args, &build) }
+      define_method(tag){ |*args| closed_element(tag, *args) }
     end
 
     OPEN_TAGS.each do |tag|
@@ -89,9 +89,7 @@ module Undies
     def __closed_element(name, *args)
       @_undies_io.
         current.
-        element_node(ElementNode.new(
-          @_undies_io, Element::Closed.new(name, *args)
-        )).
+        element_node(ElementNode.new(@_undies_io, Element::Closed.new(name, *args))).
         element
     end
     alias_method :__closed_tag, :__closed_element

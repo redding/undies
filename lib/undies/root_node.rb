@@ -19,7 +19,7 @@ module Undies
       @cached = nil
     end
 
-    def attrs(*args, &block)
+    def attrs(*args)
       raise RootAPIError, "can't call '__attrs' at the root node level"
     end
 

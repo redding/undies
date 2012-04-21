@@ -96,7 +96,8 @@ class Undies::Template
     desc "using the captured element api methods"
 
     should "capture `element` output as Raw output" do
-      assert_kind_of Undies::Raw, subject.closed_element(:br)
+      assert_kind_of Undies::Element::Closed, subject.closed_element(:br)
+      assert_kind_of Undies::Raw, subject.closed_element(:br).to_s
     end
 
     should "capture `element` output correctly" do
@@ -110,9 +111,9 @@ class Undies::Template
     should "capture and escape data approptiately" do
       elem = subject.open_element(:span, *[
         "stuff & <em>more stuff</em>",
-        subject.strong(subject.i('ITALICS!!'), ' (here)')
+        subject.strong(subject.img.awesome, ' (here)')
       ])
-      assert_equal "<span>stuff &amp; &lt;em&gt;more stuff&lt;&#x2F;em&gt;<strong><i>ITALICS!!</i> (here)</strong></span>", elem.to_s
+      assert_equal "<span>stuff &amp; &lt;em&gt;more stuff&lt;&#x2F;em&gt;<strong><img class=\"awesome\" /> (here)</strong></span>", elem.to_s
     end
 
   end

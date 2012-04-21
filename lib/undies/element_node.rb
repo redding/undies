@@ -22,8 +22,8 @@ module Undies
       @start_tag_written = false
     end
 
-    def attrs(*args, &block)
-      @element.__attrs(*args, &block)
+    def attrs(*args)
+      @element.__attrs(*args)
     end
 
     def text(raw)

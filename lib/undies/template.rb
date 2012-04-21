@@ -46,18 +46,21 @@ module Undies
         self.instance_variable_set("@#{k}", v)
       end
 
-      # setup a source stack with the given source
-      source = args.last.kind_of?(Source) ? args.pop : Source.new(Proc.new {})
-      @_undies_source_stack = SourceStack.new(source)
-
       # push a root node onto the IO
       @_undies_io.push!(RootNode.new(@_undies_io)) if @_undies_io.empty?
 
-      # yield to recursivley render the source stack
-      __yield
+      # if given some source, build it
+      if args.last.kind_of?(Source)
+        # setup a source stack with the given source
+        @_undies_source_stack = SourceStack.new(args.pop)
 
-      # flush any elements that need to be built
-      __flush
+        # yield to recursivley render the source stack
+        __yield
+
+        # flush any elements that need to be built
+        __flush
+      end
+
     end
 
   end
