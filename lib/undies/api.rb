@@ -71,7 +71,7 @@ module Undies
 
     # streaming methods
 
-    # Add a text node (data escaped) to the nodes of the current node
+    # Add a text node (data escaped) to the current node
     def _(data="")
       @_undies_io.current.text(self.class.escape_html(data.to_s))
     end

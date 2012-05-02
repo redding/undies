@@ -18,47 +18,49 @@ Or install it yourself as:
 ## Usage
 
 ```ruby
+_ raw "<!DOCTYPE html>"
 _html {
   _head {
     _title "Hello World"
   }
   body {
     _h1.main!.big "Hi There!"
-    _p "this is an ", em("Undies"), " usage example."
+    _p "this is a hello world & ", em("Undies"), " usage example."
   }
 }
 ```
 
 Will stream out
 
-```
+``` html
+<!DOCTYPE html>
 <html>
   <head>
     <title>Hello World</title>
   </head>
   <body>
     <h1 class="big" id="main">Hi There!</h1>
-    <p>this is an <em>Undies</em> usage example.</p>
+    <p>this is a hello world &amp; <em>Undies</em> usage example.</p>
   </body>
 </html>
 ```
 
-## DSL
+## Captured Output
 
 ### Plain text
 
 All text is escaped by default.
 
 ```ruby
-    Undies::Template.escape_html("ab&<>'\"/yz")
-    # => "ab&amp;&lt;&gt;&#x27;&quot;&#x2F;yz"
+Undies::Template.escape_html("ab&<>'\"/yz")
+# => "ab&amp;&lt;&gt;&#x27;&quot;&#x2F;yz"
 ```
 
 Capture raw (un-escaped) text using the `raw` method
 
 ```ruby
-    raw "this will <em>not</em> be escaped"
-    # => "this will <em>not</em> be escaped"
+raw "this will <em>not</em> be escaped"
+# => "this will <em>not</em> be escaped"
 ```
 
 ### XML
@@ -66,48 +68,48 @@ Capture raw (un-escaped) text using the `raw` method
 Capture an empty element:
 
 ```ruby
-    element(:thing) # => "<thing />"
-    tag('ns:thing') # => "<ns:thing />"
+element(:thing) # => "<thing />"
+
+# use `tag` as an alias to `element`
+tag('ns:thing') # => "<ns:thing />"
 ```
 
 Capture an element with content:
 
 ```ruby
-    # basic content
+# basic content
 
-    element(:thing, "some content")
-    # => "<thing>some content</thing>"
+element(:thing, "some content")
+# => "<thing>some content</thing>"
 
-    # all content is escaped by default
+# all content is escaped by default
+element(:thing, "&<>")
+# => "<thing>&amp;&lt;&gt;</thing>"
 
-    element(:thing, "&<>")
-    # => "<thing>&amp;&lt;&gt;</thing>"
+# you can force raw content using the `raw` method
+element(:thing, raw("<raw>text</raw>"))
+# => "<thing><raw>text</raw></thing>"
 
-    # you can force raw content using the `raw` method
-
-    element(:thing, raw("<raw>text</raw>"))
-    # => "<thing><raw>text</raw></thing>"
-
-    # you can pass in as many pieces of content as you like
-
-    element(:thing, "1 < 2", raw("<raw>text</raw>"), " & 4 > 3")
-    # => "<thing>1 &lt; 2<raw>text</raw>&amp; 4 &gt; 3</thing>"
+# you can pass in as many pieces of content as you like
+element(:thing, "1 < 2", raw("<raw>text</raw>"), " & 4 > 3")
+# => "<thing>1 &lt; 2<raw>text</raw>&amp; 4 &gt; 3</thing>"
 ```
 
 Capture an element with attributes:
 
 ```ruby
-    element(:thing, "some content", :one => 1, 'a' => "Aye")
-    # => "<thing one=\"1\" a=\"Aye\">some content</thing>"
+element(:thing, "some content", :one => 1, 'a' => "Aye")
+# => "<thing one=\"1\" a=\"Aye\">some content</thing>"
 ```
 
 Capture nested elements:
 
 ```ruby
-    element(:thing) {
-      element('Something', "Some Content")
-      element('AnotherThing', "more content")
-    } # => "<thing><Something>Some Content</Something><AnotherThing>more content</AnotherThing></thing>"
+element(
+  :thing,
+  element('Something', "Some Content"),
+  element('AnotherThing', "more content")
+) # => "<thing><Something>Some Content</Something><AnotherThing>more content</AnotherThing></thing>"
 ```
 
 ### HTML
@@ -115,54 +117,52 @@ Capture nested elements:
 In general, all the same stuff applies.  However, you can call specific methods for all non-deprecated elements from the HTML 4.0.1 spec.
 
 ```ruby
-    br
-    # => "<br />"
+br
+# => "<br />"
 
-    span "something"
-    # => "<span>something</span>"
+span "something"
+# => "<span>something</span>"
 
-    div "something", :style => "color: red"
-    # => "<div style=\"color: red\">somthing</div"
+div "something", :style => "color: red"
+# => "<div style=\"color: red\">somthing</div"
 
-    html {
-      head { title "Hello World" }
-      body {
-        h1 "Hi There!"
-      }
-    } # => "<html><head><title>Hello World</title></head><body<h1>Hi There!</h1></body></html>"
+html(
+  head(title("Hello World")),
+  body(h1("Hi There!"))
+) # => "<html><head><title>Hello World</title></head><body<h1>Hi There!</h1></body></html>"
 ```
 
-You can't mix content and nested elements.  If you specify content in the element arguments, any nested element blocks will be ignored
+You can't specify content blocks when capturing element output.  Any content blocks will be ignored.
 
 ```ruby
-    div("contents") {
-      span "more content"
-    }
-    # => "<div>contents</div>"
+div("contents") {
+  span "more content"
+}
+# => "<div>contents</div>"
 ```
 
 Use bang (!) method calls to set id attributes
 
 ```ruby
-    h1.header!
-    # => "<h1 id=\"header\" />"
+h1.header!
+# => "<h1 id=\"header\" />"
 
-    h1.header!.title!
-    # => "<h1 id=\"title\" />"
+h1.header!.title!
+# => "<h1 id=\"title\" />"
 ```
 
 Use general method calls to add class attributes
 
 ```ruby
-    _h1.header.awesome
-    # => "<h1 class=\"header awesome\" />"
+_h1.header.awesome
+# => "<h1 class=\"header awesome\" />"
 ```
 
 Use both in combination
 
 ```ruby
-    h1.header!.awesome
-    # => "<h1 class=\"awesome\" id=\"header\" />
+h1.header!.awesome
+# => "<h1 class=\"awesome\" id=\"header\" />
 ```
 
 ## Streamed Output
@@ -234,7 +234,7 @@ To render using Undies, create a Template instance, providing the template sourc
     data   = { :two_plus_two => 4 }
     io     = Undies::IO.new(@some_io_stream)
 
-    Undies::Template.new(source, {}, io)
+    Undies::Template.new(source, data, io)
 
 ### Source
 
@@ -256,26 +256,26 @@ As said before, Undies streams to a given io stream.  You specify a Template's i
 file source, no local data, no pretty printing
 
 ```ruby
-    source = Undies::Source.new("/path/to/source")
-    Undies::Template.new(source, {}, Undies::IO.new(@io))
+source = Undies::Source.new("/path/to/source")
+Undies::Template.new(source, {}, Undies::IO.new(@io))
 ```
 
 proc source, simple local data, no pretty printing
 
 ```ruby
-    source = Undies::Source.new(Proc.new do
-      _div {
-        _ @content.to_s
-      }
-    end)
-    Undies::Template.new(source, {:content => "Some Content!!" }, Undies::IO.new(@io))
+source = Undies::Source.new(Proc.new do
+  _div {
+    _ @content.to_s
+  }
+end)
+Undies::Template.new(source, {:content => "Some Content!!" }, Undies::IO.new(@io))
 ```
 
 pretty printing (4 space tab indentation)
 
 ```ruby
-    source = Undies::Source.new("/path/to/source")
-    Undies::Template.new(source, {}, Undies::IO.new(@io, :pp => 4))
+source = Undies::Source.new("/path/to/source")
+Undies::Template.new(source, {}, Undies::IO.new(@io, :pp => 4))
 ```
 
 ### Builder approach
@@ -285,28 +285,28 @@ The above examples use the "source rendering" approach.  This works great when y
 To render using this approach, create a Template instance passing it data and io info as above.  However, don't pass in any source info, only pass in any local data if you like, and save off the created template:
 
 ```ruby
-    # choosing not to use any local data in this example
-    template = Undies::Template.new(Undies::IO.new(@io))
+# choosing not to use any local data in this example
+template = Undies::Template.new(Undies::IO.new(@io))
 ```
 
 Now just interact with the Undies API directly.
 
 ```ruby
-    # notice that it becomes less important to bind any local data to the Template using this approach
-    something = "Some Thing!"
-    template._div.something! template._ something.to_s
+# notice that it becomes less important to bind any local data to the Template using this approach
+something = "Some Thing!"
+template._div.something! template._ something.to_s
 
-    template._div {
-      template._span "hi"
-    }
+template._div {
+  template._span "hi"
+}
 ```
 
 *Note:* there is one extra caveat to be aware of using this approach.  You need to be sure and flush the template when content processing is complete.  Just pass the template to the Undies::Template#flush method:
 
 ```ruby
-    # ensures all content is streamed to the template's io stream
-    # this is necessary when not using the source approach above
-    Undies::Template.flush(template)
+# ensures all content is streamed to the template's io stream
+# this is necessary when not using the source approach above
+Undies::Template.flush(template)
 ```
 
 ### Manual approach
@@ -316,20 +316,20 @@ There is another method you can use to render output: the manual approach.  Like
 To render using this approach, create a Template as you would with the Builder approach.  Interact with the Undies API directly.  Use the Template#__push and Template#__pop methods to change the template scope.
 
 ```ruby
-    # this is the equivalent to the Builder approach example above
+# this is the equivalent to the Builder approach example above
 
-    template = Undies::Template.new(Undies::IO.new(@io))
+template = Undies::Template.new(Undies::IO.new(@io))
 
-    something = "Some Thing!"
-    template._div.something! something.to_s
+something = "Some Thing!"
+template._div.something! something.to_s
 
-    template._div
-    template.__push
-    template._span "hi"
-    template.__pop
+template._div
+template.__push
+template._span "hi"
+template.__pop
 
-    # alternate method for flushing a template
-    template.__flush
+# alternate method for flushing a template
+template.__flush
 ```
 
 *Note:* as with the Builder approach, you must flush the template when content processing is complete.
