@@ -1,12 +1,12 @@
 require "assert"
-require 'undies/io'
 require 'undies/element_node'
-require 'undies/element'
 
+require 'undies/io'
+require 'undies/element'
 
 class Undies::ElementNode
 
-  class BasicTests < Assert::Context
+  class UnitTests < Assert::Context
     desc 'an element node'
     before do
       # io test with :pp 1 so we can test newline insertion
@@ -41,9 +41,7 @@ class Undies::ElementNode
 
   end
 
-
-
-  class AddContentTests < BasicTests
+  class AddContentTests < UnitTests
     desc "adding content"
     before do
       @text1 = "some raw markup"
@@ -121,8 +119,6 @@ class Undies::ElementNode
     end
 
   end
-
-
 
   class AddContentStartTagNotWrittenTests < AddContentTests
     desc "(the start tag has not been written)"
@@ -208,9 +204,7 @@ class Undies::ElementNode
 
   end
 
-
-
-  class SerializeTests < BasicTests
+  class SerializeTests < UnitTests
 
     should "serialize nested elements with pp and only honor the last build block" do
       io = Undies::IO.new(@out = "", :pp => 1, :level => 0)

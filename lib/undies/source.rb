@@ -1,7 +1,5 @@
 module Undies
 
-
-
   class Source
 
     attr_reader :source, :data, :layout
@@ -72,8 +70,6 @@ module Undies
 
   end
 
-
-
   class NamedSource
 
     attr_accessor :file, :opts, :proc
@@ -123,8 +119,6 @@ module Undies
     end
   end
 
-
-
   class SourceStack < ::Array
 
     # a source stack is used to manage which sources and any deeply nested
@@ -143,7 +137,5 @@ module Undies
     end
 
   end
-
-
 
 end

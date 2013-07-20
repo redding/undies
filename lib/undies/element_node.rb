@@ -4,11 +4,11 @@ module Undies
 
   class ElementNode
 
-    # Used internally to implement the markup tree nodes.  Each node caches and
-    # processes nested markup and elements.  At each node level in the markup
-    # tree, nodes/markup are cached until the next sibling node or raw markup
-    # is defined, or until the node is flushed.  This keeps nodes from bloating
-    # memory on large documents and allows for output streaming.
+    # ElemmentNode is used internally to implement the markup tree nodes.  Each
+    # node caches and processes nested markup and elements.  At each node level
+    # in the markup tree, nodes/markup are cached until the next sibling node or
+    # raw markup is defined, or until the node is flushed.  This keeps nodes from
+    # bloating memory on large documents and allows for output streaming.
 
     # ElementNode is specifically used to handle nested element markup.
 
@@ -113,4 +113,5 @@ module Undies
     end
 
   end
+
 end

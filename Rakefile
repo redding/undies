@@ -1,10 +1,4 @@
-require 'assert/rake_tasks'
-Assert::RakeTasks.for(:test)
-
-require 'bundler'
-Bundler::GemHelper.install_tasks
-
-task :default => :build
+require "bundler/gem_tasks"
 
 namespace :bench do
 
@@ -34,4 +28,3 @@ end
 task :bench do
   Rake::Task['bench:run'].invoke
 end
-

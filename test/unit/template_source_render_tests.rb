@@ -1,9 +1,10 @@
 require "assert"
 require "undies/template"
 
+require 'undies/io'
+require 'undies/source'
+
 class Undies::Template
-
-
 
   class SourceRenderTests < Assert::Context
     desc 'a template rendered using a source object'
@@ -25,8 +26,6 @@ class Undies::Template
 
   end
 
-
-
   class LayoutTests < SourceRenderTests
     setup do
       @expected_output = "<html><head></head><body><div>Hi</div></body></html>"
@@ -39,12 +38,12 @@ class Undies::Template
           }
         }
       end
-      @layout_file = File.expand_path "test/templates/layout.html.rb"
+      @layout_file = File.expand_path "test/support/templates/layout.html.rb"
 
       @content_proc = Proc.new do
         _div "Hi"
       end
-      @content_file = File.expand_path "test/templates/content.html.rb"
+      @content_file = File.expand_path "test/support/templates/content.html.rb"
 
       @cp_lp_source = Undies::Source.new(:layout => @layout_proc, &@content_proc)
       @cp_lf_source = Undies::Source.new(:layout => @layout_file, &@content_proc)
@@ -73,8 +72,6 @@ class Undies::Template
     end
 
   end
-
-
 
   class PartialTests < SourceRenderTests
     desc "using partials"
@@ -105,7 +102,5 @@ class Undies::Template
     end
 
   end
-
-
 
 end
