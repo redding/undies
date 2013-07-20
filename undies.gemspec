@@ -11,6 +11,7 @@ Gem::Specification.new do |gem|
   gem.description = %q{A pure-Ruby DSL for streaming templated HTML, XML, or plain text.}
   gem.summary     = %q{A pure-Ruby DSL for streaming templated HTML, XML, or plain text.}
   gem.homepage    = "http://github.com/kellyredding/undies"
+  gem.license     = 'MIT'
 
   gem.files         = `git ls-files`.split($/)
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
