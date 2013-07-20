@@ -1,12 +1,13 @@
 require "assert"
-require 'undies/io'
-require 'undies/element_node'
-require 'undies/element'
 require "undies/root_node"
+
+require 'undies/io'
+require 'undies/element'
+require 'undies/element_node'
 
 class Undies::RootNode
 
-  class BasicTests < Assert::Context
+  class UnitTests < Assert::Context
     desc 'a root node'
     before do
       @io = Undies::IO.new(@out = "", :pp => 1)

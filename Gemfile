@@ -1,12 +1,15 @@
-source "http://rubygems.org"
+source "https://rubygems.org"
 
-# Specify dependencies in undies.gemspec
 gemspec
 
-gem 'rake', '~>0.9.2'
+gem 'rake'
+gem 'pry'
+
 gem 'ruby-prof'
+gem 'whysoslow'
+gem 'ansi'
+
 gem 'erubis'
 gem 'haml'
 gem 'markaby'
 gem 'erector'
-gem 'ansi'

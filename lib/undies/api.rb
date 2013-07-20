@@ -1,5 +1,6 @@
 require 'undies/element_node'
 require 'undies/element'
+require 'undies/raw'
 
 module Undies
 

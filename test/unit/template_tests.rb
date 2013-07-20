@@ -1,11 +1,12 @@
 require "assert"
 require "undies/template"
 
+require 'undies/io'
+require 'undies/source'
+
 class Undies::Template
 
-
-
-  class BasicTests < Assert::Context
+  class UnitTests < Assert::Context
     desc 'a template'
     before do
       @src = Undies::Source.new(Proc.new {})
@@ -54,9 +55,7 @@ class Undies::Template
 
   end
 
-
-
-  class PlainTextTests < BasicTests
+  class PlainTextTests < UnitTests
     before do
       @data = "stuff & <em>more stuff</em>"
     end
@@ -73,9 +72,7 @@ class Undies::Template
 
   end
 
-
-
-  class PlainTextTests < BasicTests
+  class PlainTextTests < UnitTests
     desc "with text data"
     before do
       @data = "stuff & <em>more stuff</em>"
@@ -90,9 +87,7 @@ class Undies::Template
 
   end
 
-
-
-  class CapturedElementTests < BasicTests
+  class CapturedElementTests < UnitTests
     desc "using the captured element api methods"
 
     should "capture `element` output as Raw output" do
@@ -118,9 +113,7 @@ class Undies::Template
 
   end
 
-
-
-  class StreamedElementTests < BasicTests
+  class StreamedElementTests < UnitTests
     desc "using the streamed element api methods"
 
     should "stream `element` output" do
@@ -150,9 +143,7 @@ class Undies::Template
 
   end
 
-
-
-  class BuildAttrsTests < BasicTests
+  class BuildAttrsTests < UnitTests
 
     should "modify attributes during a build using the __attrs method" do
       subject.__element(:div)
@@ -209,9 +200,7 @@ class Undies::Template
 
   end
 
-
-
-  class LocalDataTests < BasicTests
+  class LocalDataTests < UnitTests
 
     should "accept a hash of data and apply them to the template scope as instance variables" do
       t = Undies::Template.new(Undies::Source.new(Proc.new {}), {:some => 'data'}, @io)
@@ -220,9 +209,7 @@ class Undies::Template
 
   end
 
-
-
-  class StreamTests < BasicTests
+  class StreamTests < UnitTests
     desc "that is streaming"
 
     before do
@@ -257,9 +244,7 @@ class Undies::Template
 
   end
 
-
-
-  class PrettyPrintTests < BasicTests
+  class PrettyPrintTests < UnitTests
 
     should "generate pretty printed markup" do
       output = Undies::IO.new(@out = "", :pp => 2)
@@ -287,7 +272,4 @@ class Undies::Template
 
   end
 
-
-
 end
-
