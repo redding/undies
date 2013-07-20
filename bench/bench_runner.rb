@@ -1,8 +1,10 @@
 require 'whysoslow'
-require 'stringio'
 
 require 'erb'
 require 'erubis'
+require 'haml'
+require 'markaby'
+require 'erector'
 require 'undies'
 
 class UndiesBenchResults
@@ -37,13 +39,125 @@ end
 class UndiesResults < UndiesBenchResults
 
   def initialize(size='large')
-    @outstream = StringIO.new(@out = "")
     super(:undies, '.rb', size, Proc.new do
       Undies::Template.new(
         Undies::Source.new(self.file),
         {},
-        Undies::Output.new(@outstream, :pp => 2)
+        Undies::IO.new(@out = "", :pp => 2)
       )
+    end)
+  end
+
+end
+
+class MarkabyResults < UndiesBenchResults
+
+  BUILDS = {}
+
+  BUILDS['small'] = Proc.new do
+    head {}
+    body do
+      100.times do |n|
+        span "Yo", :id => "cool-#{n}!"
+        p "Yo", :class => "awesome"
+
+        br
+
+        div :class => 'last' do
+          span "Hi " + em('there') + '!!'
+        end
+      end
+    end
+  end
+
+  BUILDS['large'] = Proc.new do
+    head {}
+    body do
+      1000.times do |n|
+        span "Yo", :id => "cool-#{n}!"
+        p "Yo", :class => "awesome"
+
+        br
+
+        div :class => 'last' do
+          span "Hi " + em('there') + '!!'
+        end
+      end
+    end
+  end
+
+  BUILDS['verylarge'] = Proc.new do
+    head {}
+    body do
+      10000.times do |n|
+        span "Yo", :id => "cool-#{n}!"
+        p "Yo", :class => "awesome"
+
+        br
+
+        div :class => 'last' do
+          span "Hi " + em('there') + '!!'
+        end
+      end
+    end
+  end
+
+  def initialize(size='large')
+    @out = ""
+    super(:markaby, '.mab', size, Proc.new do
+      mab = Markaby::Builder.new
+      mab.html &BUILDS[size.to_s]
+      @out = mab.to_s
+    end)
+  end
+
+end
+
+class ErectorResults < UndiesBenchResults
+
+  class Build < Erector::Widget
+    def content
+      head {}
+      body do
+        @num.times do |n|
+          span "Yo", :id => "cool-#{n}!"
+          p "Yo", :class => "awesome"
+
+          br
+
+          div :class => 'last' do
+            span do
+              text "Hi "
+              em "there"
+              text "!!"
+            end
+          end
+        end
+      end
+    end
+  end
+
+  BUILDS = {}
+
+  BUILDS['small'] = Build.new(:num => 100)
+  BUILDS['large'] = Build.new(:num => 1000)
+  BUILDS['verylarge'] = Build.new(:num => 10000)
+
+  def initialize(size='large')
+    @out = ""
+    super(:erector, '.erc', size, Proc.new do
+      @out = BUILDS[size.to_s].to_html(:prettyprint => true)
+    end)
+  end
+
+end
+
+class HamlResults < UndiesBenchResults
+
+  def initialize(size='large')
+    @out = ""
+    super(:haml, '.haml', size, Proc.new do
+      @out = ::Haml::Engine.new(File.read(self.file)).to_html
     end)
   end
 
@@ -75,23 +189,29 @@ end
 
 class UndiesBenchRunner
 
-  SIZES = {
-    # :small     => "~20 nodes",
-    # :large     => "~2000 nodes",
-    :verylarge => "~20000 nodes"
-  }
+  SIZES = [
+    # [:small    , "~500 nodes"],
+    [:large    , "~5000 nodes"],
+    # [:verylarge, "~50000 nodes"]
+  ]
 
 
   def initialize
     puts "Benchmark Results:"
     puts
-    SIZES.each do |size, desc|
-      ErbResults.new(size).run
+    SIZES.each do |size_desc|
+      UndiesResults.new(size_desc.first).run
       puts
-      ErubisResults.new(size).run
+      ErectorResults.new(size_desc.first).run
       puts
-      UndiesResults.new(size).run
+      MarkabyResults.new(size_desc.first).run
       puts
+      # HamlResults.new(size_desc.first).run
+      # puts
+      # ErbResults.new(size_desc.first).run
+      # puts
+      # ErubisResults.new(size_desc.first).run
+      # puts
     end
     puts
   end
