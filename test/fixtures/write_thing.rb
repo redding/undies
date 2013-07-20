@@ -2,19 +2,19 @@ class WriteThing
 
   # this is used in testing the write buffer
 
-  def self.hi(thing)
+  def __hi
     'hi'
   end
 
-  def self.hello(thing)
+  def __hello
     'hello'
   end
 
-  def self.hithere(thing)
+  def __hithere
     'hithere'
   end
 
-  def self.prefix(thing, meth, level, indent)
+  def __prefix(meth, level, indent)
     "#{level > 0 ? "\n": ''}#{' '*level*indent}"
   end
 
