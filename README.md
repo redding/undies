@@ -179,19 +179,19 @@ Stream plain text
 *note*: this is only valid at the root of the view.  to add plain text to an element, pass it in as an argument.  it will get streamed out as the element is streamed.
 
 ```ruby
-    _ "this will be escaped"
+_ "this will be escaped"
 
-    _ raw("this will not be escaped")
-    ```
+_ raw("this will not be escaped")
+```
 
 ### XML
 
 Stream xml element markup.  Call the element and tag methods with two leading underscores.
 
 ```ruby
-    __element(:thing)
+__element(:thing)
 
-    __tag('ns:thing')
+__tag('ns:thing')
 ```
 
 All other element handling is the same.
@@ -201,18 +201,18 @@ All other element handling is the same.
 Stream html markup.  Call the html element methods with a leading underscore.
 
 ```ruby
-    _br
+_br
 
-    _span "something"
+_span "something"
 
-    _div "something", :style => "color: red"
+_div "something", :style => "color: red"
 
-    _html {
-      _head { _title "Hello World" }
-      _body {
-        _h1 "Hi There!"
-      }
-    }
+_html {
+  _head { _title "Hello World" }
+  _body {
+    _h1 "Hi There!"
+  }
+}
 ```
 
 All other element handling is the same.
@@ -230,11 +230,13 @@ All other element handling is the same.
 
 To render using Undies, create a Template instance, providing the template source, data, and io information.
 
-    source = Undies::Source.new("/path/to/sourcefile")
-    data   = { :two_plus_two => 4 }
-    io     = Undies::IO.new(@some_io_stream)
+```ruby
+source = Undies::Source.new("/path/to/sourcefile")
+data   = { :two_plus_two => 4 }
+io     = Undies::IO.new(@some_io_stream)
 
-    Undies::Template.new(source, data, io)
+Undies::Template.new(source, data, io)
+```
 
 ### Source
 
