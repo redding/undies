@@ -1,6 +1,7 @@
 require "assert"
 require "undies/element"
 
+require 'test/support/element'
 
 module Undies::Element
 
@@ -35,7 +36,7 @@ module Undies::Element
 
 
   class OpenCSSProxyTests < OpenBasicTests
-    extend CSSProxyMacro
+    extend TestHelpers
 
     should proxy_css_methods
   end

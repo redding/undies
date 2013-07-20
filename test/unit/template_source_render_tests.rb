@@ -39,12 +39,12 @@ class Undies::Template
           }
         }
       end
-      @layout_file = File.expand_path "test/templates/layout.html.rb"
+      @layout_file = File.expand_path "test/support/templates/layout.html.rb"
 
       @content_proc = Proc.new do
         _div "Hi"
       end
-      @content_file = File.expand_path "test/templates/content.html.rb"
+      @content_file = File.expand_path "test/support/templates/content.html.rb"
 
       @cp_lp_source = Undies::Source.new(:layout => @layout_proc, &@content_proc)
       @cp_lf_source = Undies::Source.new(:layout => @layout_file, &@content_proc)

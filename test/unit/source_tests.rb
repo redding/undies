@@ -7,7 +7,7 @@ class Undies::Source
   class BasicTests < Assert::Context
     desc 'a source'
     before do
-      @content_file = File.expand_path('test/templates/content.html.rb')
+      @content_file = File.expand_path('test/support/templates/content.html.rb')
       @content_file_data = File.read(@content_file)
       @content_file_source = Undies::Source.new(@content_file)
 
