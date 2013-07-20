@@ -1,10 +1,9 @@
 require "assert"
-
 require "undies/source"
 
 class Undies::SourceStack
 
-  class BasicTests < Assert::Context
+  class UnitTests < Assert::Context
     desc 'a source stack'
     before do
       @content_file = File.expand_path('test/support/templates/content.html.rb')

@@ -1,9 +1,10 @@
 require "assert"
 require "undies/template"
 
+require 'undies/io'
+require 'undies/source'
+
 class Undies::Template
-
-
 
   class SourceRenderTests < Assert::Context
     desc 'a template rendered using a source object'
@@ -24,8 +25,6 @@ class Undies::Template
     end
 
   end
-
-
 
   class LayoutTests < SourceRenderTests
     setup do
@@ -74,8 +73,6 @@ class Undies::Template
 
   end
 
-
-
   class PartialTests < SourceRenderTests
     desc "using partials"
 
@@ -105,7 +102,5 @@ class Undies::Template
     end
 
   end
-
-
 
 end

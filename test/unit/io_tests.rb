@@ -3,7 +3,7 @@ require "undies/io"
 
 class Undies::IO
 
-  class BasicTests < Assert::Context
+  class UnitTests < Assert::Context
     desc 'render data'
     before do
       @io = Undies::IO.new(@out = "")
@@ -43,9 +43,7 @@ class Undies::IO
 
   end
 
-
-
-  class PrettyPrintTests < BasicTests
+  class PrettyPrintTests < UnitTests
     desc "when pretty printing"
     before do
       subject.options = {:pp => 2, :level => 1}
@@ -70,9 +68,7 @@ class Undies::IO
 
   end
 
-
-
-  class NodeStackTests < BasicTests
+  class NodeStackTests < UnitTests
 
     should "push to, pop from, and refer to the current thing on the stack" do
       subject.push("lala")
@@ -97,7 +93,6 @@ class Undies::IO
       assert_not_empty subject.node_stack
       assert_not_empty subject
     end
-
 
   end
 

@@ -1,10 +1,9 @@
 require "assert"
-
 require "undies/source"
 
 class Undies::NamedSource
 
-  class BasicTests < Assert::Context
+  class UnitTests < Assert::Context
     desc 'a named source'
     before do
       @content_file = File.expand_path('test/support/templates/content.html.rb')
@@ -24,7 +23,7 @@ class Undies::NamedSource
 
   end
 
-  class AccessorTests < BasicTests
+  class AccessorTests < UnitTests
     before do
       subject.file = @content_file
       subject.opts = {:layout => :another}
@@ -53,7 +52,7 @@ class Undies::NamedSource
 
   end
 
-  class UndiesTests < BasicTests
+  class UndiesTests < UnitTests
     before do
       Undies.named_sources.clear
     end

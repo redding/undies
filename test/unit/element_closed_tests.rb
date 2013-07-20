@@ -1,5 +1,4 @@
 require "assert"
-require 'undies/io'
 require "undies/element"
 
 require 'test/support/element'
@@ -26,15 +25,11 @@ module Undies::Element
 
   end
 
-
-
   class ClosedCSSProxyTests < ClosedBasicTests
     extend TestHelpers
 
     should proxy_css_methods
   end
-
-
 
   class ClosedSerializeTests < ClosedBasicTests
 

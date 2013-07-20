@@ -1,7 +1,5 @@
 require "assert"
-require 'undies/io'
 require "undies/element"
-
 
 module Undies::Element
 
@@ -75,6 +73,7 @@ module Undies::Element
       assert_included 'id="test_2"', attrs
       assert_included 'nested_something="is_awesome"', attrs
     end
+
   end
 
 end

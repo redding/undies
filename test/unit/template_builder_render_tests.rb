@@ -1,6 +1,9 @@
 require "assert"
 require "undies/template"
 
+require 'undies/io'
+require 'undies/source'
+
 class Undies::Template
 
   class BuilderRenderTests < Assert::Context

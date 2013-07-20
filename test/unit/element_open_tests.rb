@@ -33,15 +33,11 @@ module Undies::Element
 
   end
 
-
-
   class OpenCSSProxyTests < OpenBasicTests
     extend TestHelpers
 
     should proxy_css_methods
   end
-
-
 
   class OpenSerializeTests < OpenBasicTests
 

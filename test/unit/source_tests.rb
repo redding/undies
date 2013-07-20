@@ -1,10 +1,9 @@
 require "assert"
-
 require "undies/source"
 
 class Undies::Source
 
-  class BasicTests < Assert::Context
+  class UnitTests < Assert::Context
     desc 'a source'
     before do
       @content_file = File.expand_path('test/support/templates/content.html.rb')
@@ -35,7 +34,7 @@ class Undies::Source
 
   end
 
-  class SourceWriterTests < BasicTests
+  class SourceWriterTests < UnitTests
     before do
       @does_not_exist_path = '/path/does/not/exist'
     end
@@ -66,7 +65,7 @@ class Undies::Source
 
   end
 
-  class LayoutWriterTests < BasicTests
+  class LayoutWriterTests < UnitTests
 
     should "write nil layout values" do
       subject.layout = nil
@@ -114,7 +113,7 @@ class Undies::Source
 
   end
 
-  class ArgsParserTests < BasicTests
+  class ArgsParserTests < UnitTests
 
     should "parse block arg as proc source" do
       s = Undies::Source.new(&@hi_proc)
