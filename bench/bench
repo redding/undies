@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
 
+$LOAD_PATH.push(File.expand_path("../..", __FILE__))
 require 'bench/bench_runner'
 
 UndiesBenchRunner.new
