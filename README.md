@@ -1,3 +1,5 @@
+=== **This has been archived and is not maintained.** ===
+
 # Undies
 A pure-Ruby DSL for streaming templated HTML, XML, or plain text.  Named for its gratuitous use of the underscore.
 
